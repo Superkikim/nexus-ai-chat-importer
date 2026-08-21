@@ -1,6 +1,19 @@
 /* Enhanced styles for Nexus AI Chat Importer modals */
 
 /* Nexus AI Chat Importer - Custom Callouts */
+/*
+ * --callout-color format depends on how Obsidian's core CSS consumes it:
+ *   - Obsidian < 1.13: rgba(var(--callout-color), opacity)  -> needs a bare "R, G, B" triplet
+ *   - Obsidian >= 1.13: color-mix(in oklch, var(--callout-color) X%, ...) -> needs a real CSS color
+ *     (breaking change: https://obsidian.md/changelog/ "The --callout-color variable now
+ *     expects a valid CSS color. This is a breaking change.")
+ * A bare triplet is invalid inside color-mix(), so on 1.13+ the whole border-color/
+ * background-color declaration falls back to its initial value and the callout renders
+ * with no visible color at all. Since minAppVersion (see manifest.json) predates 1.13,
+ * both formats must be served: the triplet first for older Obsidian, then an rgb()
+ * override behind @supports for color-mix (a reliable proxy for the 1.13+ engine, since
+ * both landed together) so newer Obsidian gets a real color value.
+ */
 /* User Messages */
 .callout[data-callout="nexus_user"] {
     --callout-color: 59, 130, 246; /* Blue */
@@ -35,6 +48,29 @@
 .callout[data-callout="nexus_canvas"] {
     --callout-color: 14, 165, 233; /* Sky */
     --callout-icon: lucide-file-text;
+}
+
+/* Obsidian >= 1.13 (or any Chromium build with color-mix support): override with a
+ * real CSS color so color-mix(in oklch, var(--callout-color) ..., ...) parses. */
+@supports (color: color-mix(in oklch, red, blue)) {
+    .callout[data-callout="nexus_user"] {
+        --callout-color: rgb(59, 130, 246);
+    }
+    .callout[data-callout="nexus_agent"] {
+        --callout-color: rgb(16, 185, 129);
+    }
+    .callout[data-callout="nexus_attachment"] {
+        --callout-color: rgb(245, 158, 11);
+    }
+    .callout[data-callout="nexus_artifact"] {
+        --callout-color: rgb(168, 85, 247);
+    }
+    .callout[data-callout="nexus_prompt"] {
+        --callout-color: rgb(239, 68, 68);
+    }
+    .callout[data-callout="nexus_canvas"] {
+        --callout-color: rgb(14, 165, 233);
+    }
 }
 
 /* Fix excessive spacing in editor mode */
