@@ -100,7 +100,7 @@ export function createMissingGeneratedImageAttachment(
 ): StandardAttachment {
     const trimmed = (promptText || "").trim();
     const warning =
-        "⚠️ ChatGPT generated an image here, but recent exports no longer include generated images. Open the original conversation to view it.";
+        "⚠️ ChatGPT generated an image here, but this export did not include it. A newer export may include it — reimport with Reprocess to recover it, or open the original conversation to view it.";
 
     let extractedContent: string;
     if (trimmed) {
