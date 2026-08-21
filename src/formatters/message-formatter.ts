@@ -109,7 +109,12 @@ export class MessageFormatter {
             });
 
             messageContent += formattedLines.join("\n");
-        } else {
+        } else if (!message.attachments || message.attachments.length === 0) {
+            // No text AND no attachments: genuinely empty, worth flagging.
+            // A message whose only content is an attachment (e.g. a
+            // synthetic assistant turn carrying a generated image) is not
+            // an error — the attachment block below speaks for itself, so
+            // no placeholder line is added here.
             messageContent += `> [No content found]`;
         }
 

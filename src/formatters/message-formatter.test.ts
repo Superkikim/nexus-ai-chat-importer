@@ -35,4 +35,37 @@ describe("MessageFormatter", () => {
 
         expect(rendered).toContain("Assistant · sonar");
     });
+
+    it("shows [No content found] for a message with no text and no attachments", async () => {
+        const formatter = await createFormatter();
+        const rendered = formatter.formatMessage({
+            id: "m-empty",
+            role: "assistant",
+            content: "",
+            timestamp: 1_700_000_000,
+        });
+
+        expect(rendered).toContain("[No content found]");
+    });
+
+    it("does not show [No content found] for a message whose only content is an attachment", async () => {
+        const formatter = await createFormatter();
+        const rendered = formatter.formatMessage({
+            id: "m-synthetic",
+            role: "assistant",
+            content: "",
+            timestamp: 1_700_000_000,
+            attachments: [
+                {
+                    fileName: "Brain_vs_circuit_symbol.png",
+                    fileType: "image/png",
+                    fileId: "file_img_1",
+                    attachmentType: "generated_image",
+                },
+            ],
+        });
+
+        expect(rendered).not.toContain("[No content found]");
+        expect(rendered).toContain("Brain_vs_circuit_symbol.png");
+    });
 });
