@@ -51,10 +51,28 @@ flowchart TD
 
     S --> T(["Import complete\n→ write report"])
 
+    %% Per-conversation order inside processRawConversations — see section below
+
     style PHASE0 fill:#e8f4f8,stroke:#2196F3
     style PHASE1 fill:#f0f8e8,stroke:#4CAF50
     style PROCESS fill:#fafafa,stroke:#999
 ```
+
+---
+
+## Per-Conversation Processing Order
+
+Inside `processRawConversations`, each conversation goes through the same fixed sequence for **new imports, incremental updates, and Reprocess** alike:
+
+1. **Convert** the raw provider format to `StandardConversation` (adapter/converter).
+2. **Placeholders** for genuinely incomplete exports are inserted during conversion (e.g. ChatGPT's missing generated images).
+3. **Reconcile** — the provider's optional `reconcileConversationMessages()` pass runs on the whole conversation, *between conversion and attachment extraction*. ChatGPT uses it to attach `library_files.json` artifacts (generated images/documents) to the message that produced them, replacing resolved placeholders and creating stable synthetic messages when the originating message was omitted. A failure here never sinks the conversation — the import continues unreconciled.
+4. **Sort** messages chronologically (synthetic messages included).
+5. **Extract attachments** through the shared per-provider extractor (lazy `.dat` reads).
+6. **Format and write** the note.
+7. **Count** results for the import report.
+
+The library index (`library_files.json`) is parsed once per ZIP and cached; building it never loads file payloads, so selective imports only ever read `.dat` entries belonging to selected conversations.
 
 ---
 

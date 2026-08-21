@@ -7,10 +7,16 @@
 //      "dalle-generations/*.webp"): the image is referenced by the message and
 //      resolves like any other attachment. Handled by chatgpt-dalle-processor.ts
 //      and the asset index — NOT touched here.
-//   2. Omitted (recent 2026 exports): ChatGPT no longer ships generated images
-//      at all (no asset, no .dat, no metadata). Only the conversation text
+//   2. Omitted (mid-2026 exports): some exports ship no generated images at
+//      all (no asset, no .dat, no metadata). Only the conversation text
 //      survives. This module detects those turns and inserts a clear placeholder
 //      so the loss is visible instead of silent.
+//
+// Since the August 2026 exports, generated images can also arrive through
+// library_files.json; the library reconciler
+// (chatgpt-library-artifact-reconciler.ts) replaces a placeholder created here
+// with the real file when the payload is present. The placeholder remains the
+// honest fallback for exports that still omit the file.
 //
 // To avoid regressing case 1, the heuristic here runs ONLY when a conversation
 // has no structured generated-image data and no assistant-side image, and it

@@ -19,17 +19,23 @@ The plugin uses a **best-effort** strategy for attachments:
 - **Formats**: PNG, JPEG, GIF, WebP.
 - **Special detection**: magic bytes for `.dat` files (the correct extension is restored automatically).
 
-### ⚠️ Generated images (ChatGPT) — no longer included by OpenAI
+### ✅ Generated images (ChatGPT) — imported when the export includes them
 
-- **Current status**: as of 2026, OpenAI **no longer includes AI-generated images** in the data export. No `.dat` file, no asset index entry, no DALL-E metadata. This is an OpenAI-side regression — the plugin cannot recover images that are absent from the export.
-- **Older exports** (pre-2026): generated images were shipped as `dalle-generations/<uuid>.webp` inside the ZIP and are still imported correctly when present.
-- **What the plugin does**: when an image-generation turn is detected and no image is present, a visible placeholder callout is inserted (with the generation prompt when recoverable) so the omission is explicit rather than silent. See [Generated image omission](#generated-image-omission-2026-regression).
+- **Current status (August 2026 exports)**: generated images are included again, via the file library. The payload is a `.dat` at the ZIP root and `library_files.json` links it to its conversation (`origination_thread_id`), its message (`origination_message_id`), and its generation (`image_gen_generation_id`). The plugin extracts the image under its real name and embeds it in the message that produced it — including when ChatGPT omitted that message from the export (a minimal assistant message is created at the file's real creation time; no invented text). See [Library artifacts](#library-artifacts-generated-images-and-documents).
+- **Omission-period exports (mid-2026)**: some exports contain **no** generated images at all (no `.dat`, no asset index entry, no DALL-E metadata) — an OpenAI-side regression. The plugin inserts a visible placeholder callout (with the generation prompt when recoverable) so the omission is explicit rather than silent. See [Generated image omission](#generated-image-omission-2026-regression). Reimporting with **Reprocess** from a newer export replaces the placeholder with the real file.
+- **Older exports** (pre-2026): generated images shipped as `dalle-generations/<uuid>.webp` inside the ZIP and are still imported by the legacy DALL-E path.
 - **Format** (when present): PNG or WebP, real extension restored via magic bytes.
+
+### ✅ Library artifacts (generated images and documents)
+
+- **Source**: `library_files.json` (2026+ exports) describes the user's file library, including assistant-generated content that is **not** referenced by `metadata.attachments`: generated images (identified by `image_gen_generation_id`) and Canvas documents (`library_artifact_type: "report"`, e.g. a `.docx`).
+- **Handling**: a per-conversation reconciliation pass attaches each supported artifact to the exported message that produced it; when that message was omitted from the export but the conversation is present, the artifact is positioned chronologically via a synthetic assistant message with a stable id. An existing "generated image not in export" placeholder is replaced by the real file. Extraction then follows the shared `.dat` path (images to `images/`, documents to `documents/`).
+- **Safety rules**: an artifact whose conversation is absent from the export is never injected anywhere; user uploads and `writing_block` Canvas pastes are never duplicated; a missing `.dat` payload keeps the placeholder; unknown artifact types are logged and skipped without failing the import. Reconciliation is idempotent, so Reprocess never creates duplicates.
 
 ### ✅ Canvas documents (ChatGPT, 2026+)
 
 - **Source**: assistant-generated Canvas artifacts (e.g. a `.docx` "report") described in `library_files.json` and linked to a message through `origination_message_id` — **not** through the usual `metadata.attachments`.
-- **Handling**: the document is imported and linked like any other document, **and** its body (when inlined as a `:::writing` block) is rendered as a callout. See [Canvas content](#canvas-content-writing-directives).
+- **Handling**: imported through the library reconciliation pass above, then linked like any other document — **and** its body (when inlined as a `:::writing` block) is rendered as a callout. See [Canvas content](#canvas-content-writing-directives).
 
 ### ✅ Inline text files (scripts, Markdown, code, etc.)
 
@@ -87,11 +93,11 @@ This experimental syntax is not rendered by Obsidian, so the plugin converts eac
 
 ### Generated image omission (2026 regression)
 
-In some 2026 exports, AI-generated images are absent entirely. The importer detects the generation turn — a user request (e.g. *"génère une image…"* / *"generate an image…"*) or an assistant claim (e.g. *"voici l'image…"* / *"generated image"*) — and, when no image is present, inserts a placeholder callout (including the prompt when available). The heuristic is intentionally conservative and is suppressed whenever the conversation still carries structured generated-image data, so older/DALL-E exports are unaffected.
+In some 2026 exports, AI-generated images are absent entirely. The importer detects the generation turn — a user request (e.g. *"génère une image…"* / *"generate an image…"*) or an assistant claim (e.g. *"voici l'image…"* / *"generated image"*) — and, when no image is present, inserts a placeholder callout (including the prompt when available). The heuristic is intentionally conservative and is suppressed whenever the conversation still carries structured generated-image data, so older/DALL-E exports are unaffected. When a later export ships the actual file through the library (August 2026+), the reconciliation pass replaces the placeholder with the real image.
 
 ### Reprocessing existing imports
 
-To recover attachments for archives imported with an older plugin version, re-import the same ZIP and choose **Reprocess** in the dialog — the notes are regenerated with attachments.
+To recover attachments for archives imported with an older plugin version, re-import the same ZIP and choose **Reprocess** in the dialog — the notes are regenerated with attachments. This is also the recommended path for enriching notes created from an older export: reprocessing with a **newer** export that now includes generated files replaces the placeholders with the real images/documents, without creating duplicates (the operation is idempotent).
 
 ## File Organization
 
@@ -199,4 +205,4 @@ Possible causes: a corrupted file in the archive, insufficient permissions, or i
 
 ### Generated images not appearing
 
-Recent ChatGPT exports may omit generated images entirely (see [above](#generated-image-omission-2026-regression)). The plugin cannot recover a file that the export does not contain; it surfaces a placeholder so the loss is visible. Open the original conversation to view the image.
+Some ChatGPT exports omit generated images entirely (see [above](#generated-image-omission-2026-regression)). The plugin cannot recover a file that the export does not contain; it surfaces a placeholder so the loss is visible. Newer exports (August 2026+) include generated images in the file library — request a fresh export and **Reprocess** the conversation to replace the placeholder with the real image. If the placeholder remains, that export still did not carry the file; open the original conversation to view the image.
