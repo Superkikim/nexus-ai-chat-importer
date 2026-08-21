@@ -6,7 +6,7 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.8** — ChatGPT 2026 export support, Claude web search citations, Vibe Canvas rendering, and more.
+> ✅ **v1.7.0** — ChatGPT generated images and documents are imported again when the export includes them, restored to their exact place in the conversation.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -75,6 +75,27 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 - Full UI localization in 10 languages
 
 ## ✨ What's New
+
+### v1.7.0 — ChatGPT Generated Images & Documents Restored
+
+ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation — including cases where ChatGPT omitted the final message that presented the file.
+
+✨ **New**
+- **ChatGPT — Generated images imported again** — recent exports (observed August 2026+) ship generated images in the file library; each image is extracted under its real name and embedded in the message that produced it, with the generation prompt when it can be identified safely
+- **ChatGPT — Omitted-message recovery** — when the export contains the conversation but not the message that presented the file, the image is placed at its real creation time in a minimal assistant message (no invented text)
+- **ChatGPT — Generated documents imported** — library documents (Canvas reports, `.docx`, etc.) linked to an exported conversation are extracted to your attachments folder and linked from their producing message
+- **Placeholder replacement via Reprocess** — reimporting a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files, without duplicates (see [Reprocess](#-understanding-import-reports))
+
+🐛 **Fixed**
+- Attachment-only messages no longer show *[No content found]*
+- Callout colors restored after the Obsidian 1.13.0 styling change
+- Generation prompt kept for raw image requests that carry no explicit "generate" verb
+
+> ⚠️ **Note**: whether a given export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the plugin keeps the visible placeholder — it cannot recover files the export does not contain, and future OpenAI export behavior may change again.
+
+💡 **Tip**: to enrich notes imported from an older export, request a fresh ChatGPT export, re-import it, and choose **Reprocess** — placeholders are replaced by the real files, and a second Reprocess changes nothing.
+
+---
 
 ### v1.6.8 — ChatGPT 2026, Claude Citations & Vibe Canvas
 
@@ -453,7 +474,7 @@ Attachments are organized by provider:
 
 **Images**:
 - User-uploaded photos and screenshots
-- AI-generated images (DALL-E with prompts) — when included in the export (see [Provider Limitations](#-provider-specific-features--limitations))
+- AI-generated images with their prompts — when included in the export: legacy DALL-E exports and the new library-based exports (August 2026+) both work; a visible placeholder is kept when the export omits the file (see [Provider Limitations](#-provider-specific-features--limitations))
 - Embedded directly in conversation notes
 
 **Documents**:
@@ -632,11 +653,13 @@ Each AI provider exports data differently.
 **✅ Fully Supported**:
 - Conversation titles (exported in JSON)
 - User-uploaded attachments (images, documents)
+- AI-generated images and documents — when the export includes them (legacy DALL-E exports and the new library-based exports)
 - Complete message history
 - Custom instructions and model information
 
 **⚠️ Limitations**:
-- **DALL-E generated images no longer included in exports**: As of 2026, OpenAI stopped including AI-generated images in the data export. The plugin inserts a visible placeholder (with the generation prompt when available) so the omission is explicit rather than silent. This is an OpenAI-side regression — the plugin cannot recover images that are absent from the export.
+- **Generated file availability depends on the export**: during part of 2026, OpenAI exports omitted AI-generated images entirely; newer exports (observed August 2026+) include them again through the file library. The plugin imports whatever the archive actually contains and inserts a visible placeholder (with the generation prompt when available) when a file is absent — it cannot recover files the export does not contain, and OpenAI may change export behavior again without notice. To repair older imports, request a fresh export and use **Reprocess**.
+- A generated file whose conversation is not part of the export is not imported (the plugin never guesses where a file belongs).
 - Very large archives (multi-GB) are increasingly common. Mobile stability cannot be guaranteed in those cases.
 - Desktop usually handles larger archives better, but if you hit limits, please report with ZIP size + logs.
 

@@ -1,5 +1,47 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.7.0 — ChatGPT Generated Images & Documents Restored
+
+![Version](https://img.shields.io/badge/version-1.7.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
+
+ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation, including cases where ChatGPT omitted the final message that presented the file. Legacy exports and the missing-file placeholder remain supported.
+
+### ✨ New
+
+- **ChatGPT — Generated images imported again**
+  - Recent exports (observed August 2026+) ship generated images through the file library (`library_files.json`), with the payload present in the ZIP and linked to its conversation and generation
+  - Each image is extracted under its real name into `Attachments/chatgpt/images/`, embedded in the assistant message that produced it, and presented exactly like legacy DALL-E imports — prompt callout included when the prompt can be identified safely
+
+- **ChatGPT — Recovery when the export omits the presenting message**
+  - Exports sometimes contain the conversation but not the final message that carried the generated file
+  - The file is then restored at its real creation time in a minimal assistant message that shows only the file (and its prompt when available) — no invented text, and a stable identifier so repeated imports never duplicate it
+
+- **ChatGPT — Generated documents imported**
+  - Library documents linked to an exported conversation (Canvas reports, `.docx`, etc.) go through the same reconciliation pass: extracted to `Attachments/chatgpt/documents/` under their original name and linked from their producing message
+
+- **ChatGPT — Placeholders replaced on Reprocess**
+  - Re-importing a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files
+  - The operation is idempotent: a second Reprocess produces the same result, with no duplicate messages or files
+
+### 🔧 Improved
+
+- Extracted library files are counted in the standard **Extracted to vault** bucket of import reports, never twice
+- A library file whose conversation is absent from the export is ignored cleanly (debug log only — no report noise)
+- Unknown future library artifact types are logged and skipped without interrupting the import
+
+### 🐛 Fixed
+
+- **Attachment-only messages no longer show *[No content found]*** — a message whose content is only an attachment or generated file now renders without the misleading empty-content notice
+- **Callout colors restored after Obsidian 1.13.0** — the styling change in Obsidian 1.13.0 broke the Nexus callout palette; colors render correctly again
+- **Generation prompt kept for raw image requests** — prompts written without an explicit "generate" verb (e.g. a bare visual description) are no longer dropped from the image callout
+
+### ℹ️ Notes
+
+- Whether a given export contains generated files is decided by OpenAI and has varied over time; when a file is absent from the archive, the visible placeholder remains — the plugin cannot recover files the export does not contain
+- No new setting: the behavior is automatic for all import modes (full, selective, incremental, Reprocess)
+
+---
+
 ## Version 1.6.8 — ChatGPT 2026 Export Support
 
 ![Version](https://img.shields.io/badge/version-1.6.8-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
