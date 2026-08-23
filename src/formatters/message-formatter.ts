@@ -75,8 +75,12 @@ export class MessageFormatter {
                 ? MessageFormatter.CALLOUTS.USER
                 : MessageFormatter.CALLOUTS.AGENT;
 
-        // Create callout with timestamp and content
-        let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}\n`;
+        // Create callout with timestamp and content.
+        // Each block below prepends its own newline: a blockquote is broken by
+        // any line lacking a `>` prefix, so an empty body must add NOTHING
+        // rather than an empty line, or the attachment callouts that follow
+        // would fall outside this message's callout.
+        let messageContent = `>[!${calloutType}] **${authorName}** - ${messageTime}`;
 
         // Format main message content
         if (message.content) {
@@ -108,14 +112,14 @@ export class MessageFormatter {
                 return `> ${line}`;
             });
 
-            messageContent += formattedLines.join("\n");
+            messageContent += "\n" + formattedLines.join("\n");
         } else if (!message.attachments || message.attachments.length === 0) {
             // No text AND no attachments: genuinely empty, worth flagging.
             // A message whose only content is an attachment (e.g. a
             // synthetic assistant turn carrying a generated image) is not
             // an error — the attachment block below speaks for itself, so
             // no placeholder line is added here.
-            messageContent += `> [No content found]`;
+            messageContent += `\n> [No content found]`;
         }
 
         // Format attachments if any
