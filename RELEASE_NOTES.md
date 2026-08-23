@@ -21,7 +21,7 @@ ChatGPT now includes some generated images and documents in its new export libra
 
 - **ChatGPT — Placeholders replaced on Reprocess**
   - Re-importing a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files
-  - The operation is idempotent: a second Reprocess produces the same result, with no duplicate messages or files
+  - Reconciliation is idempotent: a second Reprocess produces the same note, with no duplicate messages and no duplicate attachment callouts
 
 ### 🔧 Improved
 
@@ -34,6 +34,14 @@ ChatGPT now includes some generated images and documents in its new export libra
 - **Attachment-only messages no longer show *[No content found]*** — a message whose content is only an attachment or generated file now renders without the misleading empty-content notice
 - **Callout colors restored after Obsidian 1.13.0** — the styling change in Obsidian 1.13.0 broke the Nexus callout palette; colors render correctly again
 - **Generation prompt kept for raw image requests** — prompts written without an explicit "generate" verb (e.g. a bare visual description) are no longer dropped from the image callout
+
+- **Missing-image placeholder no longer makes a blanket claim**
+  - The text read *"recent exports no longer include generated images"*, which became wrong once exports started shipping them again
+  - It now states plainly that **this** export did not include the image
+
+- **CLI — imports no longer fail with `moment2 is not a function`**
+  - The CLI shim polyfilled `window` but never attached `moment` to it, so every note creation threw and imports reported `0 created / N failed`
+  - The CLI is functional again; this affected the optional command-line tool only, never the plugin inside Obsidian
 
 ### ℹ️ Notes
 

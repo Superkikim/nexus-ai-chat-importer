@@ -84,16 +84,18 @@ ChatGPT now includes some generated images and documents in its new export libra
 - **ChatGPT — Generated images imported again** — recent exports (observed August 2026+) ship generated images in the file library; each image is extracted under its real name and embedded in the message that produced it, with the generation prompt when it can be identified safely
 - **ChatGPT — Omitted-message recovery** — when the export contains the conversation but not the message that presented the file, the image is placed at its real creation time in a minimal assistant message (no invented text)
 - **ChatGPT — Generated documents imported** — library documents (Canvas reports, `.docx`, etc.) linked to an exported conversation are extracted to your attachments folder and linked from their producing message
-- **Placeholder replacement via Reprocess** — reimporting a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files, without duplicates (see [Reprocess](#-understanding-import-reports))
+- **Placeholder replacement via Reprocess** — reimporting a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files, without duplicate messages (see [Reprocess](#-understanding-import-reports))
 
 🐛 **Fixed**
 - Attachment-only messages no longer show *[No content found]*
 - Callout colors restored after the Obsidian 1.13.0 styling change
 - Generation prompt kept for raw image requests that carry no explicit "generate" verb
+- Missing-image placeholder now says *this export did not include the image*, instead of claiming generated images are never included
+- **CLI** — imports no longer fail with `moment2 is not a function` (the CLI was creating no notes at all; the plugin inside Obsidian was never affected)
 
 > ⚠️ **Note**: whether a given export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the plugin keeps the visible placeholder — it cannot recover files the export does not contain, and future OpenAI export behavior may change again.
 
-💡 **Tip**: to enrich notes imported from an older export, request a fresh ChatGPT export, re-import it, and choose **Reprocess** — placeholders are replaced by the real files, and a second Reprocess changes nothing.
+💡 **Tip**: to enrich notes imported from an older export, request a fresh ChatGPT export, re-import it, and choose **Reprocess** — placeholders are replaced by the real files, and the conversation is rebuilt without duplicate messages.
 
 ---
 
