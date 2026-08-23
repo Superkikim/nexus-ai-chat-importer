@@ -168,7 +168,11 @@ export function formatTitle(title: string): string {
 export function generateFileName(title: string): string {
     let fileName = formatTitle(title)
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        // Remove diacritics from Latin letters only (café -> cafe).
+        // Non-Latin scripts keep their marks: in Cyrillic they are part of the
+        // letter itself (и + U+0306 = й), so stripping them changes the word.
+        .replace(/(\p{Script=Latin})\p{Mn}+/gu, "$1")
+        .normalize("NFC")
         .replace(/[<>:"/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
@@ -422,7 +426,11 @@ export function generateSafeAlias(title: string): string {
     // Start with the title and apply minimal sanitization
     let cleanName = title
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        // Remove diacritics from Latin letters only (café -> cafe).
+        // Non-Latin scripts keep their marks: in Cyrillic they are part of the
+        // letter itself (и + U+0306 = й), so stripping them changes the word.
+        .replace(/(\p{Script=Latin})\p{Mn}+/gu, "$1")
+        .normalize("NFC")
         .replace(/[<>/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters (keep quotes and colons)
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();

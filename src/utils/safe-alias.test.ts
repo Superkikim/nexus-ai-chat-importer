@@ -12,6 +12,16 @@ describe("generateSafeAlias unicode handling", () => {
         expect(generateSafeAlias("中文标题 test")).toBe("中文标题 test");
     });
 
+    it("keeps Cyrillic composed letters intact", () => {
+        expect(generateSafeAlias("Отладка IsActive свойства")).toBe(
+            "Отладка IsActive свойства"
+        );
+    });
+
+    it("still strips diacritics from Latin letters", () => {
+        expect(generateSafeAlias("Café résumé")).toBe("Cafe resume");
+    });
+
     it("still strips unsafe leading punctuation before a unicode letter", () => {
         expect(generateSafeAlias("<<Ошибка>> test")).toBe("Ошибка test");
     });
