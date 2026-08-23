@@ -429,7 +429,7 @@ export function generateSafeAlias(title: string): string {
 
     // Remove special characters from the beginning (for filesystem safety)
     // But we'll remember if we had YAML special chars for quoting decision
-    cleanName = cleanName.replace(/^[^\w\d\s"']+/, "");
+    cleanName = cleanName.replace(/^[^\p{L}\p{N}\s"']+/u, "");
 
     // Clean up any remaining problematic patterns
     cleanName = cleanName
