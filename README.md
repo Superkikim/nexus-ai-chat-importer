@@ -6,7 +6,7 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.7.0** — ChatGPT generated images and documents are imported again when the export includes them, restored to their exact place in the conversation.
+> ✅ **v1.7.0** — ChatGPT generated images and documents are imported again when the export includes them, and conversation filenames now preserve leading Unicode characters.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -91,6 +91,7 @@ ChatGPT now includes some generated images and documents in its new export libra
 - Callout colors restored after the Obsidian 1.13.0 styling change
 - Generation prompt kept for raw image requests that carry no explicit "generate" verb
 - Missing-image placeholder now says *this export did not include the image*, instead of claiming generated images are never included
+- Conversation filenames now preserve leading non-ASCII letters, so titles beginning with Cyrillic, Chinese, and other Unicode scripts are no longer trimmed
 - **CLI** — imports no longer fail with `moment2 is not a function` (the CLI was creating no notes at all; the plugin inside Obsidian was never affected)
 
 > ⚠️ **Note**: whether a given export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the plugin keeps the visible placeholder — it cannot recover files the export does not contain, and future OpenAI export behavior may change again.
@@ -1001,6 +1002,7 @@ See [LICENSE](LICENSE) for full details.
   - [@caseyg](https://github.com/caseyg) — CLI for bulk importing (PR #33), Claude formatting feedback (PR #34)
   - [@chuckfs](https://github.com/chuckfs) — iOS support (PR #15)
   - [@baron](https://github.com/baron) — Large archive handling research (PR #27)
+  - [@lstsavr](https://github.com/lstsavr) — Unicode filename preservation (PR #70)
 - **Special Thanks**: To all users who report issues and suggest improvements
 
 ## 🔗 Resources

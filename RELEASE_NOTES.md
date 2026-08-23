@@ -35,6 +35,10 @@ ChatGPT now includes some generated images and documents in its new export libra
 - **Callout colors restored after Obsidian 1.13.0** — the styling change in Obsidian 1.13.0 broke the Nexus callout palette; colors render correctly again
 - **Generation prompt kept for raw image requests** — prompts written without an explicit "generate" verb (e.g. a bare visual description) are no longer dropped from the image callout
 
+- **Unicode conversation titles preserved in filenames**
+  - Conversation titles that start with non-ASCII letters, such as Cyrillic or Chinese, no longer lose their leading characters when note filenames are generated
+  - Unsafe leading punctuation is still removed, so hidden-file protections remain intact
+
 - **Missing-image placeholder no longer makes a blanket claim**
   - The text read *"recent exports no longer include generated images"*, which became wrong once exports started shipping them again
   - It now states plainly that **this** export did not include the image
