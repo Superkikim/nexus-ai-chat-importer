@@ -126,7 +126,7 @@ export function createMissingGeneratedImageAttachment(
             processed: true,
             found: false,
             reason: "not_in_export",
-            note: "Generated images are omitted by recent ChatGPT exports.",
+            note: "This export did not include the generated image. Exports that ship it through library_files.json are reconciled instead.",
         },
     };
 }
