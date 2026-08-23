@@ -486,6 +486,12 @@ if (typeof globalThis.window === "undefined") {
     (globalThis as any).window = globalThis;
 }
 
+// Obsidian exposes moment on window; src/utils.ts captures `window.moment` at
+// module load, so it must be set before any plugin module is imported.
+if (typeof (globalThis as any).window.moment === "undefined") {
+    (globalThis as any).window.moment = moment;
+}
+
 // ---------------------------------------------------------------------------
 // Additional exports the plugin might reference
 // ---------------------------------------------------------------------------
