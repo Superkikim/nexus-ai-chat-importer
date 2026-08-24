@@ -525,7 +525,7 @@
     "support_box": {
         "header": "Supporta questo plugin",
         "header_highlight": "Supporta questo plugin",
-        "default_message_emphasis": "Nexus ha superato i 9.000 download. Al momento, solo circa 5 utenti al mese fanno una donazione per sostenere lo sviluppo.",
+        "default_message_emphasis": "Nexus ha superato i 15.000 download. Al momento, solo circa 5 utenti al mese fanno una donazione per sostenere lo sviluppo.",
         "default_message": "Mantengo questo plugin nel mio tempo libero e mantenere operativo il mio ambiente di sviluppo comporta costi continui. Aggiungere nuovi provider richiede anche abbonamenti a pagamento per poter testare e offrire un supporto affidabile.",
         "reality_check": "Se Nexus ti è utile, considera una donazione una tantum o mensile. Grazie a tutte le persone che già supportano il progetto.",
         "button_alt": "Supportare il mio lavoro"

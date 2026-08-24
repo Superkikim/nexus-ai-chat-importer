@@ -167,7 +167,7 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 
 ## ☕ Support My Work
 
-Nexus has reached 9,000+ downloads. Right now, only about 5 users per month donate to support development.
+Nexus has reached 15,000+ downloads. Right now, only about 5 users per month donate to support development.
 
 I maintain this plugin in my own time, and keeping my dev ecosystem running has ongoing costs. Adding new providers also requires paid subscriptions so I can test and deliver accurate support.
 
