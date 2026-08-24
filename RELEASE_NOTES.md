@@ -1,5 +1,24 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.6.9 — Claude Split Export Detection
+
+![Version](https://img.shields.io/badge/version-1.6.9-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🐛 Fixed
+
+- **Claude — New split export detected correctly**
+  - Anthropic now delivers exports as a manifest file listing several ZIPs to download separately, and `users.json` no longer sits next to `conversations.json`
+  - The plugin identified a Claude export by that pairing, so `conversations-000.zip` was read as a ChatGPT export and imported zero conversations
+  - An archive containing nothing but `conversations.json` is now checked against its actual content and imported as Claude
+  - Only `conversations-000.zip` is needed; the projects, memories and light metadata archives contain nothing the plugin uses
+  - All previously supported export formats are unaffected — their detection is unchanged
+
+- **Callout colors restored on Obsidian 1.13+**
+  - Obsidian 1.13.0 changed `--callout-color` to require a real CSS color instead of a bare `R, G, B` triplet, so Nexus callouts rendered with the right icons but no color and no visible border
+  - Both formats are now served: the legacy triplet for older Obsidian, and a real color for 1.13 and later
+
+---
+
 ## Version 1.6.8 — ChatGPT 2026 Export Support
 
 ![Version](https://img.shields.io/badge/version-1.6.8-blue) ![Feature](https://img.shields.io/badge/type-feature-green)

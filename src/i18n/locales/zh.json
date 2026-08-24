@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### ✨ 新功能\n- **ChatGPT** — 商品推荐轮播（`products{…}` 标记）渲染为包含名称、类别和价格的可折叠标注；图片不包含在导出中\n- **Claude** — 网络搜索来源以去重的 `### References` 列表形式附加在每条消息末尾\n- **Vibe** — Canvas 内容（`slides` 演示文稿和 `text/markdown` 文档）渲染为可折叠的标注\n- **Vibe** — 为导出中未包含的助手生成的文件引用（`file_reference`）插入占位符\n- **ChatGPT** — Canvas `:::writing` 块现在渲染为可折叠的标注，而非原始标记语言\n- **ChatGPT** — Canvas 生成的文档（报告、`.docx` 等）从 `library_files.json` 导入并链接到笔记中\n- **ChatGPT** — 当导出文件中缺少生成的图像时（OpenAI 近期的退步），会插入占位符\n\n### 🐛 修复\n- **ChatGPT** — 完整支持新的 2026 导出格式：`.dat` 文件通过 `conversation_asset_file_names.json` 解析\n- **ChatGPT** — 用户上传的文档（PDF 等）可正确导入\n- **ChatGPT** — 语音录音（WAV）现在可正确检测并跳过，不再被误导入为损坏的文件\n\n### 🔧 改进\n- 魔术字节检测新增 WAV 和 PDF 支持",
+            "fallback_content": "## ✨ v{{version}} 新增内容\n\n### 🐛 修复\n- **Claude** — 现已识别新的拆分导出格式：Anthropic 提供列出多个 ZIP 的清单文件，`users.json` 不再与 `conversations.json` 放在一起，导致 `conversations-000.zip` 被误判为 ChatGPT 导出且未导入任何内容\n- 直接导入 `conversations-000.zip` 即可 — 项目、记忆和元数据压缩包不含插件需要的内容\n- 此前支持的所有导出格式的识别方式保持不变\n- **Obsidian 1.13+** — 恢复标注颜色：Obsidian 1.13.0 要求 `--callout-color` 使用真实的 CSS 颜色，导致 Nexus 标注既无颜色也无边框",
             "buttons": {
                 "got_it": "知道了！"
             }
@@ -525,7 +525,7 @@
     "support_box": {
         "header": "支持此插件",
         "header_highlight": "支持此插件",
-        "default_message_emphasis": "Nexus 已超过 9,000 次下载。当前每月只有约 5 位用户通过捐赠支持开发。",
+        "default_message_emphasis": "Nexus 已超过 15,000 次下载。当前每月只有约 5 位用户通过捐赠支持开发。",
         "default_message": "我在个人时间维护这个插件，维持开发环境也有持续成本。新增 provider 支持还需要付费订阅，才能进行准确测试并提供可靠支持。",
         "reality_check": "如果 Nexus 对你有价值，欢迎考虑一次性或按月捐赠。感谢所有已经在支持这个项目的用户。",
         "button_alt": "支持我的工作"

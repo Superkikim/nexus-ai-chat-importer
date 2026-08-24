@@ -62,7 +62,7 @@ import {
 } from "./utils";
 import { sortFilesForImport } from "./utils/file-sort";
 import { createZipArchiveReader } from "./utils/zip-loader";
-import { classifyArchiveEntries } from "./utils/zip-content-reader";
+import { resolveArchiveClassification } from "./utils/zip-content-reader";
 
 interface ImportCheckpoint {
     operation: "import-all" | "selective-analysis" | "selective-import";
@@ -747,7 +747,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             try {
                 const zip = await createZipArchiveReader(file, entryFilter);
                 const entries = await zip.listEntries();
-                const classification = classifyArchiveEntries(
+                const classification = await resolveArchiveClassification(
+                    zip,
                     entries.map((entry) => entry.path),
                     provider
                 );
@@ -1437,7 +1438,8 @@ ${report.generateMobileIndexContent(files, links)}
             try {
                 const zip = await createZipArchiveReader(file);
                 const entries = await zip.listEntries();
-                const classification = classifyArchiveEntries(
+                const classification = await resolveArchiveClassification(
+                    zip,
                     entries.map((entry) => entry.path)
                 );
                 if (!classification.supported) {

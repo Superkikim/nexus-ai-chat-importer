@@ -30,7 +30,7 @@ import { isValidMessage, compareTimestampsIgnoringSeconds } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
 import {
-    classifyArchiveEntries,
+    resolveArchiveClassification,
     extractConversationsStream,
     getArchiveProviderMismatchMessage,
     getArchiveUnsupportedFormatMessage,
@@ -128,7 +128,8 @@ export class ConversationMetadataExtractor {
     ): Promise<ConversationMetadata[]> {
         const startedAt = Date.now();
         const entries = await zip.listEntries();
-        const classification = classifyArchiveEntries(
+        const classification = await resolveArchiveClassification(
+            zip,
             entries.map((entry) => entry.path),
             forcedProvider
         );
@@ -270,7 +271,8 @@ export class ConversationMetadataExtractor {
 
                 const zip = await createZipArchiveReader(file, entryFilter);
                 const entries = await zip.listEntries();
-                const classification = classifyArchiveEntries(
+                const classification = await resolveArchiveClassification(
+                    zip,
                     entries.map((entry) => entry.path),
                     forcedProvider
                 );

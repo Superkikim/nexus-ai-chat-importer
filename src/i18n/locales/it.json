@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Aggiornamento completato - v{{version}}",
-            "fallback_content": "## ✨ Novità della v{{version}}\n\n### ✨ Nuovo\n- **ChatGPT** — I caroselli di raccomandazione prodotti (token `products{…}`) vengono mostrati come callout comprimibili con nome, categoria e prezzo; immagini non incluse nell'export\n- **Claude** — Le fonti della ricerca web vengono aggiunte come lista `### References` deduplicata alla fine di ogni messaggio\n- **Vibe** — Gli elementi Canvas (presentazioni `slides` e documenti `text/markdown`) vengono mostrati come callout comprimibili\n- **Vibe** — Viene inserito un segnaposto per i riferimenti a file generati dall'assistente (`file_reference`) non presenti nell'export\n- **ChatGPT** — I blocchi Canvas `:::writing` vengono ora mostrati come callout comprimibili invece di markup grezzo\n- **ChatGPT** — I documenti generati da Canvas (report, `.docx`, ecc.) vengono importati da `library_files.json` e collegati nelle note\n- **ChatGPT** — Viene inserito un segnaposto quando le immagini generate sono assenti dall'esportazione (regressione recente di OpenAI)\n\n### 🐛 Corretto\n- **ChatGPT** — Nuovo formato di esportazione 2026 completamente supportato: file `.dat` risolti tramite `conversation_asset_file_names.json`\n- **ChatGPT** — Documenti caricati dall'utente (PDF, ecc.) importati correttamente\n- **ChatGPT** — Registrazioni vocali (WAV) rilevate e ignorate invece di essere importate come file danneggiati\n\n### 🔧 Migliorato\n- Rilevamento dei magic byte esteso con supporto WAV e PDF",
+            "fallback_content": "## ✨ Novità nella v{{version}}\n\n### 🐛 Corretto\n- **Claude** — Il nuovo export suddiviso viene ora riconosciuto: Anthropic fornisce un manifest con più ZIP e `users.json` non si trova più accanto a `conversations.json`, così `conversations-000.zip` veniva letto come un export ChatGPT e non importava nulla\n- Importa direttamente `conversations-000.zip` — gli archivi di progetti, memorie e metadati non contengono nulla di utile al plugin\n- Il riconoscimento di tutti i formati di export precedenti resta invariato\n- **Obsidian 1.13+** — colori dei callout ripristinati: Obsidian 1.13.0 richiede un colore CSS reale per `--callout-color`, lasciando i callout Nexus senza colore né bordo",
             "buttons": {
                 "got_it": "Capito!"
             }
@@ -525,7 +525,7 @@
     "support_box": {
         "header": "Supporta questo plugin",
         "header_highlight": "Supporta questo plugin",
-        "default_message_emphasis": "Nexus ha superato i 9.000 download. Al momento, solo circa 5 utenti al mese fanno una donazione per sostenere lo sviluppo.",
+        "default_message_emphasis": "Nexus ha superato i 15.000 download. Al momento, solo circa 5 utenti al mese fanno una donazione per sostenere lo sviluppo.",
         "default_message": "Mantengo questo plugin nel mio tempo libero e mantenere operativo il mio ambiente di sviluppo comporta costi continui. Aggiungere nuovi provider richiede anche abbonamenti a pagamento per poter testare e offrire un supporto affidabile.",
         "reality_check": "Se Nexus ti è utile, considera una donazione una tantum o mensile. Grazie a tutte le persone che già supportano il progetto.",
         "button_alt": "Supportare il mio lavoro"
