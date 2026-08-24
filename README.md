@@ -6,7 +6,7 @@
 >
 > [![EN](https://img.shields.io/badge/docs-EN-0066CC)](https://nexus-prod.dev/nexus-ai-chat-importer/) [![DE](https://img.shields.io/badge/docs-DE-0066CC)](https://nexus-prod.dev/de/nexus-ai-chat-importer/) [![ES](https://img.shields.io/badge/docs-ES-0066CC)](https://nexus-prod.dev/es/nexus-ai-chat-importer/) [![FR](https://img.shields.io/badge/docs-FR-0066CC)](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) [![IT](https://img.shields.io/badge/docs-IT-0066CC)](https://nexus-prod.dev/it/nexus-ai-chat-importer/) [![JA](https://img.shields.io/badge/docs-JA-0066CC)](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) [![KO](https://img.shields.io/badge/docs-KO-0066CC)](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) [![PT](https://img.shields.io/badge/docs-PT-0066CC)](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) [![RU](https://img.shields.io/badge/docs-RU-0066CC)](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) [![ZH](https://img.shields.io/badge/docs-ZH-0066CC)](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
 
-> ✅ **v1.6.8** — ChatGPT 2026 export support, Claude web search citations, Vibe Canvas rendering, and more.
+> ✅ **v1.6.9** — Claude's new split export (the one that comes with a manifest and several ZIPs) is now detected: import `conversations-000.zip` directly.
 > See [What’s New](#-whats-new) for details.
 
 
@@ -75,6 +75,15 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 - Full UI localization in 10 languages
 
 ## ✨ What's New
+
+### v1.6.9 — Claude split export detection
+
+🐛 **Fixed**
+- **Claude — New export layout supported** — Anthropic now delivers a manifest listing several ZIPs, and `users.json` moved out of the conversations archive; `conversations-000.zip` was therefore misread as a ChatGPT export and imported nothing
+- Import `conversations-000.zip` directly — the projects, memories and light metadata archives contain nothing the plugin uses
+- Detection of all previously supported export formats is unchanged
+
+---
 
 ### v1.6.8 — ChatGPT 2026, Claude Citations & Vibe Canvas
 
