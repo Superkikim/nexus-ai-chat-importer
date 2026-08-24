@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ 업그레이드 완료 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### ✨ 새 기능\n- **ChatGPT** — 상품 추천 캐러셀(`products{…}` 토큰)이 이름, 카테고리, 가격을 포함한 접을 수 있는 콜아웃으로 렌더링됩니다. 이미지는 내보내기에 포함되지 않습니다\n- **Claude** — 웹 검색 출처가 중복 제거된 `### References` 목록으로 각 메시지 끝에 추가됩니다\n- **Vibe** — Canvas 항목(`slides` 프레젠테이션 및 `text/markdown` 문서)이 접을 수 있는 콜아웃으로 렌더링됩니다\n- **Vibe** — 내보내기에 포함되지 않은 어시스턴트 생성 파일 참조(`file_reference`)에 대한 플레이스홀더가 삽입됩니다\n- **ChatGPT** — Canvas `:::writing` 블록이 원시 마크업 대신 접을 수 있는 콜아웃으로 렌더링됩니다\n- **ChatGPT** — Canvas로 생성된 문서(보고서, `.docx` 등)가 `library_files.json`에서 가져와 노트에 연결됩니다\n- **ChatGPT** — 내보내기에 생성된 이미지가 없을 경우(OpenAI의 최근 회귀) 플레이스홀더가 삽입됩니다\n\n### 🐛 수정\n- **ChatGPT** — 새로운 2026 내보내기 형식 완전 지원: `.dat` 파일이 `conversation_asset_file_names.json`으로 해결됩니다\n- **ChatGPT** — 사용자가 업로드한 문서(PDF 등)가 올바르게 가져와집니다\n- **ChatGPT** — 음성 녹음(WAV)이 올바르게 감지되고 건너뛰어집니다\n\n### 🔧 개선\n- 매직 바이트 감지에 WAV 및 PDF 지원 추가",
+            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 🐛 수정\n- **Claude** — 새로운 분할 내보내기를 인식합니다. Anthropic이 여러 ZIP을 나열한 매니페스트를 제공하면서 `users.json`이 `conversations.json` 옆에 있지 않게 되어 `conversations-000.zip`이 ChatGPT 내보내기로 인식되고 아무것도 가져오지 못했습니다\n- `conversations-000.zip`을 바로 가져오세요. 프로젝트·메모리·메타데이터 아카이브에는 플러그인이 사용하는 내용이 없습니다\n- 기존에 지원하던 모든 내보내기 형식의 인식 방식은 그대로입니다",
             "buttons": {
                 "got_it": "알겠어요!"
             }
