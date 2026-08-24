@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 新增内容\n\n### 🐛 修复\n- **Claude** — 现已识别新的拆分导出格式：Anthropic 提供列出多个 ZIP 的清单文件，`users.json` 不再与 `conversations.json` 放在一起，导致 `conversations-000.zip` 被误判为 ChatGPT 导出且未导入任何内容\n- 直接导入 `conversations-000.zip` 即可 — 项目、记忆和元数据压缩包不含插件需要的内容\n- 此前支持的所有导出格式的识别方式保持不变",
+            "fallback_content": "## ✨ v{{version}} 新增内容\n\n### 🐛 修复\n- **Claude** — 现已识别新的拆分导出格式：Anthropic 提供列出多个 ZIP 的清单文件，`users.json` 不再与 `conversations.json` 放在一起，导致 `conversations-000.zip` 被误判为 ChatGPT 导出且未导入任何内容\n- 直接导入 `conversations-000.zip` 即可 — 项目、记忆和元数据压缩包不含插件需要的内容\n- 此前支持的所有导出格式的识别方式保持不变\n- **Obsidian 1.13+** — 恢复标注颜色：Obsidian 1.13.0 要求 `--callout-color` 使用真实的 CSS 颜色，导致 Nexus 标注既无颜色也无边框",
             "buttons": {
                 "got_it": "知道了！"
             }

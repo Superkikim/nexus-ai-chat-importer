@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ アップグレード完了 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} の新機能\n\n### 🐛 修正\n- **Claude** — 新しい分割エクスポートを検出できるようになりました。Anthropic は複数の ZIP を列挙したマニフェストを提供し、`users.json` は `conversations.json` の隣に置かれなくなったため、`conversations-000.zip` が ChatGPT のエクスポートとして扱われ、何もインポートされませんでした\n- `conversations-000.zip` をそのままインポートしてください。プロジェクト・メモリ・メタデータのアーカイブにプラグインが使う情報は含まれていません\n- これまで対応していたすべてのエクスポート形式の検出は変わりません",
+            "fallback_content": "## ✨ v{{version}} の新機能\n\n### 🐛 修正\n- **Claude** — 新しい分割エクスポートを検出できるようになりました。Anthropic は複数の ZIP を列挙したマニフェストを提供し、`users.json` は `conversations.json` の隣に置かれなくなったため、`conversations-000.zip` が ChatGPT のエクスポートとして扱われ、何もインポートされませんでした\n- `conversations-000.zip` をそのままインポートしてください。プロジェクト・メモリ・メタデータのアーカイブにプラグインが使う情報は含まれていません\n- これまで対応していたすべてのエクスポート形式の検出は変わりません\n- **Obsidian 1.13+** — コールアウトの色を修正しました。Obsidian 1.13.0 で `--callout-color` に実際の CSS カラーが必要になり、Nexus のコールアウトが色も枠線もない状態で表示されていました",
             "buttons": {
                 "got_it": "了解！"
             }

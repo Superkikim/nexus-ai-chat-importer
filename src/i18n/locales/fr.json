@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Mise à niveau terminée - v{{version}}",
-            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### 🐛 Corrigé\n- **Claude** — Le nouveau format d'export est maintenant reconnu : Anthropic fournit un manifeste listant plusieurs ZIP, et `users.json` ne se trouve plus à côté de `conversations.json`, si bien que `conversations-000.zip` était pris pour un export ChatGPT et n'importait rien\n- Importez directement `conversations-000.zip` — les archives projets, mémoires et métadonnées ne contiennent rien d'utile au plugin\n- La détection de tous les formats d'export précédents reste inchangée",
+            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### 🐛 Corrigé\n- **Claude** — Le nouveau format d'export est maintenant reconnu : Anthropic fournit un manifeste listant plusieurs ZIP, et `users.json` ne se trouve plus à côté de `conversations.json`, si bien que `conversations-000.zip` était pris pour un export ChatGPT et n'importait rien\n- Importez directement `conversations-000.zip` — les archives projets, mémoires et métadonnées ne contiennent rien d'utile au plugin\n- La détection de tous les formats d'export précédents reste inchangée\n- **Obsidian 1.13+** — couleurs des callouts rétablies : Obsidian 1.13.0 exige désormais une vraie couleur CSS pour `--callout-color`, ce qui laissait les callouts Nexus sans couleur ni bordure",
             "buttons": {
                 "got_it": "Compris !"
             }

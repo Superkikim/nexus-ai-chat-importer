@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ 업그레이드 완료 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 🐛 수정\n- **Claude** — 새로운 분할 내보내기를 인식합니다. Anthropic이 여러 ZIP을 나열한 매니페스트를 제공하면서 `users.json`이 `conversations.json` 옆에 있지 않게 되어 `conversations-000.zip`이 ChatGPT 내보내기로 인식되고 아무것도 가져오지 못했습니다\n- `conversations-000.zip`을 바로 가져오세요. 프로젝트·메모리·메타데이터 아카이브에는 플러그인이 사용하는 내용이 없습니다\n- 기존에 지원하던 모든 내보내기 형식의 인식 방식은 그대로입니다",
+            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 🐛 수정\n- **Claude** — 새로운 분할 내보내기를 인식합니다. Anthropic이 여러 ZIP을 나열한 매니페스트를 제공하면서 `users.json`이 `conversations.json` 옆에 있지 않게 되어 `conversations-000.zip`이 ChatGPT 내보내기로 인식되고 아무것도 가져오지 못했습니다\n- `conversations-000.zip`을 바로 가져오세요. 프로젝트·메모리·메타데이터 아카이브에는 플러그인이 사용하는 내용이 없습니다\n- 기존에 지원하던 모든 내보내기 형식의 인식 방식은 그대로입니다\n- **Obsidian 1.13+** — 콜아웃 색상이 복구되었습니다. Obsidian 1.13.0부터 `--callout-color`에 실제 CSS 색상이 필요해지면서 Nexus 콜아웃이 색과 테두리 없이 표시되었습니다",
             "buttons": {
                 "got_it": "알겠어요!"
             }

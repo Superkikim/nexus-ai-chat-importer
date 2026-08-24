@@ -13,6 +13,10 @@
   - Only `conversations-000.zip` is needed; the projects, memories and light metadata archives contain nothing the plugin uses
   - All previously supported export formats are unaffected — their detection is unchanged
 
+- **Callout colors restored on Obsidian 1.13+**
+  - Obsidian 1.13.0 changed `--callout-color` to require a real CSS color instead of a bare `R, G, B` triplet, so Nexus callouts rendered with the right icons but no color and no visible border
+  - Both formats are now served: the legacy triplet for older Obsidian, and a real color for 1.13 and later
+
 ---
 
 ## Version 1.6.8 — ChatGPT 2026 Export Support
