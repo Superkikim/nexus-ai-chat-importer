@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Atualização concluída - v{{version}}",
-            "fallback_content": "## ✨ Novidades da v{{version}}\n\n### ✨ Novo\n- **ChatGPT** — As imagens geradas voltam a ser importadas: as exportações recentes incluem-nas na biblioteca de ficheiros; cada imagem é extraída e restaurada na mensagem que a produziu, com o seu prompt\n- **ChatGPT** — Quando a exportação omite a mensagem que apresentava o ficheiro, a imagem é colocada na sua data de criação real numa mensagem mínima do assistente\n- **ChatGPT** — Os documentos gerados (relatórios do Canvas, `.docx`, etc.) são extraídos e ligados na sua mensagem de origem\n- **ChatGPT** — O reprocessamento substitui os antigos marcadores «ausente da exportação» pelos ficheiros reais, sem duplicados\n\n### 🐛 Corrigido\n- Mensagens contendo apenas um anexo já não mostram [No content found]\n- Cores dos callouts restauradas após a mudança de estilo do Obsidian 1.13.0\n- O prompt de geração é preservado em pedidos de imagem sem um verbo «gerar» explícito\n\n### ℹ️ Nota\n- Quando um ficheiro está ausente do arquivo, o marcador visível permanece — o plugin não consegue recuperar ficheiros que a exportação não contém",
+            "fallback_content": "## ✨ Novidades da v{{version}}\n\n### ✨ Novo\n- **ChatGPT** — As imagens geradas voltam a ser importadas: as exportações recentes incluem-nas na biblioteca de ficheiros; cada imagem é extraída e restaurada na mensagem que a produziu, com o seu prompt\n- **ChatGPT** — Quando a exportação omite a mensagem que apresentava o ficheiro, a imagem é colocada na sua data de criação real numa mensagem mínima do assistente\n- **ChatGPT** — Os documentos gerados (relatórios do Canvas, `.docx`, etc.) são extraídos e ligados na sua mensagem de origem\n- **ChatGPT** — O reprocessamento substitui os antigos marcadores «ausente da exportação» pelos ficheiros reais, sem duplicados\n\n### 🐛 Corrigido\n- Mensagens contendo apenas um anexo já não mostram [No content found]\n- O prompt de geração é preservado em pedidos de imagem sem um verbo «gerar» explícito\n\n### ℹ️ Nota\n- Quando um ficheiro está ausente do arquivo, o marcador visível permanece — o plugin não consegue recuperar ficheiros que a exportação não contém",
             "buttons": {
                 "got_it": "Entendido!"
             }
@@ -525,7 +525,7 @@
     "support_box": {
         "header": "Apoiar este plugin",
         "header_highlight": "Apoiar este plugin",
-        "default_message_emphasis": "O Nexus ultrapassou os 9.000 downloads. Neste momento, apenas cerca de 5 utilizadores por mês fazem doações para apoiar o desenvolvimento.",
+        "default_message_emphasis": "O Nexus ultrapassou os 15.000 downloads. Neste momento, apenas cerca de 5 utilizadores por mês fazem doações para apoiar o desenvolvimento.",
         "default_message": "Mantenho este plugin no meu tempo livre, e manter o meu ecossistema de desenvolvimento a funcionar tem custos contínuos. Adicionar novos providers também exige subscrições pagas para eu poder testar e oferecer suporte fiável.",
         "reality_check": "Se o Nexus é valioso para si, considere uma doação única ou mensal. Obrigado a todas as pessoas que já apoiam o projeto.",
         "button_alt": "Apoiar o meu trabalho"

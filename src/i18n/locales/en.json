@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade Complete - v{{version}}",
-            "fallback_content": "## ✨ What's New in v{{version}}\n\n### ✨ New\n- **ChatGPT** — Generated images are imported again: recent exports include them in the file library; each image is extracted and restored to the message that produced it, with its prompt\n- **ChatGPT** — When the export omits the message that presented the file, the image is placed at its real creation time in a minimal assistant message\n- **ChatGPT** — Generated documents (Canvas reports, `.docx`, etc.) are extracted and linked in their producing message\n- **ChatGPT** — Reprocess replaces old \"not in export\" placeholders with the real files, without duplicates\n\n### 🐛 Fixed\n- Attachment-only messages no longer show [No content found]\n- Callout colors restored after the Obsidian 1.13.0 styling change\n- Generation prompt kept for image requests without an explicit \"generate\" verb\n\n### ℹ️ Note\n- When a file is absent from the archive, the visible placeholder remains — the plugin cannot recover files the export does not contain",
+            "fallback_content": "## ✨ What's New in v{{version}}\n\n### ✨ New\n- **ChatGPT** — Generated images are imported again: recent exports include them in the file library; each image is extracted and restored to the message that produced it, with its prompt\n- **ChatGPT** — When the export omits the message that presented the file, the image is placed at its real creation time in a minimal assistant message\n- **ChatGPT** — Generated documents (Canvas reports, `.docx`, etc.) are extracted and linked in their producing message\n- **ChatGPT** — Reprocess replaces old \"not in export\" placeholders with the real files, without duplicates\n\n### 🐛 Fixed\n- Attachment-only messages no longer show [No content found]\n- Generation prompt kept for image requests without an explicit \"generate\" verb\n\n### ℹ️ Note\n- When a file is absent from the archive, the visible placeholder remains — the plugin cannot recover files the export does not contain",
             "buttons": {
                 "got_it": "Got it!"
             }
@@ -540,7 +540,7 @@
     "support_box": {
         "header": "Support This Plugin",
         "header_highlight": "Support This Plugin",
-        "default_message_emphasis": "Nexus has reached 9,000+ downloads. Right now, only about 5 users per month donate to support development.",
+        "default_message_emphasis": "Nexus has reached 15,000+ downloads. Right now, only about 5 users per month donate to support development.",
         "default_message": "I maintain this plugin in my own time, and keeping my dev ecosystem running has ongoing costs. Adding new providers also requires paid subscriptions so I can test and deliver accurate support.",
         "reality_check": "If Nexus is valuable to you, please consider a one-time or monthly donation. Thank you to everyone already supporting the project.",
         "button_alt": "Support my work"

@@ -9,12 +9,6 @@
  * layer can run in a Node.js environment. Backed by `fs` and `yaml`.
  */
 
-/* eslint-disable @typescript-eslint/no-require-imports -- CJS require() is required; this file runs in Node.js, not a bundled ESM context */
-/* eslint-disable import/no-nodejs-modules -- CLI shim intentionally uses Node.js built-ins (fs, path, crypto) to polyfill Obsidian API */
-/* eslint-disable obsidianmd/no-global-this -- Node.js has no `window`; globalThis is the correct cross-environment global in this context */
-/* eslint-disable obsidianmd/hardcoded-config-path -- running outside Obsidian; Vault API is unavailable, .obsidian path is a best-effort default */
-/* eslint-disable @typescript-eslint/no-explicit-any -- duck-typed Obsidian API shim; types are intentionally loose to match the real API surface */
-
 const fs = require("fs") as typeof import("fs");
 const pathMod = require("path") as typeof import("path");
 const yaml = require("yaml") as typeof import("yaml");

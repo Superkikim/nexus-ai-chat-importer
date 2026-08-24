@@ -32,7 +32,6 @@ ChatGPT now includes some generated images and documents in its new export libra
 ### 🐛 Fixed
 
 - **Attachment-only messages no longer show *[No content found]*** — a message whose content is only an attachment or generated file now renders without the misleading empty-content notice
-- **Callout colors restored after Obsidian 1.13.0** — the styling change in Obsidian 1.13.0 broke the Nexus callout palette; colors render correctly again
 - **Generation prompt kept for raw image requests** — prompts written without an explicit "generate" verb (e.g. a bare visual description) are no longer dropped from the image callout
 
 - **Unicode conversation titles preserved in filenames**
@@ -51,6 +50,25 @@ ChatGPT now includes some generated images and documents in its new export libra
 
 - Whether a given export contains generated files is decided by OpenAI and has varied over time; when a file is absent from the archive, the visible placeholder remains — the plugin cannot recover files the export does not contain
 - No new setting: the behavior is automatic for all import modes (full, selective, incremental, Reprocess)
+
+---
+
+## Version 1.6.9 — Claude Split Export Detection
+
+![Version](https://img.shields.io/badge/version-1.6.9-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🐛 Fixed
+
+- **Claude — New split export detected correctly**
+  - Anthropic now delivers exports as a manifest file listing several ZIPs to download separately, and `users.json` no longer sits next to `conversations.json`
+  - The plugin identified a Claude export by that pairing, so `conversations-000.zip` was read as a ChatGPT export and imported zero conversations
+  - An archive containing nothing but `conversations.json` is now checked against its actual content and imported as Claude
+  - Only `conversations-000.zip` is needed; the projects, memories and light metadata archives contain nothing the plugin uses
+  - All previously supported export formats are unaffected — their detection is unchanged
+
+- **Callout colors restored on Obsidian 1.13+**
+  - Obsidian 1.13.0 changed `--callout-color` to require a real CSS color instead of a bare `R, G, B` triplet, so Nexus callouts rendered with the right icons but no color and no visible border
+  - Both formats are now served: the legacy triplet for older Obsidian, and a real color for 1.13 and later
 
 ---
 

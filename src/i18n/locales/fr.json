@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Mise à niveau terminée - v{{version}}",
-            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### ✨ Nouveau\n- **ChatGPT** — Les images générées sont à nouveau importées : les exports récents les incluent dans la bibliothèque de fichiers ; chaque image est extraite et restituée dans le message qui l'a produite, avec son prompt\n- **ChatGPT** — Quand l'export omet le message qui présentait le fichier, l'image est placée à sa date de création réelle dans un message assistant minimal\n- **ChatGPT** — Les documents générés (rapports Canvas, `.docx`, etc.) sont extraits et liés dans leur message d'origine\n- **ChatGPT** — Le retraitement remplace les anciens placeholders « absent de l'export » par les vrais fichiers, sans doublons\n\n### 🐛 Corrigé\n- Les messages ne contenant qu'une pièce jointe n'affichent plus [No content found]\n- Couleurs des callouts restaurées après le changement de style d'Obsidian 1.13.0\n- Le prompt de génération est conservé pour les demandes d'image sans verbe « générer » explicite\n\n### ℹ️ Note\n- Quand un fichier est absent de l'archive, le placeholder visible est conservé — le plugin ne peut pas récupérer des fichiers que l'export ne contient pas",
+            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### ✨ Nouveau\n- **ChatGPT** — Les images générées sont à nouveau importées : les exports récents les incluent dans la bibliothèque de fichiers ; chaque image est extraite et restituée dans le message qui l'a produite, avec son prompt\n- **ChatGPT** — Quand l'export omet le message qui présentait le fichier, l'image est placée à sa date de création réelle dans un message assistant minimal\n- **ChatGPT** — Les documents générés (rapports Canvas, `.docx`, etc.) sont extraits et liés dans leur message d'origine\n- **ChatGPT** — Le retraitement remplace les anciens placeholders « absent de l'export » par les vrais fichiers, sans doublons\n\n### 🐛 Corrigé\n- Les messages ne contenant qu'une pièce jointe n'affichent plus [No content found]\n- Le prompt de génération est conservé pour les demandes d'image sans verbe « générer » explicite\n\n### ℹ️ Note\n- Quand un fichier est absent de l'archive, le placeholder visible est conservé — le plugin ne peut pas récupérer des fichiers que l'export ne contient pas",
             "buttons": {
                 "got_it": "Compris !"
             }
@@ -525,7 +525,7 @@
     "support_box": {
         "header": "Soutenir ce plugin",
         "header_highlight": "Soutenir ce plugin",
-        "default_message_emphasis": "Nexus a dépassé les 9 000 téléchargements. Aujourd'hui, seulement environ 5 utilisateurs par mois font un don pour soutenir le développement.",
+        "default_message_emphasis": "Nexus a dépassé les 15 000 téléchargements. Aujourd'hui, seulement environ 5 utilisateurs par mois font un don pour soutenir le développement.",
         "default_message": "Je maintiens ce plugin sur mon temps personnel, et maintenir mon environnement de développement entraîne des coûts continus. Ajouter de nouveaux providers nécessite aussi des abonnements payants afin de tester et de fournir un support fiable.",
         "reality_check": "Si Nexus vous est utile, pensez à faire un don ponctuel ou mensuel. Merci à toutes les personnes qui soutiennent déjà le projet.",
         "button_alt": "Soutenir mon travail"

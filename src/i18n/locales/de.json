@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade abgeschlossen – v{{version}}",
-            "fallback_content": "## ✨ Neu in v{{version}}\n\n### ✨ Neu\n- **ChatGPT** — Generierte Bilder werden wieder importiert: aktuelle Exporte enthalten sie in der Dateibibliothek; jedes Bild wird extrahiert und samt Prompt in der Nachricht wiederhergestellt, die es erzeugt hat\n- **ChatGPT** — Fehlt im Export die Nachricht, die die Datei präsentierte, wird das Bild zu seiner tatsächlichen Erstellungszeit in einer minimalen Assistenten-Nachricht platziert\n- **ChatGPT** — Generierte Dokumente (Canvas-Berichte, `.docx` usw.) werden extrahiert und in ihrer Ursprungsnachricht verlinkt\n- **ChatGPT** — Die Neuverarbeitung ersetzt alte „nicht im Export\"-Platzhalter durch die echten Dateien, ohne Duplikate\n\n### 🐛 Behoben\n- Nachrichten, die nur einen Anhang enthalten, zeigen nicht mehr [No content found]\n- Callout-Farben nach der Stiländerung in Obsidian 1.13.0 wiederhergestellt\n- Der Generierungs-Prompt bleibt auch bei Bildanfragen ohne explizites „generieren\" erhalten\n\n### ℹ️ Hinweis\n- Fehlt eine Datei im Archiv, bleibt der sichtbare Platzhalter bestehen — das Plugin kann keine Dateien wiederherstellen, die der Export nicht enthält",
+            "fallback_content": "## ✨ Neu in v{{version}}\n\n### ✨ Neu\n- **ChatGPT** — Generierte Bilder werden wieder importiert: aktuelle Exporte enthalten sie in der Dateibibliothek; jedes Bild wird extrahiert und samt Prompt in der Nachricht wiederhergestellt, die es erzeugt hat\n- **ChatGPT** — Fehlt im Export die Nachricht, die die Datei präsentierte, wird das Bild zu seiner tatsächlichen Erstellungszeit in einer minimalen Assistenten-Nachricht platziert\n- **ChatGPT** — Generierte Dokumente (Canvas-Berichte, `.docx` usw.) werden extrahiert und in ihrer Ursprungsnachricht verlinkt\n- **ChatGPT** — Die Neuverarbeitung ersetzt alte „nicht im Export\"-Platzhalter durch die echten Dateien, ohne Duplikate\n\n### 🐛 Behoben\n- Nachrichten, die nur einen Anhang enthalten, zeigen nicht mehr [No content found]\n- Der Generierungs-Prompt bleibt auch bei Bildanfragen ohne explizites „generieren\" erhalten\n\n### ℹ️ Hinweis\n- Fehlt eine Datei im Archiv, bleibt der sichtbare Platzhalter bestehen — das Plugin kann keine Dateien wiederherstellen, die der Export nicht enthält",
             "buttons": {
                 "got_it": "Verstanden!"
             }
@@ -525,7 +525,7 @@
     "support_box": {
         "header": "Dieses Plugin unterstützen",
         "header_highlight": "Dieses Plugin unterstützen",
-        "default_message_emphasis": "Nexus hat über 9.000 Downloads erreicht. Derzeit spenden nur etwa 5 Nutzer pro Monat, um die Entwicklung zu unterstützen.",
+        "default_message_emphasis": "Nexus hat über 15.000 Downloads erreicht. Derzeit spenden nur etwa 5 Nutzer pro Monat, um die Entwicklung zu unterstützen.",
         "default_message": "Ich pflege dieses Plugin in meiner Freizeit, und meine Entwicklungsumgebung verursacht laufende Kosten. Das Hinzufügen neuer Provider erfordert außerdem kostenpflichtige Abonnements, damit ich zuverlässig testen und verlässlichen Support liefern kann.",
         "reality_check": "Wenn Nexus für Sie wertvoll ist, unterstützen Sie das Projekt bitte mit einer einmaligen oder monatlichen Spende. Danke an alle, die das Projekt bereits unterstützen.",
         "button_alt": "Meine Arbeit unterstützen"

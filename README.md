@@ -88,7 +88,6 @@ ChatGPT now includes some generated images and documents in its new export libra
 
 🐛 **Fixed**
 - Attachment-only messages no longer show *[No content found]*
-- Callout colors restored after the Obsidian 1.13.0 styling change
 - Generation prompt kept for raw image requests that carry no explicit "generate" verb
 - Missing-image placeholder now says *this export did not include the image*, instead of claiming generated images are never included
 - Conversation filenames now preserve leading non-ASCII letters, so titles beginning with Cyrillic, Chinese, and other Unicode scripts are no longer trimmed
@@ -97,6 +96,16 @@ ChatGPT now includes some generated images and documents in its new export libra
 > ⚠️ **Note**: whether a given export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the plugin keeps the visible placeholder — it cannot recover files the export does not contain, and future OpenAI export behavior may change again.
 
 💡 **Tip**: to enrich notes imported from an older export, request a fresh ChatGPT export, re-import it, and choose **Reprocess** — placeholders are replaced by the real files, and the conversation is rebuilt without duplicate messages.
+
+---
+
+### v1.6.9 — Claude split export detection
+
+🐛 **Fixed**
+- **Claude — New export layout supported** — Anthropic now delivers a manifest listing several ZIPs, and `users.json` moved out of the conversations archive; `conversations-000.zip` was therefore misread as a ChatGPT export and imported nothing
+- Import `conversations-000.zip` directly — the projects, memories and light metadata archives contain nothing the plugin uses
+- Detection of all previously supported export formats is unchanged
+- **Callout colors on Obsidian 1.13+** — Obsidian 1.13.0 changed `--callout-color` to require a real CSS color, leaving Nexus callouts without color or border; both the old and the new format are now served
 
 ---
 
@@ -182,7 +191,7 @@ ChatGPT now includes some generated images and documents in its new export libra
 
 ## ☕ Support My Work
 
-Nexus has reached 9,000+ downloads. Right now, only about 5 users per month donate to support development.
+Nexus has reached 15,000+ downloads. Right now, only about 5 users per month donate to support development.
 
 I maintain this plugin in my own time, and keeping my dev ecosystem running has ongoing costs. Adding new providers also requires paid subscriptions so I can test and deliver accurate support.
 

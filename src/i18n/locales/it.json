@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Aggiornamento completato - v{{version}}",
-            "fallback_content": "## ✨ Novità della v{{version}}\n\n### ✨ Nuovo\n- **ChatGPT** — Le immagini generate vengono di nuovo importate: le esportazioni recenti le includono nella libreria dei file; ogni immagine viene estratta e ripristinata nel messaggio che l'ha prodotta, con il suo prompt\n- **ChatGPT** — Quando l'esportazione omette il messaggio che presentava il file, l'immagine viene collocata alla sua data di creazione reale in un messaggio minimale dell'assistente\n- **ChatGPT** — I documenti generati (report Canvas, `.docx`, ecc.) vengono estratti e collegati nel loro messaggio di origine\n- **ChatGPT** — La rielaborazione sostituisce i vecchi segnaposto «assente dall'esportazione» con i file reali, senza duplicati\n\n### 🐛 Corretto\n- I messaggi che contengono solo un allegato non mostrano più [No content found]\n- Colori dei callout ripristinati dopo la modifica di stile di Obsidian 1.13.0\n- Il prompt di generazione viene conservato per le richieste di immagine senza un verbo «genera» esplicito\n\n### ℹ️ Nota\n- Quando un file è assente dall'archivio, il segnaposto visibile rimane — il plugin non può recuperare file che l'esportazione non contiene",
+            "fallback_content": "## ✨ Novità della v{{version}}\n\n### ✨ Nuovo\n- **ChatGPT** — Le immagini generate vengono di nuovo importate: le esportazioni recenti le includono nella libreria dei file; ogni immagine viene estratta e ripristinata nel messaggio che l'ha prodotta, con il suo prompt\n- **ChatGPT** — Quando l'esportazione omette il messaggio che presentava il file, l'immagine viene collocata alla sua data di creazione reale in un messaggio minimale dell'assistente\n- **ChatGPT** — I documenti generati (report Canvas, `.docx`, ecc.) vengono estratti e collegati nel loro messaggio di origine\n- **ChatGPT** — La rielaborazione sostituisce i vecchi segnaposto «assente dall'esportazione» con i file reali, senza duplicati\n\n### 🐛 Corretto\n- I messaggi che contengono solo un allegato non mostrano più [No content found]\n- Il prompt di generazione viene conservato per le richieste di immagine senza un verbo «genera» esplicito\n\n### ℹ️ Nota\n- Quando un file è assente dall'archivio, il segnaposto visibile rimane — il plugin non può recuperare file che l'esportazione non contiene",
             "buttons": {
                 "got_it": "Capito!"
             }
@@ -525,7 +525,7 @@
     "support_box": {
         "header": "Supporta questo plugin",
         "header_highlight": "Supporta questo plugin",
-        "default_message_emphasis": "Nexus ha superato i 9.000 download. Al momento, solo circa 5 utenti al mese fanno una donazione per sostenere lo sviluppo.",
+        "default_message_emphasis": "Nexus ha superato i 15.000 download. Al momento, solo circa 5 utenti al mese fanno una donazione per sostenere lo sviluppo.",
         "default_message": "Mantengo questo plugin nel mio tempo libero e mantenere operativo il mio ambiente di sviluppo comporta costi continui. Aggiungere nuovi provider richiede anche abbonamenti a pagamento per poter testare e offrire un supporto affidabile.",
         "reality_check": "Se Nexus ti è utile, considera una donazione una tantum o mensile. Grazie a tutte le persone che già supportano il progetto.",
         "button_alt": "Supportare il mio lavoro"

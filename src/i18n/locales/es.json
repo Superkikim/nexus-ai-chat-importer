@@ -322,7 +322,7 @@
         },
         "complete_modal": {
             "title": "✅ Actualización completada - v{{version}}",
-            "fallback_content": "## ✨ Novedades en v{{version}}\n\n### ✨ Nuevo\n- **ChatGPT** — Las imágenes generadas se importan de nuevo: las exportaciones recientes las incluyen en la biblioteca de archivos; cada imagen se extrae y se restaura en el mensaje que la produjo, con su prompt\n- **ChatGPT** — Cuando la exportación omite el mensaje que presentaba el archivo, la imagen se coloca en su fecha de creación real dentro de un mensaje mínimo del asistente\n- **ChatGPT** — Los documentos generados (informes de Canvas, `.docx`, etc.) se extraen y se enlazan en su mensaje de origen\n- **ChatGPT** — El reprocesamiento reemplaza los antiguos marcadores «ausente de la exportación» por los archivos reales, sin duplicados\n\n### 🐛 Corregido\n- Los mensajes que solo contienen un adjunto ya no muestran [No content found]\n- Colores de los callouts restaurados tras el cambio de estilo de Obsidian 1.13.0\n- El prompt de generación se conserva en solicitudes de imagen sin un verbo «generar» explícito\n\n### ℹ️ Nota\n- Cuando un archivo no está en el archivo comprimido, el marcador visible se mantiene — el plugin no puede recuperar archivos que la exportación no contiene",
+            "fallback_content": "## ✨ Novedades en v{{version}}\n\n### ✨ Nuevo\n- **ChatGPT** — Las imágenes generadas se importan de nuevo: las exportaciones recientes las incluyen en la biblioteca de archivos; cada imagen se extrae y se restaura en el mensaje que la produjo, con su prompt\n- **ChatGPT** — Cuando la exportación omite el mensaje que presentaba el archivo, la imagen se coloca en su fecha de creación real dentro de un mensaje mínimo del asistente\n- **ChatGPT** — Los documentos generados (informes de Canvas, `.docx`, etc.) se extraen y se enlazan en su mensaje de origen\n- **ChatGPT** — El reprocesamiento reemplaza los antiguos marcadores «ausente de la exportación» por los archivos reales, sin duplicados\n\n### 🐛 Corregido\n- Los mensajes que solo contienen un adjunto ya no muestran [No content found]\n- El prompt de generación se conserva en solicitudes de imagen sin un verbo «generar» explícito\n\n### ℹ️ Nota\n- Cuando un archivo no está en el archivo comprimido, el marcador visible se mantiene — el plugin no puede recuperar archivos que la exportación no contiene",
             "buttons": {
                 "got_it": "¡Entendido!"
             }
@@ -525,7 +525,7 @@
     "support_box": {
         "header": "Apoyar este plugin",
         "header_highlight": "Apoyar este plugin",
-        "default_message_emphasis": "Nexus ha superado las 9.000 descargas. Ahora mismo, solo unas 5 personas al mes donan para apoyar el desarrollo.",
+        "default_message_emphasis": "Nexus ha superado las 15.000 descargas. Ahora mismo, solo unas 5 personas al mes donan para apoyar el desarrollo.",
         "default_message": "Mantengo este plugin en mi tiempo libre, y mantener en marcha mi entorno de desarrollo tiene costes continuos. Añadir nuevos proveedores también requiere suscripciones de pago para poder probar y ofrecer soporte fiable.",
         "reality_check": "Si Nexus te resulta valioso, considera hacer una donación puntual o mensual. Gracias a todas las personas que ya apoyan el proyecto.",
         "button_alt": "Apoyar mi trabajo"
