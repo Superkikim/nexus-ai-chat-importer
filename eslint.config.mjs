@@ -14,6 +14,10 @@ export default defineConfig([
             // Build scripts are plain JS — not Obsidian plugin source.
             "**/*.mjs",
             "**/*.cjs",
+            // Test-runner config: outside every tsconfig project, so the
+            // type-aware rules cannot be applied to it.
+            "**/vitest.config.ts",
+            "vitest.setup.ts",
         ],
     },
 
