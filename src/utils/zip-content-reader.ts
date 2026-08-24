@@ -1,7 +1,7 @@
 import { NexusAiChatImporterError } from "../models/errors";
 import { logger } from "../logger";
 import { StreamingJsonArrayParser } from "./streaming-json-array-parser";
-import { ZipArchiveReader } from "./zip-loader";
+import { ZipArchiveReader, ZipEntryHandle } from "./zip-loader";
 import { t } from "../i18n";
 
 const DEFAULT_LARGE_JSON_THRESHOLD_BYTES = 32 * 1024 * 1024; // 32 MB
@@ -218,6 +218,109 @@ export function classifyArchiveEntries(
     return {
         supported: true,
         provider: detectedProvider,
+        reason: "supported",
+    };
+}
+
+const CLAUDE_SOLO_PROBE_CHARS = 64 * 1024;
+
+function isArchiveNoiseEntry(name: string): boolean {
+    if (name.endsWith("/")) return true;
+    const lower = name.toLowerCase();
+    return lower.startsWith("__macosx/") || lower.endsWith(".ds_store");
+}
+
+/**
+ * Claude's split export ships `conversations.json` as the archive's only
+ * entry (`users.json` now lives in a separate ZIP). Every earlier Claude
+ * export, and every ChatGPT export, carries additional entries, so this
+ * signature is unique to the new layout.
+ */
+export function isSoloConversationsArchive(fileNames: string[]): boolean {
+    const meaningful = fileNames.filter((name) => !isArchiveNoiseEntry(name));
+    return meaningful.length === 1 && meaningful[0] === "conversations.json";
+}
+
+/**
+ * Structural check on the head of a `conversations.json` payload.
+ *
+ * Both providers store a bare top-level array, so array-ness alone proves
+ * nothing; the discriminating signal is `chat_messages` (Claude) versus
+ * `mapping` (ChatGPT) on the conversation objects.
+ */
+export function looksLikeClaudeConversationsPayload(head: string): boolean {
+    if (!head.trimStart().startsWith("[")) return false;
+    return head.includes('"chat_messages"') && !head.includes('"mapping"');
+}
+
+async function readEntryHead(
+    entry: ZipEntryHandle,
+    maxChars: number
+): Promise<string> {
+    if (entry.readTextChunks) {
+        let head = "";
+        for await (const chunk of entry.readTextChunks()) {
+            head += chunk;
+            if (head.length >= maxChars) break;
+        }
+        return head.slice(0, maxChars);
+    }
+
+    const text = await entry.readText();
+    return text.slice(0, maxChars);
+}
+
+/**
+ * Name-based classification, with a content probe for the one layout names
+ * cannot resolve: an archive holding nothing but `conversations.json`.
+ *
+ * Any archive recognized by {@link classifyArchiveEntries} is returned
+ * untouched, so previously supported exports keep their existing verdict.
+ */
+export async function resolveArchiveClassification(
+    zip: ZipArchiveReader,
+    fileNames: string[],
+    forcedProvider?: string
+): Promise<ArchiveClassification> {
+    const nameClassification = classifyArchiveEntries(
+        fileNames,
+        forcedProvider
+    );
+
+    if (!isSoloConversationsArchive(fileNames)) {
+        return nameClassification;
+    }
+
+    const entry = zip.get("conversations.json");
+    if (!entry) return nameClassification;
+
+    let head: string;
+    try {
+        head = await readEntryHead(entry, CLAUDE_SOLO_PROBE_CHARS);
+    } catch (error) {
+        logger.warn("Failed to probe solo conversations.json archive", {
+            error: error instanceof Error ? error.message : String(error),
+        });
+        return nameClassification;
+    }
+
+    if (!looksLikeClaudeConversationsPayload(head)) {
+        return nameClassification;
+    }
+
+    if (forcedProvider && forcedProvider !== "claude") {
+        return {
+            supported: false,
+            reason: "provider-mismatch",
+            message: getArchiveProviderMismatchMessage(
+                forcedProvider as SupportedArchiveProvider
+            ),
+        };
+    }
+
+    return {
+        supported: true,
+        provider: "claude",
         reason: "supported",
     };
 }

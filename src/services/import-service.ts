@@ -39,7 +39,7 @@ import { decideArchiveMode, ArchiveModeDecision } from "./archive-mode-decider";
 import type NexusAiChatImporterPlugin from "../main";
 import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
 import {
-    classifyArchiveEntries,
+    resolveArchiveClassification,
     extractConversationsStream,
     extractRawConversations,
     getArchiveEmptyMessage,
@@ -436,7 +436,8 @@ export class ImportService {
             const zip = await createZipArchiveReader(file, entryFilter);
             const entries = await zip.listEntries();
             const fileNames = entries.map((entry) => entry.path);
-            const classification = classifyArchiveEntries(
+            const classification = await resolveArchiveClassification(
+                zip,
                 fileNames,
                 forcedProvider
             );
