@@ -5,9 +5,7 @@
  * Supports ChatGPT, Claude, and Mistral Vibe providers.
  */
 
-// eslint-disable-next-line import/no-nodejs-modules -- CLI-only file; Node.js built-ins are required
 import * as fs from "fs";
-// eslint-disable-next-line import/no-nodejs-modules -- CLI-only file; Node.js built-ins are required
 import * as path from "path";
 import { App, Plugin } from "obsidian";
 import { DEFAULT_SETTINGS } from "../../src/config/constants";
@@ -19,7 +17,8 @@ import { ImportReport } from "../../src/models/import-report";
 import { Logger } from "../../src/logger";
 import pluginManifest from "../../manifest.json";
 
-// eslint-disable-next-line obsidianmd/hardcoded-config-path -- running outside Obsidian; Vault API unavailable, .obsidian path is a best-effort default
+// Running outside Obsidian: the Vault API is unavailable, so this is a
+// best-effort default for locating the plugin config.
 const OBSIDIAN_CONFIG_DIR = ".obsidian";
 
 export interface ImportOptions {
@@ -99,7 +98,7 @@ function readPluginConfig(vaultPath: string): Partial<PluginSettings> {
  * Settings are layered: DEFAULT_SETTINGS → saved plugin config → CLI flags.
  * CLI flags only override when explicitly provided (not undefined).
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- returns a duck-typed Plugin; no interface captures the injected properties (settings, logger, etc.)
+// Returns a duck-typed Plugin: no interface captures the injected properties.
 function createMockPlugin(opts: ImportOptions): any {
     const app = new App(opts.vault);
 
@@ -132,13 +131,11 @@ function createMockPlugin(opts: ImportOptions): any {
             settings.messageTimestampFormat = "locale";
         } else {
             settings.useCustomMessageTimestampFormat = true;
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- timestampFormat is a free-form string that the plugin accepts at runtime
             settings.messageTimestampFormat = opts.timestampFormat as any;
         }
     }
 
     // Create a Plugin-like object
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Plugin is extended with duck-typed CLI properties not in the type definition
     const plugin = new Plugin(app, manifest) as any;
     plugin.settings = settings;
     plugin.logger = new Logger();
@@ -256,7 +253,6 @@ export async function runImport(opts: ImportOptions): Promise<void> {
         }
         try {
             await importService.handleZipFile(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any -- NodeFile satisfies the shape ImportService needs (arrayBuffer, name, size) but doesn't extend File
                 file as any,
                 provider,
                 undefined, // all conversations
