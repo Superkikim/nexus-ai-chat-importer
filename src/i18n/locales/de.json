@@ -496,6 +496,7 @@
         "import_analyzing": "Gespräche aus {{count}} Datei(en) werden analysiert...",
         "import_no_new": "Keine neuen oder aktualisierten Gespräche gefunden. Alle Gespräche sind bereits aktuell.",
         "import_starting": "{{count}} Gespräche werden importiert ({{new}} neu, {{updated}} aktualisiert)...",
+        "import_starting_reprocess": "{{count}} Gespräche werden importiert ({{rebuilt}} neu erstellt)…",
         "import_starting_selected": "{{count}} ausgewählte Gespräche aus {{files}} Datei(en) werden importiert...",
         "import_completed_fallback": "Import abgeschlossen. {{created}} erstellt, {{updated}} aktualisiert.",
         "import_error": "Fehler beim Import: {{error}}",

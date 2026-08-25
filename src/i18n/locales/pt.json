@@ -496,6 +496,7 @@
         "import_analyzing": "A analisar conversas de {{count}} ficheiro(s)...",
         "import_no_new": "Não foram encontradas conversas novas ou atualizadas. Todas as conversas já estão atualizadas.",
         "import_starting": "A importar {{count}} conversas ({{new}} novas, {{updated}} atualizadas)...",
+        "import_starting_reprocess": "A importar {{count}} conversas ({{rebuilt}} reconstruídas)…",
         "import_starting_selected": "A importar {{count}} conversas selecionadas de {{files}} ficheiro(s)...",
         "import_completed_fallback": "Importação concluída. {{created}} criadas, {{updated}} atualizadas.",
         "import_error": "Erro durante a importação: {{error}}",

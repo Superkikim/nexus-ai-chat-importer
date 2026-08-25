@@ -55,6 +55,8 @@ export interface AnalysisInfo {
     conversationsNew: number;
     conversationsUpdated: number;
     conversationsIgnored: number;
+    /** Unchanged conversations pulled back in because a rebuild was requested. */
+    conversationsReprocessed: number;
 }
 
 export interface ConversationMetadata {
@@ -225,7 +227,13 @@ export class ConversationMetadataExtractor {
     async extractMetadataFromMultipleZips(
         files: File[],
         forcedProvider?: string,
-        existingConversations?: Map<string, ConversationCatalogEntry>
+        existingConversations?: Map<string, ConversationCatalogEntry>,
+        /**
+         * Keep conversations whose update_time has not moved. Without this an
+         * unchanged conversation is dropped here, long before any per-import
+         * reprocess flag is consulted, so a rebuild could never be requested.
+         */
+        includeUnchanged = false
     ): Promise<MetadataExtractionResult> {
         const batchStartedAt = Date.now();
         this.metadataLogger.debug(`Begin metadata extraction batch`, {
@@ -418,7 +426,8 @@ export class ConversationMetadataExtractor {
 
         const filterResult = this.filterConversationsForSelection(
             Array.from(conversationMap.values()),
-            existingConversations
+            existingConversations,
+            includeUnchanged
         );
 
         for (const conversation of filterResult.conversations) {
@@ -457,6 +466,7 @@ export class ConversationMetadataExtractor {
                 conversationsNew: filterResult.newCount,
                 conversationsUpdated: filterResult.updatedCount,
                 conversationsIgnored: filterResult.ignoredCount,
+                conversationsReprocessed: filterResult.reprocessedCount,
             },
             fileStats: fileStatsMap,
             supportedFiles,
@@ -822,19 +832,22 @@ export class ConversationMetadataExtractor {
 
     private filterConversationsForSelection(
         bestVersions: ConversationMetadata[],
-        existingConversations?: Map<string, ConversationCatalogEntry>
+        existingConversations?: Map<string, ConversationCatalogEntry>,
+        includeUnchanged = false
     ): {
         conversations: ConversationMetadata[];
         ignoredConversations: ConversationMetadata[];
         newCount: number;
         updatedCount: number;
         ignoredCount: number;
+        reprocessedCount: number;
     } {
         const conversationsForSelection: ConversationMetadata[] = [];
         const ignoredConversations: ConversationMetadata[] = [];
         let newCount = 0;
         let updatedCount = 0;
         let ignoredCount = 0;
+        let reprocessedCount = 0;
 
         for (const conversation of bestVersions) {
             if (!existingConversations) {
@@ -870,13 +883,22 @@ export class ConversationMetadataExtractor {
                 conversationsForSelection.push(conversation);
                 updatedCount++;
             } else {
+                // Status stays "unchanged" either way, so the selection dialog
+                // keeps telling the truth about what is already in the vault.
                 conversation.existenceStatus = "unchanged";
-                ignoredConversations.push(conversation);
-                ignoredCount++;
+                if (includeUnchanged) {
+                    conversation.hasNewerContent = false;
+                    conversationsForSelection.push(conversation);
+                    reprocessedCount++;
+                } else {
+                    ignoredConversations.push(conversation);
+                    ignoredCount++;
+                }
             }
         }
 
         return {
+            reprocessedCount,
             conversations: conversationsForSelection,
             ignoredConversations,
             newCount,

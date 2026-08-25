@@ -496,6 +496,7 @@
         "import_analyzing": "{{count}} 件のファイルから会話を分析中...",
         "import_no_new": "新規または更新された会話は見つかりませんでした。すべての会話は最新の状態です。",
         "import_starting": "{{count}} 件の会話をインポート中（新規 {{new}} 件、更新済み {{updated}} 件）...",
+        "import_starting_reprocess": "{{count}} 件の会話をインポートしています（{{rebuilt}} 件を再構築）…",
         "import_starting_selected": "{{files}} 件のファイルから選択した {{count}} 件の会話をインポート中...",
         "import_completed_fallback": "インポートが完了しました。{{created}} 件を作成、{{updated}} 件を更新。",
         "import_error": "インポート中にエラーが発生しました：{{error}}",

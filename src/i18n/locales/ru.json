@@ -496,6 +496,7 @@
         "import_analyzing": "Анализ разговоров из {{count}} файл(ов)...",
         "import_no_new": "Новых или обновлённых разговоров не найдено. Все разговоры уже актуальны.",
         "import_starting": "Импорт {{count}} разговоров ({{new}} новых, {{updated}} обновлённых)...",
+        "import_starting_reprocess": "Импорт {{count}} разговоров ({{rebuilt}} пересоздано)…",
         "import_starting_selected": "Импорт {{count}} выбранных разговоров из {{files}} файл(ов)...",
         "import_completed_fallback": "Импорт завершён. {{created}} создано, {{updated}} обновлено.",
         "import_error": "Ошибка во время импорта: {{error}}",

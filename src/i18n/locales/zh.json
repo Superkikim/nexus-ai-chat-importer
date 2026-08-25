@@ -496,6 +496,7 @@
         "import_analyzing": "正在分析来自 {{count}} 个文件的对话...",
         "import_no_new": "未发现新的或已更新的对话，所有对话均已是最新状态。",
         "import_starting": "正在导入 {{count}} 条对话（{{new}} 条新建，{{updated}} 条已更新）...",
+        "import_starting_reprocess": "正在导入 {{count}} 个对话（重建 {{rebuilt}} 个）…",
         "import_starting_selected": "正在从 {{files}} 个文件中导入 {{count}} 条已选对话...",
         "import_completed_fallback": "导入完成。已创建 {{created}} 条，已更新 {{updated}} 条。",
         "import_error": "导入时发生错误：{{error}}",

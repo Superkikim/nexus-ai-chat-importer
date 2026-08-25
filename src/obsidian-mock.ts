@@ -67,3 +67,15 @@ export async function requestUrl(
         text: async () => "",
     };
 }
+
+/**
+ * Desktop-shaped runtime flags. Code paths that branch on Platform would
+ * otherwise throw in tests, which is what kept the ZIP analysis path
+ * untested.
+ */
+export const Platform = {
+    isMobile: false,
+    isMobileApp: false,
+    isDesktop: true,
+    isDesktopApp: true,
+};

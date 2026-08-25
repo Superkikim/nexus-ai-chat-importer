@@ -496,6 +496,7 @@
         "import_analyzing": "{{count}}개 파일에서 대화를 분석하는 중...",
         "import_no_new": "새로운 대화나 업데이트된 대화가 없습니다. 모든 대화가 이미 최신 상태입니다.",
         "import_starting": "{{count}}개 대화를 가져오는 중 (신규 {{new}}개, 업데이트됨 {{updated}}개)...",
+        "import_starting_reprocess": "대화 {{count}}개를 가져오는 중입니다 ({{rebuilt}}개 다시 생성)…",
         "import_starting_selected": "{{files}}개 파일에서 선택한 {{count}}개 대화를 가져오는 중...",
         "import_completed_fallback": "가져오기 완료. {{created}}개 생성됨, {{updated}}개 업데이트됨.",
         "import_error": "가져오는 중 오류 발생: {{error}}",

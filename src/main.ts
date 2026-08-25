@@ -508,7 +508,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         try {
             const isMobile = this.isMobileTaskQueueMode();
             if (isMobile) {
-                await this.handleImportAllMobileSequential(files, provider);
+                await this.handleImportAllMobileSequential(
+                    files,
+                    provider,
+                    forceReprocess
+                );
                 return;
             }
 
@@ -551,7 +555,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await metadataExtractor.extractMetadataFromMultipleZips(
                     files,
                     provider,
-                    existingConversations
+                    existingConversations,
+                    forceReprocess
                 );
             this.logIgnoredArchives(
                 extractionResult.ignoredArchives,
@@ -612,19 +617,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 return;
             }
 
-            // Auto-select ALL conversations (NEW + UPDATED)
+            // Auto-select ALL conversations (NEW + UPDATED, plus unchanged
+            // ones when a rebuild was requested).
             const allIds = extractionResult.conversations.map((c) => c.id);
 
             const newCount =
                 extractionResult.analysisInfo?.conversationsNew ?? 0;
             const updatedCount =
                 extractionResult.analysisInfo?.conversationsUpdated ?? 0;
+            const reprocessedCount =
+                extractionResult.analysisInfo?.conversationsReprocessed ?? 0;
             new Notice(
-                t("notices.import_starting", {
-                    count: String(allIds.length),
-                    new: String(newCount),
-                    updated: String(updatedCount),
-                })
+                reprocessedCount > 0
+                    ? t("notices.import_starting_reprocess", {
+                          count: String(allIds.length),
+                          rebuilt: String(reprocessedCount),
+                      })
+                    : t("notices.import_starting", {
+                          count: String(allIds.length),
+                          new: String(newCount),
+                          updated: String(updatedCount),
+                      })
             );
 
             // Group conversations by file and import
@@ -963,7 +976,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await metadataExtractor.extractMetadataFromMultipleZips(
                     mobileFiles,
                     provider,
-                    existingConversations
+                    existingConversations,
+                    forceReprocess
                 );
             this.logIgnoredArchives(
                 extractionResult.ignoredArchives,
