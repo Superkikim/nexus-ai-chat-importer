@@ -70,6 +70,11 @@
             "selective_label": "Gezielt auswählen",
             "selective_description": "Gespräche in der Vorschau anzeigen und auswählen"
         },
+        "reprocess": {
+            "label": "Vorhandene Notizen neu verarbeiten",
+            "description": "Erstellt bereits im Tresor vorhandene Notizen neu, statt sie zu überspringen. Nach einer Plugin-Aktualisierung verwenden, um neue Funktionen zu übernehmen.",
+            "warning": "Manuelle Änderungen an diesen Notizen gehen verloren."
+        },
         "file_area": {
             "section_title": "Dateien auswählen",
             "drop_text_default": "ZIP-Dateien hier ablegen oder zum Durchsuchen klicken",

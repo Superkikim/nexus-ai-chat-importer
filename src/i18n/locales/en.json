@@ -70,6 +70,11 @@
             "selective_label": "Select Specific",
             "selective_description": "Preview and choose conversations"
         },
+        "reprocess": {
+            "label": "Reprocess existing notes",
+            "description": "Rebuilds notes already in your vault instead of skipping them. Use this after a plugin update to pick up new features.",
+            "warning": "Manual edits to those notes will be lost."
+        },
         "file_area": {
             "section_title": "Select Files",
             "drop_text_default": "Drop ZIP files here or click to browse",

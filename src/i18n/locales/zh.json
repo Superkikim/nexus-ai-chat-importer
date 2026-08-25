@@ -70,6 +70,11 @@
             "selective_label": "选择性导入",
             "selective_description": "预览并选择要导入的对话"
         },
+        "reprocess": {
+            "label": "重新处理已有笔记",
+            "description": "重建库中已存在的笔记，而不是跳过它们。在插件更新后使用，以应用新功能。",
+            "warning": "这些笔记中的手动修改将会丢失。"
+        },
         "file_area": {
             "section_title": "选择文件",
             "drop_text_default": "将 ZIP 文件拖放至此处，或点击浏览",

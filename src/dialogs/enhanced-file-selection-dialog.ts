@@ -29,6 +29,7 @@ import { t } from "../i18n";
 export class EnhancedFileSelectionDialog extends Modal {
     private selectedFiles: File[] = [];
     private importMode: ImportMode = "all";
+    private reprocess = false;
     private provider: string;
     private onFileSelectionComplete: (result: FileSelectionResult) => void;
     private dragCounter = 0;
@@ -170,6 +171,59 @@ export class EnhancedFileSelectionDialog extends Modal {
             this.importMode = "selective";
             this.updateImportModeDescription();
             this.updateImportModeBoxes();
+        });
+
+        this.createReprocessToggle(section);
+    }
+
+    /**
+     * Opt-in rebuild of notes already in the vault.
+     *
+     * Shown in both import modes: selecting an already-imported conversation in
+     * "Select Specific" mode already forces a rebuild, so a visible control
+     * makes that rule explicit rather than something the user has to discover.
+     */
+    private createReprocessToggle(container: HTMLElement) {
+        const box = container.createDiv("nexus-reprocess-option");
+        box.toggleClass("is-selected", this.reprocess);
+
+        const checkbox = box.createEl("input", { type: "checkbox" });
+        checkbox.id = "import-reprocess";
+        checkbox.checked = this.reprocess;
+        checkbox.addClass("nexus-reprocess-checkbox");
+
+        const content = box.createDiv({ cls: "nexus-option-box-content" });
+
+        const label = content.createEl("label", {
+            cls: "nexus-option-box-label",
+        });
+        label.htmlFor = "import-reprocess";
+        label.textContent = t("file_selection.reprocess.label");
+
+        const description = content.createDiv({
+            cls: "nexus-option-box-description",
+        });
+        description.textContent = t("file_selection.reprocess.description");
+
+        const warning = content.createDiv({
+            cls: "nexus-reprocess-warning",
+        });
+        warning.textContent = t("file_selection.reprocess.warning");
+
+        const sync = () => {
+            this.reprocess = checkbox.checked;
+            box.toggleClass("is-selected", this.reprocess);
+        };
+
+        checkbox.addEventListener("change", sync);
+
+        // The label and the checkbox already toggle natively; only clicks on
+        // the surrounding box need to be forwarded, or the state flips twice.
+        box.addEventListener("click", (event) => {
+            const target = event.target as HTMLElement;
+            if (target === checkbox || target === label) return;
+            checkbox.checked = !checkbox.checked;
+            sync();
         });
     }
 
@@ -444,6 +498,7 @@ export class EnhancedFileSelectionDialog extends Modal {
                 files: this.selectedFiles,
                 mode: this.importMode,
                 provider: this.provider,
+                reprocess: this.reprocess,
             };
             this.close();
             this.onFileSelectionComplete(result);

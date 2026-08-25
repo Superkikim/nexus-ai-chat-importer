@@ -70,6 +70,11 @@
             "selective_label": "Selezione specifica",
             "selective_description": "Anteprima e scelta delle conversazioni"
         },
+        "reprocess": {
+            "label": "Rielabora le note esistenti",
+            "description": "Ricostruisce le note già presenti nel tuo vault invece di saltarle. Da usare dopo un aggiornamento del plugin per sfruttare le novità.",
+            "warning": "Le modifiche manuali a quelle note andranno perse."
+        },
         "file_area": {
             "section_title": "Seleziona file",
             "drop_text_default": "Trascina qui i file ZIP o clicca per sfogliare",

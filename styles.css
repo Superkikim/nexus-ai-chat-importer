@@ -928,6 +928,48 @@
     line-height: 1.4;
 }
 
+/* Reprocess opt-in — full width beneath the two import-mode boxes */
+.nexus-reprocess-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background-color: var(--background-primary);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-width: 0;
+}
+
+.nexus-reprocess-option:hover {
+    border-color: var(--interactive-accent);
+}
+
+.nexus-reprocess-option.is-selected {
+    border-color: var(--interactive-accent);
+    border-width: 2px;
+    /* Compensate the thicker border so the box does not shift on toggle. */
+    padding: 13px 15px;
+    box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.nexus-reprocess-checkbox {
+    flex: 0 0 auto;
+    margin: 2px 0 0;
+    cursor: pointer;
+}
+
+.nexus-reprocess-warning {
+    margin-top: 6px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: var(--text-warning, var(--text-muted));
+    font-weight: 500;
+}
+
 .nexus-drop-zone {
     border: 2px dashed var(--background-modifier-border);
     border-radius: 10px;
@@ -1084,6 +1126,10 @@
 }
 
 @media (max-width: 600px) {
+    .nexus-import-options-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .modal.nexus-installation-welcome-dialog,
     .modal.nexus-upgrade-complete-modal,
     .modal.nexus-provider-selection-dialog,

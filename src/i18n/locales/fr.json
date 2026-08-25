@@ -70,6 +70,11 @@
             "selective_label": "Sélection spécifique",
             "selective_description": "Prévisualiser et choisir les conversations"
         },
+        "reprocess": {
+            "label": "Retraiter les notes existantes",
+            "description": "Reconstruit les notes déjà présentes dans votre coffre au lieu de les ignorer. À utiliser après une mise à jour du module pour bénéficier des nouveautés.",
+            "warning": "Les modifications manuelles apportées à ces notes seront perdues."
+        },
         "file_area": {
             "section_title": "Sélectionner les fichiers",
             "drop_text_default": "Déposez des fichiers ZIP ici ou cliquez pour parcourir",

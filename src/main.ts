@@ -400,7 +400,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private async handleFileSelectionResult(
         result: FileSelectionResult
     ): Promise<void> {
-        const { files, mode, provider } = result;
+        const { files, mode, provider, reprocess } = result;
 
         if (files.length === 0) {
             return;
@@ -483,9 +483,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         if (mode === "all") {
-            await this.handleImportAll(sortedZipFiles, effectiveProvider);
+            await this.handleImportAll(
+                sortedZipFiles,
+                effectiveProvider,
+                reprocess
+            );
         } else {
-            await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
+            await this.handleSelectiveImport(
+                sortedZipFiles,
+                effectiveProvider,
+                reprocess
+            );
         }
     }
 
@@ -494,7 +502,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(
         files: File[],
-        provider: string
+        provider: string,
+        forceReprocess = false
     ): Promise<void> {
         try {
             const isMobile = this.isMobileTaskQueueMode();
@@ -644,7 +653,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 filesToImport,
                 conversationsByFile,
-                operationReport
+                operationReport,
+                undefined,
+                forceReprocess
             );
 
             // Write the consolidated report (always, even if some files failed)
@@ -685,7 +696,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     private async handleImportAllMobileSequential(
         files: File[],
-        provider: string
+        provider: string,
+        forceReprocess = false
     ): Promise<void> {
         const mobileFiles = files.slice(0, 1);
         if (files.length > 1) {
@@ -812,10 +824,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 fileName: file.name,
                 task: `${i + 1}/${mobileFiles.length}`,
             });
-            const archiveImportMode = await this.resolveMobileArchiveImportMode(
-                file,
-                provider
-            );
+            const archiveImportMode = forceReprocess
+                ? "reprocess"
+                : await this.resolveMobileArchiveImportMode(file, provider);
             await this.importService.handleZipFile(
                 file,
                 provider,
@@ -890,7 +901,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(
         files: File[],
-        provider: string
+        provider: string,
+        forceReprocess = false
     ): Promise<void> {
         try {
             const mobileFiles = this.isMobileTaskQueueMode()
@@ -1015,7 +1027,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                         provider,
                         extractionResult.analysisInfo,
                         extractionResult.fileStats,
-                        extractionResult.ignoredArchives
+                        extractionResult.ignoredArchives,
+                        forceReprocess
                     );
                 },
                 this,
@@ -1042,7 +1055,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         provider: string,
         analysisInfo?: AnalysisInfo,
         fileStats?: Map<string, FileAnalysisStats>,
-        ignoredArchives?: IgnoredArchiveInfo[]
+        ignoredArchives?: IgnoredArchiveInfo[],
+        forceReprocess = false
     ): Promise<void> {
         try {
             this.setImportCheckpoint({
@@ -1117,7 +1131,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 filesToImport,
                 conversationsByFile,
                 operationReport,
-                selectedExistingConversationIds
+                selectedExistingConversationIds,
+                forceReprocess
             );
 
             // Write the consolidated report (always, even if some files failed)
@@ -1601,7 +1616,8 @@ ${report.generateMobileIndexContent(files, links)}
         filesToImport: File[],
         conversationsByFile: Map<string, string[]>,
         operationReport: ImportReport,
-        selectedExistingConversationIds?: Set<string>
+        selectedExistingConversationIds?: Set<string>,
+        forceReprocess = false
     ): Promise<void> {
         const importFlowLogger = this.logger.child("ImportFlow");
         const mobileTaskQueueMode = this.isMobileTaskQueueMode();
@@ -1693,8 +1709,10 @@ ${report.generateMobileIndexContent(files, links)}
                         : "standard",
                 });
 
-                const archiveImportMode =
-                    mobileTaskQueueMode && operation === "import-all"
+                const archiveImportMode: MobileArchiveImportMode | undefined =
+                    forceReprocess
+                        ? "reprocess"
+                        : mobileTaskQueueMode && operation === "import-all"
                         ? await this.resolveMobileArchiveImportMode(
                               file,
                               provider

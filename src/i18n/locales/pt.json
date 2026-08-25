@@ -70,6 +70,11 @@
             "selective_label": "Selecionar individualmente",
             "selective_description": "Pré-visualizar e escolher conversas"
         },
+        "reprocess": {
+            "label": "Reprocessar as notas existentes",
+            "description": "Reconstrói as notas já presentes no seu cofre em vez de as ignorar. Use após atualizar o plugin para aproveitar as novidades.",
+            "warning": "As edições manuais dessas notas serão perdidas."
+        },
         "file_area": {
             "section_title": "Selecionar ficheiros",
             "drop_text_default": "Arraste ficheiros ZIP para aqui ou clique para procurar",

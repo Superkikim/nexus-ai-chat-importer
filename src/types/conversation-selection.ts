@@ -30,6 +30,13 @@ export interface FileSelectionResult {
     files: File[];
     mode: ImportMode;
     provider: string;
+    /**
+     * Rebuild notes that already exist in the vault instead of skipping them.
+     * Without it, a conversation whose `update_time` has not moved is reported
+     * as "No Updates" — so a plugin update that adds new rendering would never
+     * reach notes imported by an earlier version.
+     */
+    reprocess: boolean;
 }
 
 /**

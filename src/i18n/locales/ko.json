@@ -70,6 +70,11 @@
             "selective_label": "개별 선택",
             "selective_description": "대화를 미리 보고 선택합니다"
         },
+        "reprocess": {
+            "label": "기존 노트 다시 처리",
+            "description": "보관함에 이미 있는 노트를 건너뛰지 않고 다시 만듭니다. 플러그인을 업데이트한 뒤 새 기능을 적용할 때 사용하세요.",
+            "warning": "해당 노트에 직접 편집한 내용은 사라집니다."
+        },
         "file_area": {
             "section_title": "파일 선택",
             "drop_text_default": "ZIP 파일을 여기에 끌어다 놓거나 클릭하여 찾아보기",

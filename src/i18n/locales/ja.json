@@ -70,6 +70,11 @@
             "selective_label": "個別に選択",
             "selective_description": "会話をプレビューして選択する"
         },
+        "reprocess": {
+            "label": "既存のノートを再処理する",
+            "description": "保管庫にすでにあるノートをスキップせずに再構築します。プラグインの更新後に新機能を反映させるために使用します。",
+            "warning": "これらのノートに加えた手動の編集は失われます。"
+        },
         "file_area": {
             "section_title": "ファイルを選択",
             "drop_text_default": "ZIPファイルをここにドロップするか、クリックして参照",

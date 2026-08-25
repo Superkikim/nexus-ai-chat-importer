@@ -70,6 +70,11 @@
             "selective_label": "Selección específica",
             "selective_description": "Vista previa y selección de conversaciones"
         },
+        "reprocess": {
+            "label": "Reprocesar las notas existentes",
+            "description": "Reconstruye las notas que ya están en tu bóveda en lugar de omitirlas. Úsalo tras actualizar el plugin para aprovechar las novedades.",
+            "warning": "Se perderán las modificaciones manuales de esas notas."
+        },
         "file_area": {
             "section_title": "Seleccionar archivos",
             "drop_text_default": "Suelte archivos ZIP aquí o haga clic para explorar",
