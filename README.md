@@ -76,17 +76,17 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 
 ## ✨ What's New
 
-### v1.7.0 — ChatGPT Generated Images, Privacy Portal Archives & Reprocess
+### v1.7.0 — ChatGPT Images & Privacy Portal, plus Reprocess for every provider
 
-ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation — including cases where ChatGPT omitted the final message that presented the file. It also accepts OpenAI's Privacy Portal downloads directly, and lets you rebuild notes an earlier version created.
+ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation — including cases where ChatGPT omitted the final message that presented the file. It also accepts OpenAI's Privacy Portal downloads directly. Separately, and for **every provider**, you can now rebuild notes that an earlier plugin version created.
 
 ✨ **New**
 - **ChatGPT — Privacy Portal archives import directly** — the account-level ZIP from OpenAI's Privacy Portal wraps the conversation export alongside billing and profile data; import the outer ZIP as-is instead of extracting it by hand. The container is recognised by its contents, not its filename, which OpenAI has changed between downloads
-- **Reprocess existing notes** — a new checkbox in the file selection dialog rebuilds notes already in your vault instead of skipping them, in both import modes. Use it after a plugin update so existing notes pick up new features; notes are rewritten in place so backlinks survive, and manual edits to them are lost
 - **ChatGPT — Generated images imported again** — recent exports (observed August 2026+) ship generated images in the file library; each image is extracted under its real name and embedded in the message that produced it, with the generation prompt when it can be identified safely
 - **ChatGPT — Omitted-message recovery** — when the export contains the conversation but not the message that presented the file, the image is placed at its real creation time in a minimal assistant message (no invented text)
 - **ChatGPT — Generated documents imported** — library documents (Canvas reports, `.docx`, etc.) linked to an exported conversation are extracted to your attachments folder and linked from their producing message
 - **Placeholder replacement via Reprocess** — reimporting a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files, without duplicate messages (see [Reprocess Existing Notes](#-reprocess-existing-notes))
+- **Reprocess existing notes — all providers** — a new checkbox in the file selection dialog rebuilds notes already in your vault instead of skipping them, in both import modes. Works for ChatGPT, Claude, Mistral Vibe and Perplexity alike; notes are rewritten in place so backlinks survive, and manual edits to them are lost
 
 🐛 **Fixed**
 - Attachment-only messages no longer show *[No content found]*
@@ -408,6 +408,8 @@ Perfect when you want control:
 - ✅ **Flexible sorting** - Organize by date, title, or status
 
 #### ♻️ **Reprocess Existing Notes**
+
+> Applies to **every provider** — ChatGPT, Claude, Mistral Vibe and Perplexity.
 
 By default a conversation whose content has not changed since your last import is left alone — it is reported as **Unchanged** and skipped. That is what you want most of the time, and it is what makes repeated imports fast.
 

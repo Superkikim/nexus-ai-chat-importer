@@ -112,3 +112,91 @@ describe("reprocess pulls unchanged conversations back into the selection", () =
         expect(rebuilt?.hasNewerContent).toBe(false);
     });
 });
+
+/**
+ * The toggle lives in the shared file-selection flow, not in a provider
+ * adapter. Claude proves the behaviour is not ChatGPT-specific.
+ */
+describe("reprocess is provider-agnostic", () => {
+    function claudeChat(uuid: string, name: string, iso: string) {
+        return {
+            uuid,
+            name,
+            created_at: iso,
+            updated_at: iso,
+            chat_messages: [
+                {
+                    uuid: `${uuid}-m1`,
+                    sender: "human",
+                    text: "hello",
+                    created_at: iso,
+                },
+            ],
+        };
+    }
+
+    async function analyseClaude(includeUnchanged: boolean) {
+        const extractor = new ConversationMetadataExtractor(
+            new DefaultProviderRegistry(),
+            createTestPlugin()
+        );
+        const bytes = await buildZip([
+            {
+                name: "conversations.json",
+                data: new TextEncoder().encode(
+                    JSON.stringify([
+                        claudeChat(
+                            "claude-unchanged",
+                            "Already imported",
+                            "2026-08-01T10:00:00.000Z"
+                        ),
+                    ])
+                ),
+                compress: true,
+            },
+            {
+                name: "users.json",
+                data: new TextEncoder().encode(JSON.stringify([{ uuid: "u" }])),
+            },
+        ]);
+        const updateTime = Math.floor(
+            new Date("2026-08-01T10:00:00.000Z").getTime() / 1000
+        );
+        const existing = new Map<string, ConversationCatalogEntry>([
+            [
+                "claude-unchanged",
+                {
+                    conversationId: "claude-unchanged",
+                    provider: "claude",
+                    updateTime,
+                    path: "Conversations/claude.md",
+                    create_time: updateTime,
+                    update_time: updateTime,
+                },
+            ],
+        ]);
+
+        return extractor.extractMetadataFromMultipleZips(
+            [toFile(bytes, "claude-export.zip")],
+            "claude",
+            existing,
+            includeUnchanged
+        );
+    }
+
+    it("skips an unchanged Claude conversation by default", async () => {
+        const result = await analyseClaude(false);
+
+        expect(result.conversations).toHaveLength(0);
+        expect(result.analysisInfo?.conversationsIgnored).toBe(1);
+    });
+
+    it("rebuilds it when asked, exactly as for ChatGPT", async () => {
+        const result = await analyseClaude(true);
+
+        expect(result.conversations.map((c) => c.id)).toEqual([
+            "claude-unchanged",
+        ]);
+        expect(result.analysisInfo?.conversationsReprocessed).toBe(1);
+    });
+});

@@ -1,10 +1,10 @@
 # Release Notes for Nexus AI Chat Importer
 
-## Version 1.7.0 — ChatGPT Generated Images, Privacy Portal Archives & Reprocess
+## Version 1.7.0 — ChatGPT Images & Privacy Portal, plus Reprocess for every provider
 
 ![Version](https://img.shields.io/badge/version-1.7.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
 
-ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation, including cases where ChatGPT omitted the final message that presented the file. It also accepts OpenAI's Privacy Portal downloads without any manual unpacking, and adds a way to rebuild notes that an earlier plugin version created. Legacy exports and the missing-file placeholder remain supported.
+ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation, including cases where ChatGPT omitted the final message that presented the file. It also accepts OpenAI's Privacy Portal downloads without any manual unpacking. Separately, and for **every supported provider**, a new option rebuilds notes that an earlier plugin version created. Legacy exports and the missing-file placeholder remain supported.
 
 ### ✨ New
 
@@ -15,12 +15,13 @@ ChatGPT now includes some generated images and documents in its new export libra
   - The inner archive is read in place rather than unpacked, so a 200 MB export costs no extra memory
   - If the container turns out not to hold a usable export, it is left untouched and the existing guidance message still applies
 
-- **Reprocess existing notes**
+- **Reprocess existing notes — all providers**
   - A conversation whose content has not changed since the last import is skipped as *Unchanged*. That is the right default, but it also meant a plugin update improving how notes are built could never reach notes an earlier version created
   - A new **Reprocess existing notes** checkbox in the file selection dialog rebuilds them anyway, in both **Import All** and **Select Specific**
   - With it ticked, Unchanged conversations also appear in the selective list, so a rebuild can be limited to chosen conversations
   - Notes are rewritten in place rather than deleted and recreated, so Obsidian backlinks and file history survive
   - Manual edits to a rebuilt note are lost: the note is regenerated from the export. The dialog says so next to the checkbox
+  - Not ChatGPT-specific: the option lives in the shared import flow and applies to ChatGPT, Claude, Mistral Vibe and Perplexity
   - Available in all ten interface languages
 
 - **ChatGPT — Generated images imported again**
