@@ -63,7 +63,7 @@ import {
 import { sortFilesForImport } from "./utils/file-sort";
 import { createZipArchiveReader } from "./utils/zip-loader";
 import { resolveArchiveClassification } from "./utils/zip-content-reader";
-
+import { expandContainerArchives } from "./utils/container-archive";
 interface ImportCheckpoint {
     operation: "import-all" | "selective-analysis" | "selective-import";
     phase: string;
@@ -412,6 +412,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         );
         files.filter((file) => file.name.toLowerCase().endsWith(".json"));
         const isMobile = this.isMobileTaskQueueMode();
+
+        // Account-level downloads (OpenAI Privacy Portal) wrap the real export
+        // in a container ZIP. Replace it with the conversation archives it
+        // carries, so the rest of the flow sees an ordinary export.
+        const containerExpansion = await expandContainerArchives(zipFiles);
+        if (containerExpansion.expandedContainers.length > 0) {
+            this.logger
+                .child("ImportFlow")
+                .info("Expanded container archive selection", {
+                    containers: containerExpansion.expandedContainers,
+                    archiveCount: containerExpansion.files.length,
+                });
+        }
+        zipFiles = containerExpansion.files;
 
         if (isMobile && zipFiles.length > 1) {
             this.logger
