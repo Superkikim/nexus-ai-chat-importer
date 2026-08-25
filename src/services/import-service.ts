@@ -24,7 +24,6 @@ import {
     ensureFolderExists,
     getErrorMessage,
 } from "../utils";
-import { showDialog } from "../dialogs";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
 import { NexusAiChatImporterError } from "../models/errors";
@@ -46,7 +45,6 @@ import {
     getArchiveUnsupportedFormatMessage,
 } from "../utils/zip-content-reader";
 import { filterConversationsByIds as filterConversationsByIdsUsingAdapters } from "../utils/conversation-filter";
-import { sortFilesForImport } from "../utils/file-sort";
 import { t } from "../i18n";
 
 interface ImportRuntimeContext {
@@ -63,7 +61,8 @@ interface ResolvedImportError {
     reportDetails: string;
 }
 
-export type ArchiveImportMode = "auto" | "reprocess" | "incremental";
+/** "auto" keeps existing notes; "reprocess" rebuilds them. */
+export type ArchiveImportMode = "auto" | "reprocess";
 
 export interface HandleZipFileOptions {
     archiveImportMode?: ArchiveImportMode;
@@ -108,29 +107,6 @@ export class ImportService {
             plugin,
             this.providerRegistry
         );
-    }
-
-    async selectZipFile() {
-        const input = activeDocument.createEl("input");
-        input.type = "file";
-        input.accept = ".zip";
-        input.multiple = true;
-        input.onchange = async (e) => {
-            const files = Array.from(
-                (e.target as HTMLInputElement).files || []
-            );
-            if (files.length > 0) {
-                const sortedFiles = this.sortFilesByTimestamp(files);
-                for (const file of sortedFiles) {
-                    await this.handleZipFile(file);
-                }
-            }
-        };
-        input.click();
-    }
-
-    private sortFilesByTimestamp(files: File[]): File[] {
-        return sortFilesForImport(files);
     }
 
     async handleZipFile(
@@ -229,79 +205,24 @@ export class ImportService {
             });
             await this.yieldToEventLoopIfMobile();
 
-            // When using shared report (new workflow), skip the "already imported" check
-            // because the analysis already determined what needs to be imported
-            let isReprocess = false;
-            let fileHash = "";
-
-            if (!isSharedReport) {
-                // Legacy workflow: check if file was already imported
-                progressCallback({
-                    phase: "validation",
-                    title: "Validating file...",
-                    detail: "Checking file hash and import history",
-                });
-                this.updateRuntimePhase("hash-validation");
-
-                importLogger.debug("Archive tracking fingerprint start", {
-                    fileName: file.name,
-                    strategy: "metadata-fingerprint",
-                    fileSize: file.size,
-                });
-                fileHash = getFileFingerprint(file);
-                importLogger.debug("Archive tracking fingerprint complete", {
-                    fileName: file.name,
-                    strategy: "metadata-fingerprint",
-                });
-                const foundByHash = storage.isArchiveImported(fileHash);
-                const foundByName = storage.isArchiveImported(file.name);
-                isReprocess = foundByHash || foundByName;
-
-                if (isReprocess) {
-                    progressModal.close(); // Close progress modal for user dialog
-
-                    const shouldReimport = await showDialog(
-                        this.plugin.app,
-                        "confirmation",
-                        "Already processed",
-                        [
-                            `File ${file.name} has already been imported.`,
-                            `Do you want to reprocess it?`,
-                            `**Note:** This will recreate notes from before v1.1.0 to add attachment support.`,
-                        ],
-                        undefined,
-                        { button1: "Let's do this", button2: "Skip this file" }
-                    );
-
-                    if (!shouldReimport) {
-                        new Notice(`Skipping ${file.name} (already imported).`);
-                        progressModal.close();
-                        return; // Skip this file, but don't cancel the whole operation
-                    }
-
-                    // Reopen progress modal for continued processing
-                    progressModal.open();
-                }
-            } else {
-                // Shared-report workflow (multi-file): avoid loading full ZIP into memory on mobile.
-                fileHash = getFileFingerprint(file);
-                importLogger.debug("Archive tracking fingerprint generated", {
-                    fileName: file.name,
-                    strategy: "metadata-fingerprint",
-                    fileSize: file.size,
-                });
-            }
+            // Recorded on success so a repeat import of the same file is
+            // recognised. Whether existing notes are rebuilt is decided by the
+            // reprocess option, not by having seen the archive before.
+            importLogger.debug("Archive tracking fingerprint start", {
+                fileName: file.name,
+                strategy: "metadata-fingerprint",
+                fileSize: file.size,
+            });
+            const fileHash = getFileFingerprint(file);
+            importLogger.debug("Archive tracking fingerprint complete", {
+                fileName: file.name,
+                strategy: "metadata-fingerprint",
+            });
 
             const archiveImportMode = options?.archiveImportMode ?? "auto";
-            if (archiveImportMode === "reprocess") {
-                isReprocess = true;
-                importLogger.debug("Archive import mode override applied", {
-                    fileName: file.name,
-                    archiveImportMode,
-                });
-            } else if (archiveImportMode === "incremental") {
-                isReprocess = false;
-                importLogger.debug("Archive import mode override applied", {
+            const isReprocess = archiveImportMode === "reprocess";
+            if (isReprocess) {
+                importLogger.debug("Rebuilding existing notes for archive", {
                     fileName: file.name,
                     archiveImportMode,
                 });
