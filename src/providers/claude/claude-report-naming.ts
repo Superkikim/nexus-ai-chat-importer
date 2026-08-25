@@ -17,7 +17,10 @@
  */
 
 // src/providers/claude/claude-report-naming.ts
-import { ReportNamingStrategy } from "../../types/standard";
+import {
+    ProviderSpecificColumn,
+    ReportNamingStrategy,
+} from "../../types/standard";
 import { extractReportPrefixFromZip } from "../../utils/report-naming-utils";
 
 export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
@@ -36,10 +39,7 @@ export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
         return extractReportPrefixFromZip(zipFileName, patterns);
     }
 
-    getProviderSpecificColumn(): {
-        header: string;
-        getValue: (adapter: unknown, chat: unknown) => number;
-    } {
+    getProviderSpecificColumn(): ProviderSpecificColumn {
         return {
             header: "Artifacts",
             getValue: (adapter: unknown, chat: unknown) => {

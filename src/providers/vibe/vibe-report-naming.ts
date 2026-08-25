@@ -16,7 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ReportNamingStrategy } from "../../types/standard";
+import {
+    ProviderSpecificColumn,
+    ReportNamingStrategy,
+} from "../../types/standard";
 import {
     getCurrentImportDate,
     generateReportPrefix,
@@ -71,12 +74,10 @@ export class MistralVibeReportNamingStrategy implements ReportNamingStrategy {
      * Provider-specific column: Attachments
      * Counts the number of file attachments (images, documents) in the conversation
      */
-    getProviderSpecificColumn(): {
-        header: string;
-        getValue: (adapter: unknown, chat: unknown) => number;
-    } {
+    getProviderSpecificColumn(): ProviderSpecificColumn {
         return {
             header: "Attachments",
+            countsImportedAttachments: true,
             getValue: (_adapter: unknown, chat: unknown) => {
                 const vibeChat = chat as MistralVibeConversation;
                 let attachmentCount = 0;

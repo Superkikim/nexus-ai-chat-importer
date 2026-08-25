@@ -17,7 +17,10 @@
  */
 
 // src/providers/chatgpt/chatgpt-report-naming.ts
-import { ReportNamingStrategy } from "../../types/standard";
+import {
+    ProviderSpecificColumn,
+    ReportNamingStrategy,
+} from "../../types/standard";
 import { extractReportPrefixFromZip } from "../../utils/report-naming-utils";
 import type { Chat } from "./chatgpt-types";
 
@@ -42,12 +45,10 @@ export class ChatGPTReportNamingStrategy implements ReportNamingStrategy {
         return "chatgpt";
     }
 
-    getProviderSpecificColumn(): {
-        header: string;
-        getValue: (adapter: unknown, chat: unknown) => number;
-    } {
+    getProviderSpecificColumn(): ProviderSpecificColumn {
         return {
             header: "Attachments",
+            countsImportedAttachments: true,
             getValue: (_adapter: unknown, chat: unknown) => {
                 const gptChat = chat as Chat;
                 let attachmentCount = 0;

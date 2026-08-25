@@ -562,14 +562,26 @@ export class ConversationProcessor {
     /**
      * Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
      */
+    /**
+     * Value for the provider-specific report column.
+     *
+     * Attachment columns are taken from the stats of the messages actually
+     * written, so files reconciled from outside the conversation payload are
+     * included and a file described twice is still counted once. Columns with
+     * other semantics are computed from the raw chat by the provider.
+     */
     private getProviderSpecificCount(
         adapter: ProviderAdapter,
-        chat: unknown
+        chat: unknown,
+        attachmentStats?: AttachmentStats
     ): number {
         try {
             const strategy = adapter.getReportNamingStrategy();
             if (strategy && strategy.getProviderSpecificColumn) {
                 const columnInfo = strategy.getProviderSpecificColumn();
+                if (columnInfo.countsImportedAttachments) {
+                    return attachmentStats?.total ?? 0;
+                }
                 return columnInfo.getValue(adapter, chat);
             }
         } catch {
@@ -673,7 +685,12 @@ export class ConversationProcessor {
                         chatCreateTime,
                         chatUpdateTime,
                         totalMessageCount,
-                        attachmentStats
+                        attachmentStats,
+                        this.getProviderSpecificCount(
+                            adapter,
+                            chat,
+                            attachmentStats
+                        )
                     );
 
                     this.counters.totalConversationsActuallyUpdated++;
@@ -730,7 +747,12 @@ export class ConversationProcessor {
                         chatCreateTime,
                         chatUpdateTime,
                         newMessages.length,
-                        attachmentStats
+                        attachmentStats,
+                        this.getProviderSpecificCount(
+                            adapter,
+                            chat,
+                            attachmentStats
+                        )
                     );
                 } else {
                     importReport.addSkipped(
@@ -867,7 +889,8 @@ export class ConversationProcessor {
             // Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
             const providerSpecificCount = this.getProviderSpecificCount(
                 adapter,
-                chat
+                chat,
+                attachmentStats
             );
 
             importReport.addCreated(
