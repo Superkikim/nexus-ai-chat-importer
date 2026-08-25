@@ -76,15 +76,17 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 
 ## ✨ What's New
 
-### v1.7.0 — ChatGPT Generated Images & Documents Restored
+### v1.7.0 — ChatGPT Generated Images, Privacy Portal Archives & Reprocess
 
-ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation — including cases where ChatGPT omitted the final message that presented the file.
+ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation — including cases where ChatGPT omitted the final message that presented the file. It also accepts OpenAI's Privacy Portal downloads directly, and lets you rebuild notes an earlier version created.
 
 ✨ **New**
+- **ChatGPT — Privacy Portal archives import directly** — the account-level ZIP from OpenAI's Privacy Portal wraps the conversation export alongside billing and profile data; import the outer ZIP as-is instead of extracting it by hand. The container is recognised by its contents, not its filename, which OpenAI has changed between downloads
+- **Reprocess existing notes** — a new checkbox in the file selection dialog rebuilds notes already in your vault instead of skipping them, in both import modes. Use it after a plugin update so existing notes pick up new features; notes are rewritten in place so backlinks survive, and manual edits to them are lost
 - **ChatGPT — Generated images imported again** — recent exports (observed August 2026+) ship generated images in the file library; each image is extracted under its real name and embedded in the message that produced it, with the generation prompt when it can be identified safely
 - **ChatGPT — Omitted-message recovery** — when the export contains the conversation but not the message that presented the file, the image is placed at its real creation time in a minimal assistant message (no invented text)
 - **ChatGPT — Generated documents imported** — library documents (Canvas reports, `.docx`, etc.) linked to an exported conversation are extracted to your attachments folder and linked from their producing message
-- **Placeholder replacement via Reprocess** — reimporting a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files, without duplicate messages (see [Reprocess](#-understanding-import-reports))
+- **Placeholder replacement via Reprocess** — reimporting a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files, without duplicate messages (see [Reprocess Existing Notes](#-reprocess-existing-notes))
 
 🐛 **Fixed**
 - Attachment-only messages no longer show *[No content found]*
@@ -95,7 +97,7 @@ ChatGPT now includes some generated images and documents in its new export libra
 
 > ⚠️ **Note**: whether a given export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the plugin keeps the visible placeholder — it cannot recover files the export does not contain, and future OpenAI export behavior may change again.
 
-💡 **Tip**: to enrich notes imported from an older export, request a fresh ChatGPT export, re-import it, and choose **Reprocess** — placeholders are replaced by the real files, and the conversation is rebuilt without duplicate messages.
+💡 **Tip**: to enrich notes imported from an older export, re-import your archive with **Reprocess existing notes** ticked — placeholders are replaced by the real files and the conversation is rebuilt, without duplicate messages. A fresh export helps only if the images were missing from the old archive in the first place.
 
 ---
 
@@ -311,10 +313,20 @@ Want to reorganize? No problem!
 2. Check your email (arrives in a few minutes)
 3. Download the ZIP file
 
+> **🔐 Privacy Portal downloads work too**
+> If the in-app export never arrives, OpenAI's **Privacy Portal** delivers an account-level ZIP that wraps your conversation export alongside billing, profile and activity data.
+> **Import that outer ZIP as-is** — the plugin finds the conversation archive inside and imports it normally. Nothing to extract by hand.
+> The container's filename does not matter: OpenAI has delivered it under several different names, so the plugin identifies it by its contents.
+
 **Claude**:
 1. Open Claude → **Settings** → **Privacy** → **Export data**
 2. Check your email (arrives in a few minutes)
 3. Download the ZIP file
+
+> **📦 Recent Claude exports arrive as several ZIPs**
+> Anthropic now sends a manifest listing multiple archives instead of a single file.
+> **Import `conversations-000.zip`** — the one holding `conversations.json`. The projects, memories and metadata archives contain nothing the plugin uses.
+> That archive no longer carries `users.json`, which used to be how Claude exports were recognised. The plugin now identifies it by its contents, so you don't need to pick the provider by hand.
 
 **Mistral Vibe** (formerly Le Chat):
 1. Click your name → **Profile** → **Mistral Vibe: Export**
@@ -383,7 +395,8 @@ Perfect when you want control:
 7. Click **Import Selected**
 
 **Important behavior:**
-- Selecting an **existing** conversation (Updated or Unchanged) in selective mode will overwrite and reprocess the matching note.
+- Selecting an **Updated** conversation overwrites and rebuilds the matching note.
+- **Unchanged** conversations appear in the list only when **Reprocess existing notes** is ticked (see below). Selecting one then rebuilds it.
 
 **Cool features:**
 - ✅ **Keyword search** - Find conversations by title instantly
@@ -393,6 +406,19 @@ Perfect when you want control:
 - ✅ **Single-ZIP safety mode (mobile)** - One archive per run for stable imports
 - ✅ **Duplicate detection** - Automatically finds duplicates across ZIPs
 - ✅ **Flexible sorting** - Organize by date, title, or status
+
+#### ♻️ **Reprocess Existing Notes**
+
+By default a conversation whose content has not changed since your last import is left alone — it is reported as **Unchanged** and skipped. That is what you want most of the time, and it is what makes repeated imports fast.
+
+It is *not* what you want after a plugin update that improves how notes are built: your existing notes were created by the old version, and nothing about the export has changed, so they would never be rebuilt.
+
+Tick **Reprocess existing notes** in the file selection dialog to rebuild them anyway:
+
+- Works with both **Import All** and **Select Specific**
+- With the box ticked, Unchanged conversations also appear in the selective list, so you can rebuild only the ones you care about
+- Notes are **rewritten in place**, so Obsidian backlinks and file history survive
+- ⚠️ **Manual edits to rebuilt notes are lost** — the note is regenerated from the export
 
 > **💾 Keep your export ZIPs**
 > The plugin imports from your ZIP files but does not store them. If something goes wrong or a future plugin version improves processing, you will need the original ZIP to reimport. Keep at least your most recent export from each provider.
