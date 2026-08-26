@@ -576,8 +576,7 @@ export class ConversationSelectionDialog extends Modal {
             // Status cell with badge
             const statusCell = row.createEl("td");
             statusCell.addClass("nexus-td-center");
-            const statusBadge = this.createStatusBadge(conversation);
-            statusCell.appendChild(statusBadge);
+            this.createStatusBadge(statusCell, conversation);
 
             if (mobileList) {
                 this.renderMobileConversationCard(mobileList, conversation);
@@ -622,9 +621,8 @@ export class ConversationSelectionDialog extends Modal {
             sourceInfo.textContent = `📁 ${conversation.sourceFile}`;
         }
 
-        const badge = this.createStatusBadge(conversation);
+        const badge = this.createStatusBadge(header, conversation);
         badge.addClass("nexus-conversation-card-badge");
-        header.appendChild(badge);
 
         const meta = card.createDiv("nexus-conversation-card-meta");
         meta.createDiv({
@@ -644,12 +642,18 @@ export class ConversationSelectionDialog extends Modal {
         });
     }
 
-    private createStatusBadge(conversation: ConversationMetadata): HTMLElement {
-        // createElement, not createSpan: Obsidian's createSpan/createDiv
-        // helpers append to the node they are called on, and appending to the
-        // document throws "Only one element on document allowed". This element
-        // is attached by the caller.
-        const badge = activeDocument.createElement("span");
+    /**
+     * Builds the badge inside `parent`.
+     *
+     * Obsidian's createSpan appends to the node it is called on, so it needs a
+     * real parent element: called on the document it throws "Only one element
+     * on document allowed" and takes the whole list down with it.
+     */
+    private createStatusBadge(
+        parent: HTMLElement,
+        conversation: ConversationMetadata
+    ): HTMLElement {
+        const badge = parent.createSpan();
         badge.classList.add("status-badge");
 
         switch (conversation.existenceStatus) {
