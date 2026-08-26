@@ -23,6 +23,7 @@ import {
     ClaudeConversation,
     ClaudeMessage,
 } from "../providers/claude/claude-types";
+import { isExportableClaudeMessage } from "../providers/claude/claude-message-filter";
 import { MistralVibeConversation } from "../providers/vibe/vibe-types";
 import { PerplexityRawConversationFile } from "../providers/perplexity/perplexity-types";
 import { ConversationCatalogEntry } from "../types/plugin";
@@ -823,11 +824,7 @@ export class ConversationMetadataExtractor {
     }
 
     private shouldIncludeClaudeMessage(message: ClaudeMessage): boolean {
-        if (!message || !message.uuid || !message.sender) {
-            return false;
-        }
-
-        return message.sender === "human" || message.sender === "assistant";
+        return isExportableClaudeMessage(message);
     }
 
     private filterConversationsForSelection(

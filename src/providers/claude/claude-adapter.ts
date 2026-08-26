@@ -22,6 +22,7 @@ import { ClaudeConverter } from "./claude-converter";
 import { ClaudeAttachmentExtractor } from "./claude-attachment-extractor";
 import { ClaudeReportNamingStrategy } from "./claude-report-naming";
 import { ClaudeConversation, ClaudeMessage } from "./claude-types";
+import { isExportableClaudeMessage } from "./claude-message-filter";
 import type NexusAiChatImporterPlugin from "../../main";
 import {
     BaseProviderAdapter,
@@ -138,18 +139,6 @@ export class ClaudeAdapter extends BaseProviderAdapter<ClaudeConversation> {
     }
 
     private shouldIncludeMessage(message: ClaudeMessage): boolean {
-        // Include all human and assistant messages
-        if (message.sender === "human" || message.sender === "assistant") {
-            // Skip empty messages
-            if (
-                !message.text &&
-                (!message.content || message.content.length === 0)
-            ) {
-                return false;
-            }
-            return true;
-        }
-
-        return false;
+        return isExportableClaudeMessage(message);
     }
 }

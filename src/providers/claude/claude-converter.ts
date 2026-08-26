@@ -30,6 +30,7 @@ import {
     ClaudeAttachment,
     ClaudeFile,
 } from "./claude-types";
+import { isExportableClaudeMessage } from "./claude-message-filter";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
 
@@ -439,19 +440,7 @@ export class ClaudeConverter {
     }
 
     private static shouldIncludeMessage(message: ClaudeMessage): boolean {
-        // Include all human and assistant messages
-        if (message.sender === "human" || message.sender === "assistant") {
-            // Skip empty messages
-            if (
-                !message.text &&
-                (!message.content || message.content.length === 0)
-            ) {
-                return false;
-            }
-            return true;
-        }
-
-        return false;
+        return isExportableClaudeMessage(message);
     }
 
     /**
