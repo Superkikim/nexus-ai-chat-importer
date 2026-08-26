@@ -242,7 +242,9 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         const existingMsg = settingEl.querySelector(".operation-result");
         if (existingMsg) existingMsg.remove();
 
-        const resultEl = activeDocument.createDiv();
+        // createElement, not createDiv: the helper would append to the
+        // document itself. This element is attached below.
+        const resultEl = activeDocument.createElement("div");
         resultEl.className = "operation-result";
         resultEl.textContent = message;
         resultEl.style.cssText = `

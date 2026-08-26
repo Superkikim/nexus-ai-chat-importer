@@ -645,7 +645,11 @@ export class ConversationSelectionDialog extends Modal {
     }
 
     private createStatusBadge(conversation: ConversationMetadata): HTMLElement {
-        const badge = activeDocument.createSpan();
+        // createElement, not createSpan: Obsidian's createSpan/createDiv
+        // helpers append to the node they are called on, and appending to the
+        // document throws "Only one element on document allowed". This element
+        // is attached by the caller.
+        const badge = activeDocument.createElement("span");
         badge.classList.add("status-badge");
 
         switch (conversation.existenceStatus) {
