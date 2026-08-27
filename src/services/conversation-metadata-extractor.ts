@@ -241,6 +241,8 @@ export class ConversationMetadataExtractor {
          * Keep conversations whose update_time has not moved. Without this an
          * unchanged conversation is dropped here, long before any per-import
          * reprocess flag is consulted, so a rebuild could never be requested.
+         * Selective import always passes true; a full import passes the
+         * reprocess flag.
          */
         includeUnchanged = false
     ): Promise<MetadataExtractionResult> {
@@ -451,6 +453,11 @@ export class ConversationMetadataExtractor {
                 stats.newConversations++;
             } else if (conversation.existenceStatus === "updated") {
                 stats.updatedConversations++;
+            } else if (conversation.existenceStatus === "unchanged") {
+                // Counted here as well as in the ignored loop below: an
+                // unchanged conversation lands in one bucket or the other
+                // depending on the policy, but it is unchanged either way.
+                stats.unchangedConversations++;
             }
         }
 

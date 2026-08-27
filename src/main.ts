@@ -972,7 +972,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     mobileFiles,
                     provider,
                     existingConversations,
-                    forceReprocess
+                    // Always true here: the selection dialog decides what gets
+                    // rebuilt, so it needs every existing conversation in the
+                    // list. Selecting one is what requests the rebuild.
+                    true
                 );
             this.logIgnoredArchives(
                 extractionResult.ignoredArchives,
