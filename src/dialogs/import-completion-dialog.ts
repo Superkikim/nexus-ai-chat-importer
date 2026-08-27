@@ -30,7 +30,8 @@ export interface ImportCompletionStats {
     duplicates: number;
     created: number;
     updated: number;
-    skipped: number;
+    recreated: number;
+    unchanged: number;
     /** Offered in the selection dialog and left unchecked; null on a full import. */
     notSelected: number | null;
     emptyConversations: number;
@@ -140,19 +141,31 @@ export class ImportCompletionDialog extends Modal {
             "var(--color-orange)"
         );
 
+        // Recreated cartouche. Only a rebuild produces one, so it stays out
+        // of the way of the imports that never ask for it.
+        if (this.stats.recreated > 0) {
+            this.createStatCartouche(
+                section,
+                "♻️",
+                this.stats.recreated.toString(),
+                t("import_completion.stats.recreated"),
+                "var(--color-purple)"
+            );
+        }
+
         // Unchanged cartouche. The suffix used to be hardcoded English.
-        const skippedLabel =
+        const unchangedLabel =
             this.stats.emptyConversations > 0
-                ? `${t("import_completion.stats.skipped")} (${t(
+                ? `${t("import_completion.stats.unchanged")} (${t(
                       "import_completion.stats.empty_suffix",
                       { count: String(this.stats.emptyConversations) }
                   )})`
-                : t("import_completion.stats.skipped");
+                : t("import_completion.stats.unchanged");
         this.createStatCartouche(
             section,
             "⏭️",
-            this.stats.skipped.toString(),
-            skippedLabel,
+            this.stats.unchanged.toString(),
+            unchangedLabel,
             "var(--text-muted)"
         );
 

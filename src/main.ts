@@ -1308,7 +1308,8 @@ totalFilesSkipped: ${skippedFiles.length}
 totalConversations: ${stats.totalConversations}
 totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
-totalSkipped: ${stats.skipped}
+totalRecreated: ${stats.recreated}
+totalSkipped: ${stats.unchanged}
 totalFailed: ${stats.failed}
 totalUnchanged: ${ledger.unchanged}
 totalReprocessed: ${ledger.reprocessed}

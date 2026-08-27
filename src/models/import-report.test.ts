@@ -125,7 +125,7 @@ describe("import report — desktop import-all (analysis available)", () => {
         expect(stats.duplicates).toBe(2);
         expect(stats.created).toBe(3);
         expect(stats.updated).toBe(2);
-        expect(stats.skipped).toBe(5);
+        expect(stats.unchanged).toBe(5);
         expect(stats.emptyConversations).toBe(1);
         expect(stats.failed).toBe(1);
     });
@@ -226,7 +226,7 @@ describe("import report — mobile direct (no analysis phase)", () => {
         expect(stats.duplicates).toBe(0);
         expect(stats.created).toBe(3);
         expect(stats.updated).toBe(2);
-        expect(stats.skipped).toBe(1); // the no-op write
+        expect(stats.unchanged).toBe(1); // the no-op write
         expect(stats.emptyConversations).toBe(1);
         expect(stats.failed).toBe(1);
     });

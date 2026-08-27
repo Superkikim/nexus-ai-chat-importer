@@ -1164,7 +1164,7 @@ export class ImportReport {
             created: ledger.created,
             updated: ledger.updated,
             recreated: ledger.recreated,
-            skipped: ledger.unchangedSkipped,
+            unchanged: ledger.unchangedSkipped,
             notSelected: ledger.notSelected,
             emptyConversations: ledger.empty,
             failed: ledger.failed,

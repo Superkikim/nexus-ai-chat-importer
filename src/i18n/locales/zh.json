@@ -173,7 +173,8 @@
             "duplicates": "重复",
             "new": "新建",
             "updated": "已更新",
-            "skipped": "无变化",
+            "recreated": "已重新生成",
+            "unchanged": "无变化",
             "not_selected": "未选择",
             "empty_suffix": "{{count}} 个无可导出内容",
             "failed": "失败"

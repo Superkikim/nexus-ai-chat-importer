@@ -173,7 +173,8 @@
             "duplicates": "重複",
             "new": "新規",
             "updated": "更新済み",
-            "skipped": "変更なし",
+            "recreated": "再作成",
+            "unchanged": "変更なし",
             "not_selected": "未選択",
             "empty_suffix": "エクスポート可能な内容なし {{count}} 件",
             "failed": "失敗"

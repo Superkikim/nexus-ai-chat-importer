@@ -173,7 +173,8 @@
             "duplicates": "중복",
             "new": "신규",
             "updated": "업데이트됨",
-            "skipped": "변경 없음",
+            "recreated": "다시 만듦",
+            "unchanged": "변경 없음",
             "not_selected": "선택 안 함",
             "empty_suffix": "내보낼 내용 없음 {{count}}개",
             "failed": "실패"

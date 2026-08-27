@@ -173,7 +173,8 @@
             "duplicates": "Doublons",
             "new": "Nouveau",
             "updated": "Mis à jour",
-            "skipped": "Inchangées",
+            "recreated": "Recréées",
+            "unchanged": "Inchangées",
             "not_selected": "Non sélectionnées",
             "empty_suffix": "{{count}} sans contenu exportable",
             "failed": "Échoués"
