@@ -19,11 +19,7 @@
 // src/services/import-service.ts
 import { Notice, Platform } from "obsidian";
 import { ConversationCatalogEntry } from "../types/plugin";
-import {
-    getFileFingerprint,
-    ensureFolderExists,
-    getErrorMessage,
-} from "../utils";
+import { getFileFingerprint, getErrorMessage } from "../utils";
 import { ImportReport } from "../models/import-report";
 import { ConversationProcessor } from "./conversation-processor";
 import { NexusAiChatImporterError } from "../models/errors";
@@ -111,10 +107,12 @@ export class ImportService {
 
     async handleZipFile(
         file: File,
-        forcedProvider?: string,
-        selectedConversationIds?: string[],
-        sharedReport?: ImportReport,
-        existingConversationsMap?: Map<string, ConversationCatalogEntry>,
+        forcedProvider: string | undefined,
+        selectedConversationIds: string[] | undefined,
+        sharedReport: ImportReport,
+        existingConversationsMap:
+            | Map<string, ConversationCatalogEntry>
+            | undefined,
         options?: HandleZipFileOptions
     ) {
         const importLogger = this.plugin.logger.child("Import");
@@ -142,19 +140,8 @@ export class ImportService {
             );
         }
 
-        // Use shared report if provided, otherwise create a new one
-        const isSharedReport = !!sharedReport;
-        this.importReport = sharedReport || new ImportReport();
-
-        // Set custom timestamp format if enabled (only if creating new report)
-        if (
-            !isSharedReport &&
-            this.plugin.settings.useCustomMessageTimestampFormat
-        ) {
-            this.importReport.setCustomTimestampFormat(
-                this.plugin.settings.messageTimestampFormat
-            );
-        }
+        // The caller owns the report and writes it once every file is done.
+        this.importReport = sharedReport;
 
         // Start a new file section in the report
         this.importReport.startFileSection(file.name);
@@ -163,7 +150,6 @@ export class ImportService {
         this.conversationProcessor.resetCounters();
 
         const storage = this.plugin.getStorageService();
-        let processingStarted = false;
         let zip: ZipArchiveReader | null = null;
 
         // Create and show progress modal
@@ -243,7 +229,6 @@ export class ImportService {
                 );
             }
 
-            processingStarted = true;
             this.updateRuntimePhase("conversation-processing");
             importLogger.debug(`Begin conversation processing`, {
                 fileName: file.name,
@@ -322,20 +307,6 @@ export class ImportService {
             zip = null;
             await this.yieldToEventLoopIfMobile();
             this.endRuntimeContext();
-            // Only write report if processing actually started AND this is NOT a shared report
-            // (shared reports are written by the caller after all files are processed)
-            if (processingStarted && !isSharedReport) {
-                await this.writeImportReport(file.name);
-
-                // Only show notice if modal was closed due to error or completion
-                if (!progressModal.isComplete) {
-                    new Notice(
-                        this.importReport.hasErrors()
-                            ? "An error occurred during import. Please check the log file for details."
-                            : "Import completed. Log file created in the archive folder."
-                    );
-                }
-            }
         }
     }
 
@@ -744,19 +715,6 @@ export class ImportService {
         }
     }
 
-    private async writeImportReport(zipFileName: string): Promise<void> {
-        const reportWriter = new ReportWriter(
-            this.plugin,
-            this.providerRegistry
-        );
-        const currentProvider = this.conversationProcessor.getCurrentProvider();
-        await reportWriter.writeReport(
-            this.importReport,
-            zipFileName,
-            currentProvider
-        );
-    }
-
     /**
      * Build attachment map for multi-ZIP import
      * Opens all ZIPs and scans for available attachments
@@ -955,129 +913,5 @@ export class ImportService {
             }),
             reportDetails: rawMessage,
         };
-    }
-}
-
-class ReportWriter {
-    constructor(
-        private plugin: NexusAiChatImporterPlugin,
-        private providerRegistry: ProviderRegistry
-    ) {}
-
-    async writeReport(
-        report: ImportReport,
-        zipFileName: string,
-        provider: string
-    ): Promise<void> {
-        // Static imports - no dynamic import needed
-
-        // Get provider-specific naming strategy and set column header
-        const reportInfo = this.getReportGenerationInfo(zipFileName, provider);
-        const adapter = this.providerRegistry.getAdapter(provider);
-        if (adapter) {
-            const strategy = adapter.getReportNamingStrategy();
-            const columnInfo = strategy.getProviderSpecificColumn();
-            report.setProviderSpecificColumnHeader(columnInfo.header);
-        }
-
-        // Ensure provider subfolder exists
-        const folderResult = await ensureFolderExists(
-            reportInfo.folderPath,
-            this.plugin.app.vault
-        );
-        if (!folderResult.success) {
-            this.plugin.logger.error(
-                `Failed to create or access log folder: ${reportInfo.folderPath}`,
-                folderResult.error
-            );
-            new Notice("Failed to create log file. Check console for details.");
-            return;
-        }
-
-        // Generate unique filename with counter if needed
-        let logFilePath = `${reportInfo.folderPath}/${reportInfo.baseFileName}`;
-        let counter = 2;
-        while (await this.plugin.app.vault.adapter.exists(logFilePath)) {
-            const baseName = reportInfo.baseFileName.replace(
-                " - import report.md",
-                ""
-            );
-            logFilePath = `${reportInfo.folderPath}/${baseName}-${counter} - import report.md`;
-            counter++;
-        }
-
-        // Enhanced frontmatter with both dates (ISO 8601 format for consistency)
-        const currentDate = new Date().toISOString();
-        const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
-
-        const logContent = `---
-importdate: ${currentDate}
-archivedate: ${archiveDate}
-zipFile: ${zipFileName}
-provider: ${provider}
-totalSuccessfulImports: ${report.getCreatedCount()}
-totalUpdatedImports: ${report.getUpdatedCount()}
-totalSkippedImports: ${report.getSkippedCount()}
----
-
-${report.generateReportContent()}
-`;
-
-        try {
-            await this.plugin.app.vault.create(logFilePath, logContent);
-        } catch (error: unknown) {
-            this.plugin.logger.error(
-                `Failed to write import log`,
-                getErrorMessage(error)
-            );
-            new Notice("Failed to create log file. Check console for details.");
-        }
-    }
-
-    private getReportGenerationInfo(
-        zipFileName: string,
-        provider: string
-    ): { folderPath: string; baseFileName: string } {
-        const reportFolder = this.plugin.settings.reportFolder;
-
-        // Try to get provider-specific naming strategy
-        const adapter = this.providerRegistry.getAdapter(provider);
-        if (adapter) {
-            const strategy = adapter.getReportNamingStrategy();
-            const reportPrefix = strategy.extractReportPrefix(zipFileName);
-            return {
-                folderPath: `${reportFolder}/${strategy.getProviderName()}`,
-                baseFileName: `${reportPrefix} - import report.md`,
-            };
-        }
-
-        // Fallback for unknown providers
-        const now = new Date();
-        const importDate = `${now.getFullYear()}.${String(
-            now.getMonth() + 1
-        ).padStart(2, "0")}.${String(now.getDate()).padStart(2, "0")}`;
-        const archiveDate = this.extractArchiveDateFromFilename(zipFileName);
-        const fallbackPrefix = `imported-${importDate}-archive-${archiveDate}`;
-        return {
-            folderPath: `${reportFolder}`,
-            baseFileName: `${fallbackPrefix} - import report.md`,
-        };
-    }
-
-    private extractArchiveDateFromFilename(zipFileName: string): string {
-        const dateRegex = /(\d{4})-(\d{2})-(\d{2})/;
-        const match = zipFileName.match(dateRegex);
-
-        if (match) {
-            const [, year, month, day] = match;
-            return `${year}.${month}.${day}`;
-        }
-
-        // Fallback: use current date
-        const now = new Date();
-        return `${now.getFullYear()}.${String(now.getMonth() + 1).padStart(
-            2,
-            "0"
-        )}.${String(now.getDate()).padStart(2, "0")}`;
     }
 }

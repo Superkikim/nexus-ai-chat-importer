@@ -12,6 +12,9 @@ import { ClaudeConversation, ClaudeMessage } from "./claude-types";
 const archivePath = path.resolve(
     "local_resources/claude/data-bfdaffc3-9060-4687-90a1-31edfd5d57c2-1785757653-d96eb9c7-batch-0000.zip"
 );
+const sandboxConversationsPath = path.resolve(
+    "local_resources/claude/claude_sandbox/conversations.json"
+);
 
 const ghostConversationIds = [
     "7a34106c-5130-4624-bb5d-6df555802f61",
@@ -78,6 +81,41 @@ describe("Claude message exportability", () => {
                         {
                             type: "text",
                             text: "Hello from a block",
+                        } as any,
+                    ],
+                })
+            )
+        ).toBe(true);
+    });
+
+    it("excludes an empty text content block", () => {
+        expect(
+            isExportableClaudeMessage(
+                message({
+                    content: [
+                        {
+                            type: "text",
+                            text: "",
+                        } as any,
+                    ],
+                })
+            )
+        ).toBe(false);
+    });
+
+    it("includes an artifact content block with exportable content", () => {
+        expect(
+            isExportableClaudeMessage(
+                message({
+                    content: [
+                        {
+                            type: "tool_use",
+                            name: "artifacts",
+                            input: {
+                                command: "create",
+                                version_uuid: "artifact-version",
+                                content: "Artifact body",
+                            },
                         } as any,
                     ],
                 })
@@ -191,6 +229,33 @@ describe("Claude message exportability", () => {
 
         expect(metadata).toHaveLength(0);
     });
+
+    it.skipIf(!fs.existsSync(sandboxConversationsPath))(
+        "drops local Untitled conversations whose content blocks are empty",
+        () => {
+            const conversations: ClaudeConversation[] = JSON.parse(
+                fs.readFileSync(sandboxConversationsPath, "utf8")
+            );
+            const extractor = new ConversationMetadataExtractor(
+                new DefaultProviderRegistry(),
+                createTestPlugin()
+            );
+            const corpseIds = new Set([
+                "7329a60a-f1c8-47f3-848c-d6153c62472f",
+                "9c47df0f-8dd9-4484-9a4c-d5c7d8b16da0",
+            ]);
+
+            const sourceCorpses = conversations.filter((chat) =>
+                corpseIds.has(chat.uuid)
+            );
+            const metadata = (extractor as any).extractClaudeMetadata(
+                sourceCorpses
+            ) as any[];
+
+            expect(sourceCorpses).toHaveLength(corpseIds.size);
+            expect(metadata).toHaveLength(0);
+        }
+    );
 
     it.skipIf(!fs.existsSync(archivePath))(
         "keeps 119 of 128 conversations from the local Claude archive",
