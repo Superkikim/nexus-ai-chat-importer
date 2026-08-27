@@ -169,12 +169,6 @@ export class ImportReport {
     /**
      * Legacy method for backward compatibility (single file imports)
      */
-    addSummary(zipFileName: string, counters: ProcessingCounters) {
-        // For single file imports, just start a section and set counters
-        this.startFileSection(zipFileName);
-        this.setFileCounters(counters);
-    }
-
     private getTotalAttachmentStats(): AttachmentStats {
         const total = {
             total: 0,
@@ -936,16 +930,6 @@ export class ImportReport {
         }
     }
 
-    hasErrors(): boolean {
-        let hasFailed = false;
-        this.fileSections.forEach((section) => {
-            if (section.failed.length > 0) {
-                hasFailed = true;
-            }
-        });
-        return hasFailed || this.globalErrors.length > 0;
-    }
-
     getCreatedCount(): number {
         let count = 0;
         this.fileSections.forEach((section) => {
@@ -958,14 +942,6 @@ export class ImportReport {
         let count = 0;
         this.fileSections.forEach((section) => {
             count += section.updated.length;
-        });
-        return count;
-    }
-
-    getFailedCount(): number {
-        let count = 0;
-        this.fileSections.forEach((section) => {
-            count += section.failed.length;
         });
         return count;
     }
