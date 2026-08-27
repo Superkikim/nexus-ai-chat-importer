@@ -73,7 +73,7 @@
         "reprocess": {
             "label": "Reprocessar as notas existentes",
             "description": "Reconstrói as notas já presentes no seu cofre em vez de as ignorar. Use após atualizar o plugin para aproveitar as novidades.",
-            "selective_hint": "Para reconstruir uma nota existente, selecione a conversa correspondente na etapa seguinte.",
+            "selective_hint": "Para recriar notas existentes, selecione-as na etapa seguinte e marque «Recriar as notas selecionadas».",
             "warning": "As edições manuais dessas notas serão perdidas."
         },
         "file_area": {
@@ -100,7 +100,8 @@
             "search_placeholder": "Pesquisar conversas...",
             "status_label": "Estado:",
             "show_label": "Mostrar:",
-            "rebuild_help": "Ao selecionar uma conversa existente, a nota correspondente será sobrescrita e reprocessada."
+            "rebuild_existing_label": "Recriar as notas selecionadas se já existirem",
+            "rebuild_help": "Desativado, uma nota existente recebe apenas as mensagens novas. Ativado, cada nota selecionada que já está no seu cofre é reescrita do zero e as edições manuais são perdidas."
         },
         "status_filter_options": {
             "all": "Todas",

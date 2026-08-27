@@ -1971,6 +1971,22 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     outline-offset: 2px;
 }
 
+.nexus-conversation-selection-dialog .nexus-rebuild-control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+}
+
+.nexus-conversation-selection-dialog .nexus-rebuild-checkbox {
+    margin: 0;
+}
+
+.nexus-conversation-selection-dialog .nexus-rebuild-label {
+    font-size: 14px;
+    cursor: pointer;
+}
+
 .nexus-conversation-selection-dialog .nexus-controls-help {
     flex: 1 1 100%;
     font-size: 0.85em;
@@ -2233,7 +2249,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
         order: -1;
     }
 
-    .nexus-conversation-selection-dialog .nexus-status-chips {
+    .nexus-conversation-selection-dialog .nexus-status-chips,
+    .nexus-conversation-selection-dialog .nexus-rebuild-control {
         flex: 1 1 100%;
     }
 

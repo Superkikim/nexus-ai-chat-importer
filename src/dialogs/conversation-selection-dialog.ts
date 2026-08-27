@@ -39,6 +39,7 @@ const STATUS_FILTERS: readonly ConversationStatusFilter[] = [
 
 export class ConversationSelectionDialog extends Modal {
     private state: ConversationSelectionState;
+    private rebuildExisting = false;
     private onSelectionComplete: (result: ConversationSelectionResult) => void;
     private plugin?: NexusAiChatImporterPlugin;
     private analysisInfo?: AnalysisInfo;
@@ -217,10 +218,42 @@ export class ConversationSelectionDialog extends Modal {
             this.renderConversationList();
         });
 
-        const rebuildHelp = section.createDiv("nexus-controls-help");
-        rebuildHelp.textContent = t(
-            "conversation_selection.controls.rebuild_help"
+        this.createRebuildToggle(section);
+    }
+
+    /**
+     * Opt-in rebuild of the selected conversations that already have a note.
+     *
+     * Without it a selection behaves like any import: new conversations are
+     * created, updated ones gain the messages they lack, and an unchanged one
+     * is left alone. The rebuild is a separate intent, so it gets a separate
+     * control rather than being inferred from the selection.
+     */
+    private createRebuildToggle(section: HTMLElement) {
+        const control = section.createDiv("nexus-rebuild-control");
+
+        const checkboxId = `nexus-rebuild-${Date.now()}`;
+        const checkbox = control.createEl("input", {
+            type: "checkbox",
+            cls: "nexus-rebuild-checkbox",
+        });
+        checkbox.id = checkboxId;
+        checkbox.checked = this.rebuildExisting;
+
+        const label = control.createEl("label", {
+            cls: "nexus-rebuild-label",
+        });
+        label.htmlFor = checkboxId;
+        label.textContent = t(
+            "conversation_selection.controls.rebuild_existing_label"
         );
+
+        const help = section.createDiv("nexus-controls-help");
+        help.textContent = t("conversation_selection.controls.rebuild_help");
+
+        checkbox.addEventListener("change", () => {
+            this.rebuildExisting = checkbox.checked;
+        });
     }
 
     /**
@@ -842,6 +875,7 @@ export class ConversationSelectionDialog extends Modal {
             selectedIds,
             totalAvailable: this.state.allConversations.length,
             mode: "selective",
+            rebuildExisting: this.rebuildExisting,
         };
 
         this.close();

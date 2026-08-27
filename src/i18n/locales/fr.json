@@ -73,7 +73,7 @@
         "reprocess": {
             "label": "Retraiter les notes existantes",
             "description": "Reconstruit les notes déjà présentes dans votre coffre au lieu de les ignorer. À utiliser après une mise à jour du module pour bénéficier des nouveautés.",
-            "selective_hint": "Pour retraiter une note existante, sélectionnez sa conversation à l'étape suivante.",
+            "selective_hint": "Pour recréer des notes existantes, sélectionnez-les à l'étape suivante et cochez « Recréer les notes sélectionnées ».",
             "warning": "Les modifications manuelles apportées à ces notes seront perdues."
         },
         "file_area": {
@@ -100,7 +100,8 @@
             "search_placeholder": "Rechercher des conversations...",
             "status_label": "Statut :",
             "show_label": "Afficher :",
-            "rebuild_help": "Sélectionner une conversation existante écrase et retraite la note correspondante."
+            "rebuild_existing_label": "Recréer les notes sélectionnées si elles existent",
+            "rebuild_help": "Désactivé, une note existante reçoit seulement ses nouveaux messages. Activé, chaque note sélectionnée déjà présente dans votre coffre est réécrite de zéro et les modifications manuelles sont perdues."
         },
         "status_filter_options": {
             "all": "Tous",

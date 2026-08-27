@@ -1133,11 +1133,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const filesToImport = files.filter((file) =>
                 conversationsByFile.has(file.name)
             );
-            const selectedExistingConversationIds =
-                this.collectSelectedExistingConversationIds(
-                    result.selectedIds,
-                    availableConversations
-                );
+            // Only a rebuild request touches a note that is already current.
+            // Without it the processor applies its normal rules: create the
+            // new ones, append to the updated ones, leave the rest alone.
+            const selectedExistingConversationIds = result.rebuildExisting
+                ? this.collectSelectedExistingConversationIds(
+                      result.selectedIds,
+                      availableConversations
+                  )
+                : undefined;
 
             this.setImportCheckpoint({
                 operation: "selective-import",
@@ -1725,6 +1729,11 @@ ${report.generateMobileIndexContent(files, links)}
         }
     }
 
+    /**
+     * The selected conversations that already have a note, which a rebuild
+     * request turns into full regenerations. Called only when the user asked
+     * for one.
+     */
     private collectSelectedExistingConversationIds(
         selectedIds: string[],
         availableConversations: ConversationMetadata[]

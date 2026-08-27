@@ -73,7 +73,7 @@
         "reprocess": {
             "label": "Reprocess existing notes",
             "description": "Rebuilds notes already in your vault instead of skipping them. Use this after a plugin update to pick up new features.",
-            "selective_hint": "To rebuild an existing note, select its conversation in the next step.",
+            "selective_hint": "To rebuild existing notes, select them in the next step and tick “Rebuild selected notes”.",
             "warning": "Manual edits to those notes will be lost."
         },
         "file_area": {
@@ -100,7 +100,8 @@
             "search_placeholder": "Search conversations...",
             "status_label": "Status:",
             "show_label": "Show:",
-            "rebuild_help": "Selecting an existing conversation will overwrite and reprocess the matching note."
+            "rebuild_existing_label": "Rebuild selected notes if they exist",
+            "rebuild_help": "Off, an existing note only receives its new messages. On, every selected note already in your vault is rewritten from scratch and manual edits are lost."
         },
         "status_filter_options": {
             "all": "All",

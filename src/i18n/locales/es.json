@@ -73,7 +73,7 @@
         "reprocess": {
             "label": "Reprocesar las notas existentes",
             "description": "Reconstruye las notas que ya están en tu bóveda en lugar de omitirlas. Úsalo tras actualizar el plugin para aprovechar las novedades.",
-            "selective_hint": "Para reconstruir una nota existente, selecciona su conversación en el paso siguiente.",
+            "selective_hint": "Para recrear notas existentes, selecciónalas en el paso siguiente y marca «Recrear las notas seleccionadas».",
             "warning": "Se perderán las modificaciones manuales de esas notas."
         },
         "file_area": {
@@ -100,7 +100,8 @@
             "search_placeholder": "Buscar conversaciones...",
             "status_label": "Estado:",
             "show_label": "Mostrar:",
-            "rebuild_help": "Seleccionar una conversación existente sobrescribirá y reprocesará la nota correspondiente."
+            "rebuild_existing_label": "Recrear las notas seleccionadas si ya existen",
+            "rebuild_help": "Desactivado, una nota existente solo recibe sus mensajes nuevos. Activado, cada nota seleccionada que ya está en tu bóveda se reescribe desde cero y se pierden las ediciones manuales."
         },
         "status_filter_options": {
             "all": "Todos",

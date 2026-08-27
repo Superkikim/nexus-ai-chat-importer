@@ -73,7 +73,7 @@
         "reprocess": {
             "label": "Vorhandene Notizen neu verarbeiten",
             "description": "Erstellt bereits im Tresor vorhandene Notizen neu, statt sie zu überspringen. Nach einer Plugin-Aktualisierung verwenden, um neue Funktionen zu übernehmen.",
-            "selective_hint": "Um eine vorhandene Notiz neu aufzubauen, wählen Sie ihre Konversation im nächsten Schritt aus.",
+            "selective_hint": "Um vorhandene Notizen neu zu erstellen, wählen Sie sie im nächsten Schritt aus und aktivieren Sie „Ausgewählte Notizen neu erstellen“.",
             "warning": "Manuelle Änderungen an diesen Notizen gehen verloren."
         },
         "file_area": {
@@ -100,7 +100,8 @@
             "search_placeholder": "Gespräche suchen...",
             "status_label": "Status:",
             "show_label": "Anzeigen:",
-            "rebuild_help": "Wenn Sie eine vorhandene Konversation auswählen, wird die zugehörige Notiz überschrieben und neu verarbeitet."
+            "rebuild_existing_label": "Ausgewählte Notizen neu erstellen, falls vorhanden",
+            "rebuild_help": "Deaktiviert erhält eine vorhandene Notiz nur ihre neuen Nachrichten. Aktiviert wird jede ausgewählte Notiz, die bereits im Tresor liegt, komplett neu geschrieben und manuelle Änderungen gehen verloren."
         },
         "status_filter_options": {
             "all": "Alle",

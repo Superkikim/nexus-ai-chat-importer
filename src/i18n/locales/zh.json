@@ -73,7 +73,7 @@
         "reprocess": {
             "label": "重新处理已有笔记",
             "description": "重建库中已存在的笔记，而不是跳过它们。在插件更新后使用，以应用新功能。",
-            "selective_hint": "要重新生成已有笔记，请在下一步中选择对应的会话。",
+            "selective_hint": "要重新生成已有笔记，请在下一步中选择它们并勾选「重新生成所选笔记」。",
             "warning": "这些笔记中的手动修改将会丢失。"
         },
         "file_area": {
@@ -100,7 +100,8 @@
             "search_placeholder": "搜索对话...",
             "status_label": "状态：",
             "show_label": "显示：",
-            "rebuild_help": "选择已存在的会话会覆盖并重新处理对应笔记。"
+            "rebuild_existing_label": "若所选笔记已存在，则重新生成",
+            "rebuild_help": "关闭时，已有笔记只会补上新消息。开启时，保险库中每个被选中的笔记都会从头重写，手动修改将丢失。"
         },
         "status_filter_options": {
             "all": "全部",

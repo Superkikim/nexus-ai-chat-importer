@@ -46,6 +46,11 @@ export interface ConversationSelectionResult {
     selectedIds: string[];
     totalAvailable: number;
     mode: ImportMode;
+    /**
+     * Regenerate the selected conversations that already have a note. Without
+     * it an existing note is updated or left alone, never rewritten.
+     */
+    rebuildExisting: boolean;
 }
 
 /**
