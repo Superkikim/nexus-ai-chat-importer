@@ -679,7 +679,9 @@ export class ConversationProcessor {
                         );
                     await this.fileService.writeToFile(filePath, newContent);
 
-                    importReport.addUpdated(
+                    // Recreated, not updated: the note that was there is
+                    // gone, and the count is every message, not the new ones.
+                    importReport.addRecreated(
                         chatTitle,
                         filePath,
                         chatCreateTime,
