@@ -82,10 +82,7 @@ export interface FilterOptions {
     maxMessages?: number;
     showStarred?: boolean;
     showArchived?: boolean;
-    /**
-     * Statuses kept in the list. Always holds at least one, so an empty list
-     * can never be the result of the filter alone.
-     */
+    /** Statuses kept in the list. Empty hides every conversation. */
     statuses: Set<ConversationStatusFilter>;
 }
 

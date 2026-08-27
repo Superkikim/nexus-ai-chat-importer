@@ -277,13 +277,13 @@ export class ConversationSelectionDialog extends Modal {
 
         STATUS_FILTERS.forEach((status) => {
             addChip(status, () => {
-                if (!statuses.has(status)) {
+                // Every chip can be turned off, the last one included: a
+                // filter that refuses to empty the list reads as broken.
+                if (statuses.has(status)) {
+                    statuses.delete(status);
+                } else {
                     statuses.add(status);
-                    return;
                 }
-                // Turning off the last active chip would leave an empty list
-                // with no way to read why, so it stays on.
-                if (statuses.size > 1) statuses.delete(status);
             });
         });
 
