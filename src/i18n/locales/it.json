@@ -135,6 +135,7 @@
             "new": "Nuovo",
             "updated": "Aggiornato",
             "unchanged": "Invariato",
+            "scope_note": "Sull'intero archivio",
             "selected_of": "{{selected}} di {{total}} selezionate"
         },
         "buttons": {
@@ -171,7 +172,9 @@
             "duplicates": "Duplicati",
             "new": "Nuovo",
             "updated": "Aggiornato",
-            "skipped": "Saltati",
+            "skipped": "Invariate",
+            "not_selected": "Non selezionate",
+            "empty_suffix": "{{count}} senza contenuto esportabile",
             "failed": "Falliti"
         },
         "attachments": {
@@ -506,6 +509,21 @@
         "attachment_map_failed": "Impossibile costruire la mappa degli allegati. Consulta la console per maggiori dettagli.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Importa nuovo file",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+    },
+    "archive_messages": {
+        "empty": "Il file ZIP non contiene alcun file. Verifica di aver selezionato il file di esportazione corretto.",
+        "unsupported_format": "Questo file ZIP non corrisponde a nessun formato di esportazione supportato.",
+        "nested_zip": {
+            "generic": "Questo ZIP contiene altri file ZIP. Estrai l'archivio esterno e importa direttamente i file ZIP interni.",
+            "perplexity": "Questo ZIP contiene altri file ZIP. Estrai l'archivio esterno e importa direttamente i file part*.zip di Perplexity che contiene."
+        },
+        "provider_mismatch": {
+            "chatgpt": "Questo file ZIP non sembra un'esportazione di ChatGPT.",
+            "claude": "Questo file ZIP non sembra un'esportazione di Claude.",
+            "vibe": "Questo file ZIP non sembra un'esportazione di Mistral Vibe.",
+            "gemini": "Questo file ZIP non sembra un'esportazione di Gemini Takeout.",
+            "perplexity": "Questo file ZIP non sembra un archivio di Perplexity Thread Exporter."
+        }
     },
     "commands": {
         "import_conversations": {

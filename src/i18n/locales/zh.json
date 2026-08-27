@@ -135,6 +135,7 @@
             "new": "新建",
             "updated": "已更新",
             "unchanged": "未变更",
+            "scope_note": "基于整个存档",
             "selected_of": "已选 {{selected}} / {{total}}"
         },
         "buttons": {
@@ -171,7 +172,9 @@
             "duplicates": "重复",
             "new": "新建",
             "updated": "已更新",
-            "skipped": "已跳过",
+            "skipped": "无变化",
+            "not_selected": "未选择",
+            "empty_suffix": "{{count}} 个无可导出内容",
             "failed": "失败"
         },
         "attachments": {
@@ -506,6 +509,21 @@
         "attachment_map_failed": "构建附件映射失败，请查看控制台获取详细信息。",
         "ribbon_tooltip": "Nexus AI Chat Importer - 导入新文件",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+    },
+    "archive_messages": {
+        "empty": "此 ZIP 文件不包含任何文件。请确认您选择的是正确的导出文件。",
+        "unsupported_format": "此 ZIP 文件与任何受支持的导出格式都不匹配。",
+        "nested_zip": {
+            "generic": "此 ZIP 中包含其他 ZIP 文件。请解压外层 ZIP，然后直接导入内层的 ZIP 文件。",
+            "perplexity": "此 ZIP 中包含其他 ZIP 文件。请解压外层 ZIP，然后直接导入其中 Perplexity 的 part*.zip 文件。"
+        },
+        "provider_mismatch": {
+            "chatgpt": "此 ZIP 文件似乎不是 ChatGPT 导出文件。",
+            "claude": "此 ZIP 文件似乎不是 Claude 导出文件。",
+            "vibe": "此 ZIP 文件似乎不是 Mistral Vibe 导出文件。",
+            "gemini": "此 ZIP 文件似乎不是 Gemini Takeout 导出文件。",
+            "perplexity": "此 ZIP 文件似乎不是 Perplexity Thread Exporter 归档。"
+        }
     },
     "commands": {
         "import_conversations": {

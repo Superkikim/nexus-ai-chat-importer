@@ -135,6 +135,7 @@
             "new": "New",
             "updated": "Updated",
             "unchanged": "Unchanged",
+            "scope_note": "Across the whole archive",
             "selected_of": "{{selected}} of {{total}} selected"
         },
         "buttons": {
@@ -171,7 +172,9 @@
             "duplicates": "Duplicates",
             "new": "New",
             "updated": "Updated",
-            "skipped": "Skipped",
+            "skipped": "Unchanged",
+            "not_selected": "Not selected",
+            "empty_suffix": "{{count}} with no exportable content",
             "failed": "Failed"
         },
         "attachments": {

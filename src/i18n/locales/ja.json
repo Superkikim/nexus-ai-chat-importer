@@ -135,6 +135,7 @@
             "new": "新規",
             "updated": "更新済み",
             "unchanged": "変更なし",
+            "scope_note": "アーカイブ全体",
             "selected_of": "{{total}} 件中 {{selected}} 件を選択"
         },
         "buttons": {
@@ -171,7 +172,9 @@
             "duplicates": "重複",
             "new": "新規",
             "updated": "更新済み",
-            "skipped": "スキップ済み",
+            "skipped": "変更なし",
+            "not_selected": "未選択",
+            "empty_suffix": "エクスポート可能な内容なし {{count}} 件",
             "failed": "失敗"
         },
         "attachments": {
@@ -506,6 +509,21 @@
         "attachment_map_failed": "添付ファイルマップの構築に失敗しました。詳細はコンソールをご確認ください。",
         "ribbon_tooltip": "Nexus AI Chat Importer - 新しいファイルをインポート",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+    },
+    "archive_messages": {
+        "empty": "この ZIP ファイルにはファイルが含まれていません。正しいエクスポートファイルを選択したか確認してください。",
+        "unsupported_format": "この ZIP ファイルは、サポートされているエクスポート形式のいずれにも一致しません。",
+        "nested_zip": {
+            "generic": "この ZIP には別の ZIP ファイルが含まれています。外側の ZIP を展開し、内側の ZIP ファイルを直接インポートしてください。",
+            "perplexity": "この ZIP には別の ZIP ファイルが含まれています。外側の ZIP を展開し、内側の Perplexity の part*.zip ファイルを直接インポートしてください。"
+        },
+        "provider_mismatch": {
+            "chatgpt": "この ZIP ファイルは ChatGPT のエクスポートではないようです。",
+            "claude": "この ZIP ファイルは Claude のエクスポートではないようです。",
+            "vibe": "この ZIP ファイルは Mistral Vibe のエクスポートではないようです。",
+            "gemini": "この ZIP ファイルは Gemini Takeout のエクスポートではないようです。",
+            "perplexity": "この ZIP ファイルは Perplexity Thread Exporter のアーカイブではないようです。"
+        }
     },
     "commands": {
         "import_conversations": {

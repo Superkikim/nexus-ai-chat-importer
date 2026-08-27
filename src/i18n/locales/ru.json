@@ -135,6 +135,7 @@
             "new": "Новые",
             "updated": "Обновлённые",
             "unchanged": "Без изменений",
+            "scope_note": "По всему архиву",
             "selected_of": "{{selected}} из {{total}} выбрано"
         },
         "buttons": {
@@ -171,7 +172,9 @@
             "duplicates": "Дубликаты",
             "new": "Новые",
             "updated": "Обновлённые",
-            "skipped": "Пропущено",
+            "skipped": "Без изменений",
+            "not_selected": "Не выбрано",
+            "empty_suffix": "{{count}} без экспортируемого содержимого",
             "failed": "Ошибка"
         },
         "attachments": {
@@ -506,6 +509,21 @@
         "attachment_map_failed": "Не удалось создать карту вложений. Проверьте консоль для получения подробной информации.",
         "ribbon_tooltip": "Nexus AI Chat Importer — импорт нового файла",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+    },
+    "archive_messages": {
+        "empty": "ZIP-архив не содержит файлов. Проверьте, что выбран правильный файл экспорта.",
+        "unsupported_format": "Этот ZIP-архив не соответствует ни одному поддерживаемому формату экспорта.",
+        "nested_zip": {
+            "generic": "Этот ZIP-архив содержит другие ZIP-файлы. Распакуйте внешний архив и импортируйте вложенные ZIP-файлы напрямую.",
+            "perplexity": "Этот ZIP-архив содержит другие ZIP-файлы. Распакуйте внешний архив и импортируйте вложенные файлы part*.zip от Perplexity напрямую."
+        },
+        "provider_mismatch": {
+            "chatgpt": "Похоже, этот ZIP-архив не является экспортом ChatGPT.",
+            "claude": "Похоже, этот ZIP-архив не является экспортом Claude.",
+            "vibe": "Похоже, этот ZIP-архив не является экспортом Mistral Vibe.",
+            "gemini": "Похоже, этот ZIP-архив не является экспортом Gemini Takeout.",
+            "perplexity": "Похоже, этот ZIP-архив не является архивом Perplexity Thread Exporter."
+        }
     },
     "commands": {
         "import_conversations": {

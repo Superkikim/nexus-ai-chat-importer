@@ -135,6 +135,7 @@
             "new": "Neu",
             "updated": "Aktualisiert",
             "unchanged": "Unverändert",
+            "scope_note": "Für das gesamte Archiv",
             "selected_of": "{{selected}} von {{total}} ausgewählt"
         },
         "buttons": {
@@ -171,7 +172,9 @@
             "duplicates": "Duplikate",
             "new": "Neu",
             "updated": "Aktualisiert",
-            "skipped": "Übersprungen",
+            "skipped": "Unverändert",
+            "not_selected": "Nicht ausgewählt",
+            "empty_suffix": "{{count}} ohne exportierbaren Inhalt",
             "failed": "Fehlgeschlagen"
         },
         "attachments": {
@@ -506,6 +509,21 @@
         "attachment_map_failed": "Anhangskarte konnte nicht erstellt werden. Weitere Details in der Konsole.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Neue Datei importieren",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+    },
+    "archive_messages": {
+        "empty": "Die ZIP-Datei enthält keine Dateien. Bitte prüfen Sie, ob Sie die richtige Exportdatei ausgewählt haben.",
+        "unsupported_format": "Diese ZIP-Datei entspricht keinem unterstützten Exportformat.",
+        "nested_zip": {
+            "generic": "Diese ZIP-Datei enthält weitere ZIP-Dateien. Entpacken Sie das äußere Archiv und importieren Sie die inneren ZIP-Dateien direkt.",
+            "perplexity": "Diese ZIP-Datei enthält weitere ZIP-Dateien. Entpacken Sie das äußere Archiv und importieren Sie die inneren Dateien part*.zip von Perplexity direkt."
+        },
+        "provider_mismatch": {
+            "chatgpt": "Diese ZIP-Datei scheint kein ChatGPT-Export zu sein.",
+            "claude": "Diese ZIP-Datei scheint kein Claude-Export zu sein.",
+            "vibe": "Diese ZIP-Datei scheint kein Mistral Vibe-Export zu sein.",
+            "gemini": "Diese ZIP-Datei scheint kein Gemini Takeout-Export zu sein.",
+            "perplexity": "Diese ZIP-Datei scheint kein Archiv von Perplexity Thread Exporter zu sein."
+        }
     },
     "commands": {
         "import_conversations": {
