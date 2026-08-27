@@ -1930,8 +1930,10 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     flex-wrap: wrap;
 }
 
-/* Inactive chips are outlines; an active one takes the colour of the badge it
-   filters on, so the control and the rows below read as the same vocabulary. */
+/* One treatment for every chip: muted outline when off, accent fill when on.
+   The colours come from the Obsidian theme, so the control follows whatever
+   the user runs. Status colours stay on the badges in the list, where they
+   identify a row rather than a toggle state. */
 .nexus-conversation-selection-dialog .nexus-status-chip {
     padding: 4px 12px;
     border: 1px solid var(--background-modifier-border);
@@ -1947,27 +1949,26 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-conversation-selection-dialog .nexus-status-chip:hover {
-    border-color: var(--interactive-accent);
+    background-color: var(--background-modifier-hover);
+    border-color: var(--background-modifier-border-hover);
     color: var(--text-normal);
 }
 
 .nexus-conversation-selection-dialog .nexus-status-chip.is-active {
-    background-color: var(--background-modifier-border);
-    border-color: var(--background-modifier-border);
-    color: var(--text-normal);
-}
-
-.nexus-conversation-selection-dialog .nexus-status-chip.status-new.is-active {
     background-color: var(--interactive-accent);
     border-color: var(--interactive-accent);
     color: var(--text-on-accent);
 }
 
-.nexus-conversation-selection-dialog
-    .nexus-status-chip.status-updated.is-active {
-    background-color: var(--text-warning);
-    border-color: var(--text-warning);
+.nexus-conversation-selection-dialog .nexus-status-chip.is-active:hover {
+    background-color: var(--interactive-accent-hover);
+    border-color: var(--interactive-accent-hover);
     color: var(--text-on-accent);
+}
+
+.nexus-conversation-selection-dialog .nexus-status-chip:focus-visible {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
 }
 
 .nexus-conversation-selection-dialog .nexus-controls-help {

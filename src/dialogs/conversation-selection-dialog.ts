@@ -225,8 +225,8 @@ export class ConversationSelectionDialog extends Modal {
 
     /**
      * Status filter as toggle chips rather than a single-choice dropdown: the
-     * three states are not exclusive, and the chips carry the colours of the
-     * badges in the list, so the filter and the rows read as the same thing.
+     * three states are not exclusive. A chip reads as on or off and nothing
+     * else, so it stays neutral until selected.
      */
     private createStatusChips(section: HTMLElement) {
         const group = section.createDiv("nexus-status-chips");
@@ -264,7 +264,6 @@ export class ConversationSelectionDialog extends Modal {
                 text: t(`conversation_selection.status_filter_options.${key}`),
             });
             chip.type = "button";
-            if (key !== "all") chip.addClass(`status-${key}`);
             chip.addEventListener("click", () => {
                 onClick();
                 refresh();
