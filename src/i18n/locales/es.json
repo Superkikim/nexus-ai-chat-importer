@@ -99,8 +99,7 @@
             "search_placeholder": "Buscar conversaciones...",
             "status_label": "Estado:",
             "show_label": "Mostrar:",
-            "existing_only_label": "Mostrar solo conversaciones existentes",
-            "existing_only_help": "Seleccionar una conversación existente sobrescribirá y reprocesará la nota correspondiente."
+            "rebuild_help": "Seleccionar una conversación existente sobrescribirá y reprocesará la nota correspondiente."
         },
         "status_filter_options": {
             "all": "Todos",

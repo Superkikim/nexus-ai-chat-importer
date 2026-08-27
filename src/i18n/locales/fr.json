@@ -99,8 +99,7 @@
             "search_placeholder": "Rechercher des conversations...",
             "status_label": "Statut :",
             "show_label": "Afficher :",
-            "existing_only_label": "Afficher uniquement les conversations existantes",
-            "existing_only_help": "Sélectionner une conversation existante écrase et retraite la note correspondante."
+            "rebuild_help": "Sélectionner une conversation existante écrase et retraite la note correspondante."
         },
         "status_filter_options": {
             "all": "Tous",

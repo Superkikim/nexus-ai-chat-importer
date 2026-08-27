@@ -26,9 +26,16 @@ import {
 import {
     ConversationSelectionResult,
     ConversationSelectionState,
-    FilterOptions,
+    ConversationStatusFilter,
 } from "../types/conversation-selection";
 import { t } from "../i18n";
+
+/** Chip order, and the only statuses the filter knows about. */
+const STATUS_FILTERS: readonly ConversationStatusFilter[] = [
+    "new",
+    "updated",
+    "unchanged",
+];
 
 export class ConversationSelectionDialog extends Modal {
     private state: ConversationSelectionState;
@@ -67,8 +74,9 @@ export class ConversationSelectionDialog extends Modal {
                 direction: "desc",
             },
             filter: {
-                existenceStatus: "all",
-                existingOnly: false,
+                // Unchanged is off by default: it is the one status with
+                // nothing to import unless the user asks for a rebuild.
+                statuses: new Set<ConversationStatusFilter>(["new", "updated"]),
             },
             isLoading: false,
         };
@@ -169,95 +177,7 @@ export class ConversationSelectionDialog extends Modal {
             this.updatePagination();
         });
 
-        // Filter by status dropdown
-        const statusLabel = section.createEl("label", {
-            cls: "nexus-filter-label",
-        });
-        statusLabel.textContent = t(
-            "conversation_selection.controls.status_label"
-        );
-
-        const statusSelect = section.createEl("select", {
-            cls: "nexus-custom-select nexus-filter-select",
-        });
-
-        const statusOptions = [
-            {
-                value: "all",
-                text: t("conversation_selection.status_filter_options.all"),
-            },
-            {
-                value: "new",
-                text: t("conversation_selection.status_filter_options.new"),
-            },
-            {
-                value: "updated",
-                text: t("conversation_selection.status_filter_options.updated"),
-            },
-            {
-                value: "unchanged",
-                text: t(
-                    "conversation_selection.status_filter_options.unchanged"
-                ),
-            },
-        ];
-
-        statusOptions.forEach((option) => {
-            const optionEl = statusSelect.createEl("option");
-            optionEl.value = option.value;
-            optionEl.textContent = option.text;
-        });
-
-        statusSelect.value = this.state.filter.existenceStatus || "all";
-        statusSelect.addEventListener("change", (e) => {
-            const target = e.target as HTMLSelectElement;
-            this.state.filter.existenceStatus =
-                target.value as FilterOptions["existenceStatus"];
-            this.applyFiltersAndSort();
-            this.renderConversationList();
-            this.updateSummary();
-            this.updatePagination();
-        });
-
-        // Existing-only toggle (reprocess selected existing conversations)
-        const existingOnlyControl = section.createDiv(
-            "nexus-existing-only-control"
-        );
-        const existingOnlyCheckboxId = `nexus-existing-only-${Date.now()}`;
-        const existingOnlyCheckbox = existingOnlyControl.createEl("input", {
-            type: "checkbox",
-            cls: "nexus-existing-only-checkbox",
-        });
-        existingOnlyCheckbox.id = existingOnlyCheckboxId;
-        existingOnlyCheckbox.checked = !!this.state.filter.existingOnly;
-
-        const existingOnlyLabel = existingOnlyControl.createEl("label", {
-            cls: "nexus-filter-label nexus-existing-only-label",
-        });
-        existingOnlyLabel.htmlFor = existingOnlyCheckboxId;
-        existingOnlyLabel.textContent = t(
-            "conversation_selection.controls.existing_only_label"
-        );
-
-        const syncExistingOnlyState = () => {
-            const existingOnlyEnabled = !!this.state.filter.existingOnly;
-            statusSelect.disabled = existingOnlyEnabled;
-            statusLabel.classList.toggle("is-disabled", existingOnlyEnabled);
-            if (existingOnlyEnabled) {
-                this.state.filter.existenceStatus = "all";
-                statusSelect.value = "all";
-            }
-        };
-
-        existingOnlyCheckbox.addEventListener("change", () => {
-            this.state.filter.existingOnly = existingOnlyCheckbox.checked;
-            syncExistingOnlyState();
-            this.applyFiltersAndSort();
-            this.renderConversationList();
-            this.updateSummary();
-            this.updatePagination();
-        });
-        syncExistingOnlyState();
+        this.createStatusChips(section);
 
         // Page size dropdown
         const pageSizeLabel = section.createEl("label", {
@@ -295,10 +215,78 @@ export class ConversationSelectionDialog extends Modal {
             this.renderConversationList();
         });
 
-        const existingOnlyHelp = section.createDiv("nexus-existing-only-help");
-        existingOnlyHelp.textContent = t(
-            "conversation_selection.controls.existing_only_help"
+        const rebuildHelp = section.createDiv("nexus-controls-help");
+        rebuildHelp.textContent = t(
+            "conversation_selection.controls.rebuild_help"
         );
+    }
+
+    /**
+     * Status filter as toggle chips rather than a single-choice dropdown: the
+     * three states are not exclusive, and the chips carry the colours of the
+     * badges in the list, so the filter and the rows read as the same thing.
+     */
+    private createStatusChips(section: HTMLElement) {
+        const group = section.createDiv("nexus-status-chips");
+
+        const label = group.createSpan({ cls: "nexus-filter-label" });
+        label.textContent = t("conversation_selection.controls.status_label");
+
+        const { statuses } = this.state.filter;
+        const chips = new Map<"all" | ConversationStatusFilter, HTMLElement>();
+
+        const allActive = () => STATUS_FILTERS.every((s) => statuses.has(s));
+
+        const sync = () => {
+            chips.forEach((chip, key) => {
+                const active = key === "all" ? allActive() : statuses.has(key);
+                chip.toggleClass("is-active", active);
+                chip.setAttribute("aria-pressed", String(active));
+            });
+        };
+
+        const refresh = () => {
+            sync();
+            this.applyFiltersAndSort();
+            this.renderConversationList();
+            this.updateSummary();
+            this.updatePagination();
+        };
+
+        const addChip = (
+            key: "all" | ConversationStatusFilter,
+            onClick: () => void
+        ) => {
+            const chip = group.createEl("button", {
+                cls: "nexus-status-chip",
+                text: t(`conversation_selection.status_filter_options.${key}`),
+            });
+            chip.type = "button";
+            if (key !== "all") chip.addClass(`status-${key}`);
+            chip.addEventListener("click", () => {
+                onClick();
+                refresh();
+            });
+            chips.set(key, chip);
+        };
+
+        addChip("all", () => {
+            STATUS_FILTERS.forEach((status) => statuses.add(status));
+        });
+
+        STATUS_FILTERS.forEach((status) => {
+            addChip(status, () => {
+                if (!statuses.has(status)) {
+                    statuses.add(status);
+                    return;
+                }
+                // Turning off the last active chip would leave an empty list
+                // with no way to read why, so it stays on.
+                if (statuses.size > 1) statuses.delete(status);
+            });
+        });
+
+        sync();
     }
 
     private createConversationListSection(container: HTMLElement) {
@@ -454,25 +442,16 @@ export class ConversationSelectionDialog extends Modal {
             );
         }
 
-        // Apply existence status filter
-        if (
-            this.state.filter.existenceStatus &&
-            this.state.filter.existenceStatus !== "all"
-        ) {
-            filtered = filtered.filter(
-                (conv) =>
-                    conv.existenceStatus === this.state.filter.existenceStatus
-            );
-        }
-
-        // Show only conversations that already exist in vault.
-        if (this.state.filter.existingOnly) {
-            filtered = filtered.filter(
-                (conv) =>
-                    conv.existenceStatus === "updated" ||
-                    conv.existenceStatus === "unchanged"
-            );
-        }
+        // Apply existence status filter. A conversation with no known status
+        // is never hidden: the chips only speak for the three they name.
+        const { statuses } = this.state.filter;
+        filtered = filtered.filter((conv) => {
+            const status = conv.existenceStatus as
+                | ConversationStatusFilter
+                | undefined;
+            if (!status || !STATUS_FILTERS.includes(status)) return true;
+            return statuses.has(status);
+        });
 
         // Apply sorting
         filtered.sort((a, b) => {

@@ -66,6 +66,9 @@ export interface SortOptions {
     direction: "asc" | "desc";
 }
 
+/** The conversation states the list can be filtered on. */
+export type ConversationStatusFilter = "new" | "updated" | "unchanged";
+
 /**
  * Filter options for conversation list
  */
@@ -79,8 +82,11 @@ export interface FilterOptions {
     maxMessages?: number;
     showStarred?: boolean;
     showArchived?: boolean;
-    existenceStatus?: "all" | "new" | "updated" | "unchanged"; // New filter for existence status
-    existingOnly?: boolean;
+    /**
+     * Statuses kept in the list. Always holds at least one, so an empty list
+     * can never be the result of the filter alone.
+     */
+    statuses: Set<ConversationStatusFilter>;
 }
 
 /**

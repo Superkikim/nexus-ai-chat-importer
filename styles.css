@@ -1908,22 +1908,54 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     min-width: 0;
 }
 
-.nexus-conversation-selection-dialog .nexus-existing-only-control {
+.nexus-conversation-selection-dialog .nexus-status-chips {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    white-space: nowrap;
+    gap: 6px;
+    flex-wrap: wrap;
 }
 
-.nexus-conversation-selection-dialog .nexus-existing-only-checkbox {
-    margin: 0;
-}
-
-.nexus-conversation-selection-dialog .nexus-existing-only-label {
+/* Inactive chips are outlines; an active one takes the colour of the badge it
+   filters on, so the control and the rows below read as the same vocabulary. */
+.nexus-conversation-selection-dialog .nexus-status-chip {
+    padding: 4px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 12px;
+    background-color: transparent;
+    box-shadow: none;
+    color: var(--text-muted);
+    font-size: 0.85em;
+    font-weight: 500;
+    line-height: 1.4;
+    height: auto;
     cursor: pointer;
 }
 
-.nexus-conversation-selection-dialog .nexus-existing-only-help {
+.nexus-conversation-selection-dialog .nexus-status-chip:hover {
+    border-color: var(--interactive-accent);
+    color: var(--text-normal);
+}
+
+.nexus-conversation-selection-dialog .nexus-status-chip.is-active {
+    background-color: var(--background-modifier-border);
+    border-color: var(--background-modifier-border);
+    color: var(--text-normal);
+}
+
+.nexus-conversation-selection-dialog .nexus-status-chip.status-new.is-active {
+    background-color: var(--interactive-accent);
+    border-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.nexus-conversation-selection-dialog
+    .nexus-status-chip.status-updated.is-active {
+    background-color: var(--text-warning);
+    border-color: var(--text-warning);
+    color: var(--text-on-accent);
+}
+
+.nexus-conversation-selection-dialog .nexus-controls-help {
     flex: 1 1 100%;
     font-size: 0.85em;
     color: var(--text-muted);
@@ -2185,7 +2217,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
         order: -1;
     }
 
-    .nexus-conversation-selection-dialog .nexus-existing-only-control {
+    .nexus-conversation-selection-dialog .nexus-status-chips {
         flex: 1 1 100%;
     }
 
