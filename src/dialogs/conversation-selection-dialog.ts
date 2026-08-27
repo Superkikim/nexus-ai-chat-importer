@@ -835,6 +835,9 @@ export class ConversationSelectionDialog extends Modal {
                         "conversation_selection.summary.unchanged"
                     )}</div>
                 </div>
+                <div class="nexus-summary-scope">${t(
+                    "conversation_selection.summary.scope_note"
+                )}</div>
             `;
         }
 

@@ -31,6 +31,8 @@ export interface ImportCompletionStats {
     created: number;
     updated: number;
     skipped: number;
+    /** Offered in the selection dialog and left unchecked; null on a full import. */
+    notSelected: number | null;
     emptyConversations: number;
     failed: number;
     attachmentsFound: number;
@@ -138,12 +140,13 @@ export class ImportCompletionDialog extends Modal {
             "var(--color-orange)"
         );
 
-        // Skipped cartouche
+        // Unchanged cartouche. The suffix used to be hardcoded English.
         const skippedLabel =
             this.stats.emptyConversations > 0
-                ? `${t("import_completion.stats.skipped")} (${
-                      this.stats.emptyConversations
-                  } with no exportable content)`
+                ? `${t("import_completion.stats.skipped")} (${t(
+                      "import_completion.stats.empty_suffix",
+                      { count: String(this.stats.emptyConversations) }
+                  )})`
                 : t("import_completion.stats.skipped");
         this.createStatCartouche(
             section,
@@ -152,6 +155,17 @@ export class ImportCompletionDialog extends Modal {
             skippedLabel,
             "var(--text-muted)"
         );
+
+        // Only a selective import has a declined population to report.
+        if (this.stats.notSelected !== null && this.stats.notSelected > 0) {
+            this.createStatCartouche(
+                section,
+                "☐",
+                this.stats.notSelected.toString(),
+                t("import_completion.stats.not_selected"),
+                "var(--text-muted)"
+            );
+        }
 
         // Failed cartouche (only if > 0)
         if (this.stats.failed > 0) {

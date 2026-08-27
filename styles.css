@@ -1866,6 +1866,16 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     font-size: 0.85em;
 }
 
+/* Caption under the summary cards. It spans every column so it stays a single
+   row whatever the responsive column count, instead of being dealt a cell. */
+.nexus-conversation-selection-dialog .nexus-summary-scope {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78em;
+    opacity: 0.75;
+}
+
 .nexus-conversation-selection-dialog .nexus-controls-row {
     background-color: var(--background-primary);
     padding: 12px;

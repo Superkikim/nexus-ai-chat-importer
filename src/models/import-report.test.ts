@@ -77,14 +77,14 @@ function populatedReport(): ImportReport {
     return report;
 }
 
-/** The `| Skipped | n |` row of the "Conversations" table, as rendered. */
-function conversationsSkippedRow(markdown: string): string | undefined {
+/** A named row of the "Conversations" table, as rendered. */
+function conversationsRow(markdown: string, label: string): string | undefined {
     const start = markdown.indexOf("### Conversations");
     expect(start).toBeGreaterThan(-1);
     return markdown
         .slice(start)
         .split("\n")
-        .find((line) => line.startsWith("| Skipped |"));
+        .find((line) => line.startsWith(`| ${label} |`));
 }
 
 describe("import report — desktop import-all (analysis available)", () => {
@@ -106,7 +106,9 @@ describe("import report — desktop import-all (analysis available)", () => {
         expect(markdown).toContain("| Failed | 1 |");
         // 5 unchanged conversations dropped at analysis time — not the single
         // no-op write recorded by addSkipped.
-        expect(conversationsSkippedRow(markdown)).toBe("| Skipped | 5 |");
+        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
+            "| Unchanged (not imported) | 5 |"
+        );
         expect(markdown).toContain("| Found (raw) | 12 |");
         expect(markdown).toContain("| Kept (unique) | 10 |");
         expect(markdown).toContain("| Duplicates removed | 2 |");
@@ -144,14 +146,15 @@ describe("import report — selective import", () => {
         );
 
         expect(markdown).toContain("| Kept (unique) | 10 |");
-        expect(conversationsSkippedRow(markdown)).toBe("| Skipped | 5 |");
+        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
+            "| Unchanged (not imported) | 5 |"
+        );
     });
 
-    it("counts conversations the user left unselected nowhere", () => {
-        // Documents today's gap: 10 conversations offered, 5 importable, and
-        // nothing in the report says how many the user declined.
+    it("reports the conversations the user left unchecked", () => {
         const report = populatedReport();
         report.setAnalysisInfo(analysis());
+        report.setSelection(10, 4);
 
         const markdown = report.generateSummaryReportContent(
             [fakeFile("export.zip")],
@@ -162,7 +165,25 @@ describe("import report — selective import", () => {
             LINKS
         );
 
-        expect(markdown).not.toContain("Not selected");
+        expect(conversationsRow(markdown, "Not selected")).toBe(
+            "| Not selected | 6 |"
+        );
+    });
+
+    it("leaves the row out of a full import, where nothing was offered", () => {
+        const report = populatedReport();
+        report.setAnalysisInfo(analysis());
+
+        const markdown = report.generateSummaryReportContent(
+            [fakeFile("export.zip")],
+            ["export.zip"],
+            [],
+            false,
+            undefined,
+            LINKS
+        );
+
+        expect(conversationsRow(markdown, "Not selected")).toBeUndefined();
     });
 });
 
@@ -188,7 +209,9 @@ describe("import report — mobile direct (no analysis phase)", () => {
         expect(markdown).toContain("| Created | 3 |");
         expect(markdown).toContain("| Updated | 2 |");
         // The single no-op write, because nothing else is known.
-        expect(conversationsSkippedRow(markdown)).toBe("| Skipped | 1 |");
+        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
+            "| Unchanged (not imported) | 1 |"
+        );
         // Analysis-only rows must stay out rather than render as zero.
         expect(markdown).not.toContain("| Found (raw) |");
         expect(markdown).not.toContain("| Kept (unique) |");
@@ -209,8 +232,8 @@ describe("import report — mobile direct (no analysis phase)", () => {
     });
 });
 
-describe('import report — the word "Skipped" is overloaded', () => {
-    it("uses it for archives and for conversations in the same note", () => {
+describe("import report — every row names its own subject", () => {
+    it("never reuses one label for archives and for conversations", () => {
         const report = populatedReport();
         report.setAnalysisInfo(analysis());
 
@@ -228,9 +251,15 @@ describe('import report — the word "Skipped" is overloaded', () => {
             markdown.indexOf("### Conversations")
         );
         // One archive was not processed...
-        expect(filesBlock).toContain("| Skipped | 1 |");
-        // ...and five conversations were unchanged. Same word, same note.
-        expect(conversationsSkippedRow(markdown)).toBe("| Skipped | 5 |");
+        expect(filesBlock).toContain("| Not processed | 1 |");
+        // ...and five conversations were already up to date. Different words.
+        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
+            "| Unchanged (not imported) | 5 |"
+        );
+        // The overloaded label is gone from the note entirely, including the
+        // per-archive Status column that used it a third time.
+        expect(markdown).not.toContain("| Skipped |");
+        expect(markdown).not.toContain("| skipped |");
     });
 });
 

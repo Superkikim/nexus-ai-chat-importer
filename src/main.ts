@@ -1076,6 +1076,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             });
             // Create shared report for the entire operation
             const operationReport = new ImportReport();
+            operationReport.setSelection(
+                result.totalAvailable,
+                result.selectedIds.length
+            );
 
             // Set custom timestamp format if enabled
             if (this.settings.useCustomMessageTimestampFormat) {
@@ -1252,6 +1256,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         report.setIgnoredArchives(ignoredArchives ?? []);
 
         const stats = report.getCompletionStats();
+        const ledger = report.getConversationLedger();
         const processedFiles: string[] = [];
         const skippedFiles: string[] = [];
         if (stats.totalFiles > 0 || report.getProcessedFileNames().length > 0) {
@@ -1293,6 +1298,10 @@ totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
 totalSkipped: ${stats.skipped}
 totalFailed: ${stats.failed}
+totalUnchanged: ${ledger.unchanged}
+totalReprocessed: ${ledger.reprocessed}
+totalNotSelected: ${ledger.notSelected ?? 0}
+totalEmpty: ${ledger.empty}
 `;
 
         const summaryContent = `---
