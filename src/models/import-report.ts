@@ -49,6 +49,7 @@ interface FileSection {
     fileName: string;
     created: ReportEntry[];
     updated: ReportEntry[];
+    recreated: ReportEntry[];
     skipped: ReportEntry[];
     failed: ReportEntry[];
     ignored: ReportEntry[];
@@ -74,8 +75,10 @@ export interface ConversationLedger {
 
     /** Notes written for the first time. */
     created: number;
-    /** Existing notes rewritten with new content. */
+    /** Existing notes that gained the messages they lacked. */
     updated: number;
+    /** Existing notes regenerated from scratch on a rebuild request. */
+    recreated: number;
     /** Conversations that errored during processing. */
     failed: number;
     /** Conversations with no exportable content. */
@@ -131,6 +134,7 @@ export class ImportReport {
                 fileName,
                 created: [],
                 updated: [],
+                recreated: [],
                 skipped: [],
                 failed: [],
                 ignored: [],
@@ -180,7 +184,11 @@ export class ImportReport {
         };
 
         this.fileSections.forEach((section) => {
-            [...section.created, ...section.updated].forEach((entry) => {
+            [
+                ...section.created,
+                ...section.updated,
+                ...section.recreated,
+            ].forEach((entry) => {
                 if (entry.attachmentStats) {
                     total.total += entry.attachmentStats.total;
                     total.found += entry.attachmentStats.found;
@@ -213,21 +221,23 @@ export class ImportReport {
             failed: 0,
         };
 
-        [...section.created, ...section.updated].forEach((entry) => {
-            if (entry.attachmentStats) {
-                total.total += entry.attachmentStats.total;
-                total.found += entry.attachmentStats.found;
-                total.inline += entry.attachmentStats.inline;
-                total.notProvided += entry.attachmentStats.notProvided;
-                total.missing += entry.attachmentStats.missing;
-                total.failed += entry.attachmentStats.failed;
-            }
+        [...section.created, ...section.updated, ...section.recreated].forEach(
+            (entry) => {
+                if (entry.attachmentStats) {
+                    total.total += entry.attachmentStats.total;
+                    total.found += entry.attachmentStats.found;
+                    total.inline += entry.attachmentStats.inline;
+                    total.notProvided += entry.attachmentStats.notProvided;
+                    total.missing += entry.attachmentStats.missing;
+                    total.failed += entry.attachmentStats.failed;
+                }
 
-            if (entry.providerSpecificCount) {
-                total.total += entry.providerSpecificCount;
-                total.found += entry.providerSpecificCount;
+                if (entry.providerSpecificCount) {
+                    total.total += entry.providerSpecificCount;
+                    total.found += entry.providerSpecificCount;
+                }
             }
-        });
+        );
 
         return total;
     }
@@ -254,6 +264,7 @@ export class ImportReport {
     private getGlobalStats() {
         let created = 0;
         let updated = 0;
+        let recreated = 0;
         let skipped = 0;
         let failed = 0;
         let totalProcessed = 0;
@@ -262,6 +273,7 @@ export class ImportReport {
         this.fileSections.forEach((section) => {
             created += section.created.length;
             updated += section.updated.length;
+            recreated += section.recreated.length;
             skipped += section.skipped.length;
             failed += section.failed.length;
             totalProcessed += section.counters.totalConversationsProcessed;
@@ -271,6 +283,7 @@ export class ImportReport {
         return {
             created,
             updated,
+            recreated,
             skipped,
             failed,
             totalProcessed,
@@ -319,6 +332,35 @@ export class ImportReport {
                 createTime,
                 updateTime,
                 newMessageCount,
+                attachmentStats,
+                providerSpecificCount,
+                sourceFile: this.currentFileName,
+            });
+        }
+    }
+
+    /**
+     * An existing note regenerated from scratch. Distinct from addUpdated,
+     * which appends what a note lacks: nothing of the previous file survives
+     * a rebuild, so reporting the two as one outcome would hide it.
+     */
+    addRecreated(
+        title: string,
+        filePath: string,
+        createTime: number,
+        updateTime: number,
+        messageCount: number,
+        attachmentStats?: AttachmentStats,
+        providerSpecificCount?: number
+    ) {
+        const section = this.getCurrentSection();
+        if (section) {
+            section.recreated.push({
+                title,
+                filePath,
+                createTime,
+                updateTime,
+                messageCount,
                 attachmentStats,
                 providerSpecificCount,
                 sourceFile: this.currentFileName,
@@ -443,6 +485,9 @@ export class ImportReport {
         lines.push("| --- | ---: |");
         lines.push(`| Created | ${ledger.created} |`);
         lines.push(`| Updated | ${ledger.updated} |`);
+        if (ledger.recreated > 0) {
+            lines.push(`| Recreated | ${ledger.recreated} |`);
+        }
         lines.push(`| Unchanged (not imported) | ${ledger.unchangedSkipped} |`);
         if (ledger.reprocessed > 0) {
             // "requested", not "rebuilt": this is the analysis pulling unchanged
@@ -476,10 +521,10 @@ export class ImportReport {
             lines.push("## Archives");
             lines.push("");
             lines.push(
-                "| Archive | Timestamp | Status | Reason | Conversations | Selected | Created | Updated | Unchanged | Failed | Duplicates |"
+                "| Archive | Timestamp | Status | Reason | Conversations | Selected | Created | Updated | Recreated | Unchanged | Failed | Duplicates |"
             );
             lines.push(
-                "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
+                "| --- | --- | --- | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |"
             );
 
             for (const file of sortedFiles) {
@@ -491,9 +536,11 @@ export class ImportReport {
                 const selectedCount =
                     perFileStats?.selectedForImport ??
                     (section?.created.length || 0) +
-                        (section?.updated.length || 0);
+                        (section?.updated.length || 0) +
+                        (section?.recreated.length || 0);
                 const createdCount = section?.created.length || 0;
                 const updatedCount = section?.updated.length || 0;
+                const recreatedCount = section?.recreated.length || 0;
                 const failedCount = section?.failed.length || 0;
                 const duplicateCount = perFileStats?.duplicates ?? 0;
                 const unchangedCount =
@@ -510,7 +557,7 @@ export class ImportReport {
                 );
 
                 lines.push(
-                    `| \`${shortName}\` | ${timestamp} | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${unchangedCount} | ${failedCount} | ${duplicateCount} |`
+                    `| \`${shortName}\` | ${timestamp} | ${status} | ${reason} | ${conversationCount} | ${selectedCount} | ${createdCount} | ${updatedCount} | ${recreatedCount} | ${unchangedCount} | ${failedCount} | ${duplicateCount} |`
                 );
             }
             lines.push("");
@@ -570,6 +617,7 @@ export class ImportReport {
         lines.push("");
         lines.push(`- Created: ${stats.created}`);
         lines.push(`- Updated: ${stats.updated}`);
+        lines.push(`- Recreated: ${stats.recreated}`);
         lines.push(`- Failed: ${stats.failed}`);
         lines.push(`- Files with entries: ${fileNames.length}`);
         lines.push("");
@@ -667,6 +715,11 @@ export class ImportReport {
                 upsertEntry(entry, "created");
             }
             for (const entry of section.updated) {
+                upsertEntry(entry, "updated");
+            }
+            // The index is a way back to a note, not an accounting table: a
+            // recreated note is an existing one, so it lists with the updated.
+            for (const entry of section.recreated) {
                 upsertEntry(entry, "updated");
             }
 
@@ -794,6 +847,13 @@ export class ImportReport {
             content += this.generateUpdatedTable(section.updated, isMultiFile);
         }
 
+        if (section.recreated.length > 0) {
+            content += this.generateRecreatedTable(
+                section.recreated,
+                isMultiFile
+            );
+        }
+
         if (section.failed.length > 0) {
             content += this.generateFailedTable(section.failed, isMultiFile);
         }
@@ -835,6 +895,43 @@ export class ImportReport {
                     : providerSpecificValue;
 
             table += `| ✨ | ${titleLink} | ${createDate} | ${
+                entry.messageCount || 0
+            } | ${providerSpecificDisplay} |\n`;
+        });
+
+        return table + "\n\n";
+    }
+
+    private generateRecreatedTable(
+        entries: ReportEntry[],
+        isMultiFile: boolean
+    ): string {
+        const header = isMultiFile
+            ? "### ♻️ Recreated Notes"
+            : "## ♻️ Recreated Notes";
+        let table = `${header}\n\n`;
+        // Whole-note counts, not "new" ones: a rebuild rewrites everything.
+        table += `| | Title | Updated | Messages | ${this.providerSpecificColumnHeader} |\n`;
+        table += "|:---:|:---|:---:|:---:|:---:|\n";
+
+        const sortedEntries = [...entries].sort(
+            (a, b) => a.updateTime - b.updateTime
+        );
+
+        sortedEntries.forEach((entry) => {
+            const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+            const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+            const providerSpecificValue = entry.providerSpecificCount || 0;
+            const updateDate = formatMessageTimestamp(
+                entry.updateTime,
+                this.customTimestampFormat
+            );
+            const providerSpecificDisplay =
+                providerSpecificValue > 0
+                    ? `✅ ${providerSpecificValue}`
+                    : providerSpecificValue;
+
+            table += `| ♻️ | ${titleLink} | ${updateDate} | ${
                 entry.messageCount || 0
             } | ${providerSpecificDisplay} |\n`;
         });
@@ -946,6 +1043,14 @@ export class ImportReport {
         return count;
     }
 
+    getRecreatedCount(): number {
+        let count = 0;
+        this.fileSections.forEach((section) => {
+            count += section.recreated.length;
+        });
+        return count;
+    }
+
     getIgnoredCount(): number {
         let count = 0;
         this.fileSections.forEach((section) => {
@@ -1025,6 +1130,7 @@ export class ImportReport {
             // Vault-side.
             created: writes.created,
             updated: writes.updated,
+            recreated: writes.recreated,
             failed: writes.failed,
             empty: this.getIgnoredCount(),
             noChange: writes.skipped,
@@ -1057,6 +1163,7 @@ export class ImportReport {
             duplicates: ledger.duplicates,
             created: ledger.created,
             updated: ledger.updated,
+            recreated: ledger.recreated,
             skipped: ledger.unchangedSkipped,
             notSelected: ledger.notSelected,
             emptyConversations: ledger.empty,
