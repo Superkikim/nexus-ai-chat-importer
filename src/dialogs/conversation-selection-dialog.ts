@@ -770,28 +770,12 @@ export class ConversationSelectionDialog extends Modal {
         const selectedCount = this.state.selectedIds.size;
         const totalCount = this.state.filteredConversations.length;
 
-        // Calculate status counts from filtered conversations (what's currently shown)
-        const statusCounts = {
-            new: 0,
-            updated: 0,
-            unchanged: 0,
-            unknown: 0,
-        };
-
-        this.state.filteredConversations.forEach((conv) => {
-            const status = conv.existenceStatus || "unknown";
-            statusCounts[status]++;
-        });
-
-        // Build the comprehensive summary
+        // The cards deliberately describe the whole archive, not the current
+        // filter: they are what the user reads to decide how to filter.
         summary.empty();
         summary.append(
             sanitizeHTMLToDom(
-                this.buildComprehensiveSummary(
-                    selectedCount,
-                    totalCount,
-                    statusCounts
-                )
+                this.buildComprehensiveSummary(selectedCount, totalCount)
             )
         );
 
@@ -813,8 +797,7 @@ export class ConversationSelectionDialog extends Modal {
 
     private buildComprehensiveSummary(
         selectedCount: number,
-        totalCount: number,
-        _statusCounts: unknown
+        totalCount: number
     ): string {
         // 4 cartouches compacts
         if (this.analysisInfo) {
@@ -846,7 +829,7 @@ export class ConversationSelectionDialog extends Modal {
                 </div>
                 <div class="nexus-summary-card">
                     <div class="nexus-summary-value nexus-summary-value-muted">${
-                        info.conversationsIgnored
+                        info.conversationsUnchanged
                     }</div>
                     <div class="nexus-summary-label">${t(
                         "conversation_selection.summary.unchanged"

@@ -35,7 +35,8 @@ function analysis(overrides: Partial<AnalysisInfo> = {}): AnalysisInfo {
         hasMultipleFiles: false,
         conversationsNew: 3,
         conversationsUpdated: 2,
-        conversationsIgnored: 5,
+        conversationsUnchanged: 5,
+        conversationsDroppedUnchanged: 5,
         conversationsReprocessed: 0,
         ...overrides,
     };
@@ -64,7 +65,7 @@ function populatedReport(): ImportReport {
         "No changes needed"
     );
     report.addIgnored("Empty", "p/g.md", 1_700_000_000, 1_700_000_000);
-    report.addFailed("Boom", "p/h.md", 1_700_000_000, 1_700_000_000, 0, "err");
+    report.addFailed("Boom", "p/h.md", 1_700_000_000, 1_700_000_000, "err");
 
     report.setFileCounters({
         totalConversationsProcessed: 8,

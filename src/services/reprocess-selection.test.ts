@@ -86,7 +86,8 @@ describe("reprocess pulls unchanged conversations back into the selection", () =
         const result = await analyse(false);
 
         expect(result.conversations.map((c) => c.id)).toEqual(["conv-new"]);
-        expect(result.analysisInfo?.conversationsIgnored).toBe(1);
+        expect(result.analysisInfo?.conversationsUnchanged).toBe(1);
+        expect(result.analysisInfo?.conversationsDroppedUnchanged).toBe(1);
         expect(result.analysisInfo?.conversationsReprocessed).toBe(0);
     });
 
@@ -97,7 +98,11 @@ describe("reprocess pulls unchanged conversations back into the selection", () =
             "conv-new",
             "conv-unchanged",
         ]);
-        expect(result.analysisInfo?.conversationsIgnored).toBe(0);
+        // The conversation is still unchanged in the vault — the rebuild only
+        // changes what we do about it. The dialog's "Unchanged" card reads this
+        // one, so it must not drop to zero just because reprocess is on.
+        expect(result.analysisInfo?.conversationsUnchanged).toBe(1);
+        expect(result.analysisInfo?.conversationsDroppedUnchanged).toBe(0);
         expect(result.analysisInfo?.conversationsReprocessed).toBe(1);
     });
 
@@ -188,7 +193,8 @@ describe("reprocess is provider-agnostic", () => {
         const result = await analyseClaude(false);
 
         expect(result.conversations).toHaveLength(0);
-        expect(result.analysisInfo?.conversationsIgnored).toBe(1);
+        expect(result.analysisInfo?.conversationsUnchanged).toBe(1);
+        expect(result.analysisInfo?.conversationsDroppedUnchanged).toBe(1);
     });
 
     it("rebuilds it when asked, exactly as for ChatGPT", async () => {
@@ -197,6 +203,8 @@ describe("reprocess is provider-agnostic", () => {
         expect(result.conversations.map((c) => c.id)).toEqual([
             "claude-unchanged",
         ]);
+        expect(result.analysisInfo?.conversationsUnchanged).toBe(1);
+        expect(result.analysisInfo?.conversationsDroppedUnchanged).toBe(0);
         expect(result.analysisInfo?.conversationsReprocessed).toBe(1);
     });
 });

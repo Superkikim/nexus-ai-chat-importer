@@ -55,8 +55,16 @@ export interface AnalysisInfo {
     hasMultipleFiles: boolean;
     conversationsNew: number;
     conversationsUpdated: number;
-    conversationsIgnored: number;
-    /** Unchanged conversations pulled back in because a rebuild was requested. */
+    /**
+     * Every conversation already up to date in the vault, whether or not a
+     * rebuild pulled it back in. This is a state, not an outcome: it stays
+     * accurate when `reprocess` is on, which is what the selection dialog
+     * needs to stop contradicting the "Unchanged" badges in its own list.
+     */
+    conversationsUnchanged: number;
+    /** The subset of the above that was dropped instead of imported. */
+    conversationsDroppedUnchanged: number;
+    /** The subset of the above pulled back in because a rebuild was requested. */
     conversationsReprocessed: number;
 }
 
@@ -84,7 +92,7 @@ export interface FileAnalysisStats {
     selectedForImport: number;
     newConversations: number;
     updatedConversations: number;
-    skippedConversations: number;
+    unchangedConversations: number;
 }
 
 export interface IgnoredArchiveInfo {
@@ -391,7 +399,7 @@ export class ConversationMetadataExtractor {
                     selectedForImport: 0,
                     newConversations: 0,
                     updatedConversations: 0,
-                    skippedConversations: 0,
+                    unchangedConversations: 0,
                 });
             } catch (error) {
                 const message =
@@ -452,7 +460,7 @@ export class ConversationMetadataExtractor {
 
             const stats = fileStatsMap.get(fileName);
             if (stats) {
-                stats.skippedConversations++;
+                stats.unchangedConversations++;
             }
         }
 
@@ -466,7 +474,9 @@ export class ConversationMetadataExtractor {
                 hasMultipleFiles: files.length > 1,
                 conversationsNew: filterResult.newCount,
                 conversationsUpdated: filterResult.updatedCount,
-                conversationsIgnored: filterResult.ignoredCount,
+                conversationsUnchanged: filterResult.unchangedCount,
+                conversationsDroppedUnchanged:
+                    filterResult.droppedUnchangedCount,
                 conversationsReprocessed: filterResult.reprocessedCount,
             },
             fileStats: fileStatsMap,
@@ -836,14 +846,16 @@ export class ConversationMetadataExtractor {
         ignoredConversations: ConversationMetadata[];
         newCount: number;
         updatedCount: number;
-        ignoredCount: number;
+        unchangedCount: number;
+        droppedUnchangedCount: number;
         reprocessedCount: number;
     } {
         const conversationsForSelection: ConversationMetadata[] = [];
         const ignoredConversations: ConversationMetadata[] = [];
         let newCount = 0;
         let updatedCount = 0;
-        let ignoredCount = 0;
+        let unchangedCount = 0;
+        let droppedUnchangedCount = 0;
         let reprocessedCount = 0;
 
         for (const conversation of bestVersions) {
@@ -883,13 +895,14 @@ export class ConversationMetadataExtractor {
                 // Status stays "unchanged" either way, so the selection dialog
                 // keeps telling the truth about what is already in the vault.
                 conversation.existenceStatus = "unchanged";
+                unchangedCount++;
                 if (includeUnchanged) {
                     conversation.hasNewerContent = false;
                     conversationsForSelection.push(conversation);
                     reprocessedCount++;
                 } else {
                     ignoredConversations.push(conversation);
-                    ignoredCount++;
+                    droppedUnchangedCount++;
                 }
             }
         }
@@ -900,7 +913,8 @@ export class ConversationMetadataExtractor {
             ignoredConversations,
             newCount,
             updatedCount,
-            ignoredCount,
+            unchangedCount,
+            droppedUnchangedCount,
         };
     }
 }

@@ -406,7 +406,7 @@ export class ImportReport {
         lines.push(`| Updated | ${stats.updated} |`);
         lines.push(
             `| Skipped | ${
-                analysisInfo?.conversationsIgnored ?? stats.skipped
+                analysisInfo?.conversationsDroppedUnchanged ?? stats.skipped
             } |`
         );
         lines.push(`| Failed | ${stats.failed} |`);
@@ -978,7 +978,8 @@ export class ImportReport {
         const duplicates =
             this.analysisInfo?.duplicatesRemoved ?? this.getTotalDuplicates();
         const skipped =
-            this.analysisInfo?.conversationsIgnored ?? globalStats.skipped;
+            this.analysisInfo?.conversationsDroppedUnchanged ??
+            globalStats.skipped;
 
         return {
             totalFiles: this.fileSections.size,
