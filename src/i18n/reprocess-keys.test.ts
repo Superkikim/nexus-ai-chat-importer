@@ -38,7 +38,12 @@ describe("reprocess toggle translations", () => {
             const block = reprocessBlock(locales[name]);
 
             expect(block).toBeDefined();
-            for (const key of ["label", "description", "warning"]) {
+            for (const key of [
+                "label",
+                "description",
+                "selective_hint",
+                "warning",
+            ]) {
                 expect(block?.[key], `${name}.${key}`).toBeTruthy();
             }
 

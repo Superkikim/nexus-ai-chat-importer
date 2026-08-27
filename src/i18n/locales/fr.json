@@ -73,6 +73,7 @@
         "reprocess": {
             "label": "Retraiter les notes existantes",
             "description": "Reconstruit les notes déjà présentes dans votre coffre au lieu de les ignorer. À utiliser après une mise à jour du module pour bénéficier des nouveautés.",
+            "selective_hint": "Pour retraiter une note existante, sélectionnez sa conversation à l'étape suivante.",
             "warning": "Les modifications manuelles apportées à ces notes seront perdues."
         },
         "file_area": {

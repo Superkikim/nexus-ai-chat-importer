@@ -73,6 +73,7 @@
         "reprocess": {
             "label": "Reprocessar as notas existentes",
             "description": "Reconstrói as notas já presentes no seu cofre em vez de as ignorar. Use após atualizar o plugin para aproveitar as novidades.",
+            "selective_hint": "Para reconstruir uma nota existente, selecione a conversa correspondente na etapa seguinte.",
             "warning": "As edições manuais dessas notas serão perdidas."
         },
         "file_area": {

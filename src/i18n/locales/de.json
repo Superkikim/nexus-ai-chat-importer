@@ -73,6 +73,7 @@
         "reprocess": {
             "label": "Vorhandene Notizen neu verarbeiten",
             "description": "Erstellt bereits im Tresor vorhandene Notizen neu, statt sie zu überspringen. Nach einer Plugin-Aktualisierung verwenden, um neue Funktionen zu übernehmen.",
+            "selective_hint": "Um eine vorhandene Notiz neu aufzubauen, wählen Sie ihre Konversation im nächsten Schritt aus.",
             "warning": "Manuelle Änderungen an diesen Notizen gehen verloren."
         },
         "file_area": {

@@ -73,6 +73,7 @@
         "reprocess": {
             "label": "Rielabora le note esistenti",
             "description": "Ricostruisce le note già presenti nel tuo vault invece di saltarle. Da usare dopo un aggiornamento del plugin per sfruttare le novità.",
+            "selective_hint": "Per rigenerare una nota esistente, seleziona la sua conversazione nel passaggio successivo.",
             "warning": "Le modifiche manuali a quelle note andranno perse."
         },
         "file_area": {

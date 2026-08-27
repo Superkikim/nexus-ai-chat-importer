@@ -73,6 +73,7 @@
         "reprocess": {
             "label": "Reprocess existing notes",
             "description": "Rebuilds notes already in your vault instead of skipping them. Use this after a plugin update to pick up new features.",
+            "selective_hint": "To rebuild an existing note, select its conversation in the next step.",
             "warning": "Manual edits to those notes will be lost."
         },
         "file_area": {

@@ -34,6 +34,9 @@ export class EnhancedFileSelectionDialog extends Modal {
     private onFileSelectionComplete: (result: FileSelectionResult) => void;
     private dragCounter = 0;
     private lastImportMode: ImportMode | null = null;
+    private reprocessBox?: HTMLElement;
+    private reprocessCheckbox?: HTMLInputElement;
+    private reprocessDescription?: HTMLElement;
 
     constructor(
         app: App,
@@ -101,7 +104,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         allRadio.id = "import-all";
         allRadio.addEventListener("change", () => {
             this.importMode = "all";
-            this.updateImportModeDescription();
+            this.updateReprocessBox();
             this.updateImportModeBoxes();
         });
 
@@ -123,7 +126,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         allOption.addEventListener("click", () => {
             allRadio.checked = true;
             this.importMode = "all";
-            this.updateImportModeDescription();
+            this.updateReprocessBox();
             this.updateImportModeBoxes();
         });
 
@@ -143,7 +146,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         selectRadio.id = "import-selective";
         selectRadio.addEventListener("change", () => {
             this.importMode = "selective";
-            this.updateImportModeDescription();
+            this.updateReprocessBox();
             this.updateImportModeBoxes();
         });
 
@@ -169,7 +172,7 @@ export class EnhancedFileSelectionDialog extends Modal {
         selectOption.addEventListener("click", () => {
             selectRadio.checked = true;
             this.importMode = "selective";
-            this.updateImportModeDescription();
+            this.updateReprocessBox();
             this.updateImportModeBoxes();
         });
 
@@ -179,9 +182,8 @@ export class EnhancedFileSelectionDialog extends Modal {
     /**
      * Opt-in rebuild of notes already in the vault.
      *
-     * Shown in both import modes: selecting an already-imported conversation in
-     * "Select Specific" mode already forces a rebuild, so a visible control
-     * makes that rule explicit rather than something the user has to discover.
+     * The box is present in both import modes, but only "Import All" gets a
+     * checkbox — see updateReprocessBox.
      */
     private createReprocessToggle(container: HTMLElement) {
         const box = container.createDiv("nexus-reprocess-option");
@@ -211,6 +213,15 @@ export class EnhancedFileSelectionDialog extends Modal {
         warning.textContent = t("file_selection.reprocess.warning");
 
         const sync = () => {
+            // A hidden checkbox still answers to its label, so the
+            // informational mode refuses the state rather than showing one
+            // the user has no control over.
+            if (this.importMode === "selective") {
+                checkbox.checked = false;
+                this.reprocess = false;
+                box.removeClass("is-selected");
+                return;
+            }
             this.reprocess = checkbox.checked;
             box.toggleClass("is-selected", this.reprocess);
         };
@@ -220,11 +231,17 @@ export class EnhancedFileSelectionDialog extends Modal {
         // The label and the checkbox already toggle natively; only clicks on
         // the surrounding box need to be forwarded, or the state flips twice.
         box.addEventListener("click", (event) => {
+            if (this.importMode === "selective") return;
             const target = event.target as HTMLElement;
             if (target === checkbox || target === label) return;
             checkbox.checked = !checkbox.checked;
             sync();
         });
+
+        this.reprocessBox = box;
+        this.reprocessCheckbox = checkbox;
+        this.reprocessDescription = description;
+        this.updateReprocessBox();
     }
 
     private updateImportModeBoxes() {
@@ -472,8 +489,33 @@ export class EnhancedFileSelectionDialog extends Modal {
         importButton.disabled = this.selectedFiles.length === 0;
     }
 
-    private updateImportModeDescription() {
-        // Could add dynamic description updates here if needed
+    /**
+     * The box only offers a choice in "Import All". In "Select Specific" the
+     * choice is the selection itself, so the checkbox goes away and the box
+     * says so instead of offering a second, redundant way to ask for a
+     * rebuild. Nothing else moves: the label and the warning stay, so the
+     * dialog keeps the same height across modes.
+     */
+    private updateReprocessBox() {
+        const informational = this.importMode === "selective";
+        const box = this.reprocessBox;
+        if (!box || !this.reprocessCheckbox || !this.reprocessDescription) {
+            return;
+        }
+
+        box.toggleClass("is-informational", informational);
+
+        if (informational) {
+            this.reprocess = false;
+            this.reprocessCheckbox.checked = false;
+            box.removeClass("is-selected");
+        }
+
+        this.reprocessDescription.textContent = t(
+            informational
+                ? "file_selection.reprocess.selective_hint"
+                : "file_selection.reprocess.description"
+        );
     }
 
     private getDialogTitle(): string {

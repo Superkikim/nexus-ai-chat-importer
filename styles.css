@@ -962,6 +962,21 @@
     cursor: pointer;
 }
 
+/* "Select Specific" turns the box into a statement rather than a control:
+   the checkbox goes, everything else stays where it was so the dialog keeps
+   its height when the mode changes. */
+.nexus-reprocess-option.is-informational {
+    cursor: default;
+}
+
+.nexus-reprocess-option.is-informational .nexus-reprocess-checkbox {
+    display: none;
+}
+
+.nexus-reprocess-option.is-informational .nexus-option-box-label {
+    cursor: default;
+}
+
 .nexus-reprocess-warning {
     margin-top: 6px;
     font-size: 0.85em;
