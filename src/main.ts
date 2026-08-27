@@ -1305,8 +1305,6 @@ ${report.generateSummaryReportContent(
     files,
     processedFiles,
     skippedFiles,
-    analysisInfo,
-    fileStats,
     isSelectiveImport,
     archiveDisplayNames,
     links,

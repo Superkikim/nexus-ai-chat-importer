@@ -96,8 +96,6 @@ describe("import report — desktop import-all (analysis available)", () => {
             [fakeFile("export.zip")],
             ["export.zip"],
             [],
-            analysis(),
-            undefined,
             false,
             undefined,
             LINKS
@@ -140,8 +138,6 @@ describe("import report — selective import", () => {
             [fakeFile("export.zip")],
             ["export.zip"],
             [],
-            analysis(),
-            undefined,
             true,
             undefined,
             LINKS
@@ -161,8 +157,6 @@ describe("import report — selective import", () => {
             [fakeFile("export.zip")],
             ["export.zip"],
             [],
-            analysis(),
-            undefined,
             true,
             undefined,
             LINKS
@@ -186,8 +180,6 @@ describe("import report — mobile direct (no analysis phase)", () => {
             [fakeFile("export.zip")],
             ["export.zip"],
             [],
-            undefined,
-            undefined,
             false,
             undefined,
             LINKS
@@ -226,8 +218,6 @@ describe('import report — the word "Skipped" is overloaded', () => {
             [fakeFile("export.zip"), fakeFile("other.zip")],
             ["export.zip"],
             ["other.zip"],
-            analysis(),
-            undefined,
             false,
             undefined,
             LINKS
@@ -259,5 +249,79 @@ describe("import report — heavy and mobile indexes", () => {
         // Neither index surfaces no-op writes or empty conversations.
         expect(heavy).not.toContain("Same");
         expect(mobile).not.toContain("Same");
+    });
+});
+
+describe("conversation ledger", () => {
+    it("resolves from the analysis when one ran", () => {
+        const report = populatedReport();
+        report.setAnalysisInfo(analysis());
+
+        const ledger = report.getConversationLedger();
+
+        expect(ledger.analysisAvailable).toBe(true);
+        expect(ledger.totalFound).toBe(12);
+        expect(ledger.uniqueKept).toBe(10);
+        expect(ledger.unchanged).toBe(5);
+        expect(ledger.unchangedSkipped).toBe(5);
+        expect(ledger.totalConversations).toBe(10);
+        expect(ledger.duplicates).toBe(2);
+        // Write counters stay themselves — the no-op is not the skip count.
+        expect(ledger.noChange).toBe(1);
+        expect(ledger.created).toBe(3);
+        expect(ledger.updated).toBe(2);
+        expect(ledger.empty).toBe(1);
+        expect(ledger.failed).toBe(1);
+    });
+
+    it("falls back to the writes when no analysis ran", () => {
+        const ledger = populatedReport().getConversationLedger();
+
+        expect(ledger.analysisAvailable).toBe(false);
+        // On the mobile flow an unchanged conversation reaches the processor
+        // and is recorded by addSkipped, so the no-op counter carries the
+        // meaning the analysis would otherwise have supplied.
+        expect(ledger.unchangedSkipped).toBe(1);
+        expect(ledger.totalConversations).toBe(8);
+        expect(ledger.duplicates).toBe(0);
+        // Archive-side numbers stay at zero and must never be rendered.
+        expect(ledger.totalFound).toBe(0);
+        expect(ledger.uniqueKept).toBe(0);
+        expect(ledger.unchanged).toBe(0);
+    });
+
+    it("keeps the unchanged count whole when a rebuild pulls them back in", () => {
+        const report = populatedReport();
+        report.setAnalysisInfo(
+            analysis({
+                conversationsUnchanged: 5,
+                conversationsDroppedUnchanged: 0,
+                conversationsReprocessed: 5,
+            })
+        );
+
+        const ledger = report.getConversationLedger();
+
+        // What the vault holds, versus what we did about it.
+        expect(ledger.unchanged).toBe(5);
+        expect(ledger.reprocessed).toBe(5);
+        expect(ledger.unchangedSkipped).toBe(0);
+    });
+
+    it("splits unchanged into dropped and reprocessed without losing any", () => {
+        const report = populatedReport();
+        report.setAnalysisInfo(
+            analysis({
+                conversationsUnchanged: 7,
+                conversationsDroppedUnchanged: 4,
+                conversationsReprocessed: 3,
+            })
+        );
+
+        const ledger = report.getConversationLedger();
+
+        expect(ledger.unchangedSkipped + ledger.reprocessed).toBe(
+            ledger.unchanged
+        );
     });
 });
