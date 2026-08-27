@@ -1004,6 +1004,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 // Write report showing what was analyzed
                 const operationReport = new ImportReport();
+                if (this.settings.useCustomMessageTimestampFormat) {
+                    operationReport.setCustomTimestampFormat(
+                        this.settings.messageTimestampFormat
+                    );
+                }
                 const reportPath = await this.writeConsolidatedReport(
                     operationReport,
                     provider,

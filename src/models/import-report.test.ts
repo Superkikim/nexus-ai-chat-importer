@@ -354,3 +354,36 @@ describe("conversation ledger", () => {
         );
     });
 });
+
+describe("import report — a rebuild is a request, not an outcome", () => {
+    it("does not claim conversations were rebuilt when they were unchecked", () => {
+        // The analysis pulled 7 unchanged conversations back in, then the user
+        // kept 3 of 10. Saying "7 rebuilt" would contradict "7 not selected".
+        const report = populatedReport();
+        report.setAnalysisInfo(
+            analysis({
+                conversationsUnchanged: 7,
+                conversationsDroppedUnchanged: 0,
+                conversationsReprocessed: 7,
+            })
+        );
+        report.setSelection(10, 3);
+
+        const markdown = report.generateSummaryReportContent(
+            [fakeFile("export.zip")],
+            ["export.zip"],
+            [],
+            true,
+            undefined,
+            LINKS
+        );
+
+        expect(
+            conversationsRow(markdown, "Unchanged (rebuild requested)")
+        ).toBe("| Unchanged (rebuild requested) | 7 |");
+        expect(conversationsRow(markdown, "Not selected")).toBe(
+            "| Not selected | 7 |"
+        );
+        expect(markdown).not.toContain("Unchanged (rebuilt)");
+    });
+});

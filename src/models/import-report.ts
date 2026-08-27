@@ -451,7 +451,13 @@ export class ImportReport {
         lines.push(`| Updated | ${ledger.updated} |`);
         lines.push(`| Unchanged (not imported) | ${ledger.unchangedSkipped} |`);
         if (ledger.reprocessed > 0) {
-            lines.push(`| Unchanged (rebuilt) | ${ledger.reprocessed} |`);
+            // "requested", not "rebuilt": this is the analysis pulling unchanged
+            // conversations back into the selection. On a selective import the
+            // user can then uncheck them, so claiming an outcome here would
+            // overstate what happened — the Not selected row covers the rest.
+            lines.push(
+                `| Unchanged (rebuild requested) | ${ledger.reprocessed} |`
+            );
         }
         if (ledger.notSelected !== null) {
             lines.push(`| Not selected | ${ledger.notSelected} |`);
