@@ -140,7 +140,7 @@ export function extractZipTimestamp(fileName: string): number | null {
  */
 export function formatTimestamp(
     unixTime: number,
-    format: "prefix" | "date" | "time"
+    format: "prefix" | "date" | "time" | "fileStamp"
 ): string {
     const date = moment(unixTime * 1000);
     switch (format) {
@@ -150,6 +150,11 @@ export function formatTimestamp(
             return date.format("L");
         case "time":
             return date.format("LTS");
+        // Sortable and locale-independent, for names a machine orders and a
+        // human reads: the locale time format produced "75411PM" once its
+        // separators were stripped.
+        case "fileStamp":
+            return date.format("YYYYMMDD-HHmmss");
     }
 }
 

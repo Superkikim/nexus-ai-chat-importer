@@ -77,9 +77,9 @@ function populatedReport(): ImportReport {
     return report;
 }
 
-/** A named row of the "Conversations" table, as rendered. */
+/** A named row of the "Notes" outcome table, as rendered. */
 function conversationsRow(markdown: string, label: string): string | undefined {
-    const start = markdown.indexOf("### Conversations");
+    const start = markdown.indexOf("### Notes");
     expect(start).toBeGreaterThan(-1);
     return markdown
         .slice(start)
@@ -101,16 +101,16 @@ describe("import report — desktop import-all (analysis available)", () => {
             LINKS
         );
 
-        expect(markdown).toContain("| Created | 3 |");
-        expect(markdown).toContain("| Updated | 2 |");
-        expect(markdown).toContain("| Failed | 1 |");
+        expect(markdown).toContain("| ✨ Created | 3 |");
+        expect(markdown).toContain("| 🔄 Updated | 2 |");
+        expect(markdown).toContain("| ❌ Failed | 1 |");
         // 5 unchanged conversations dropped at analysis time — not the single
         // no-op write recorded by addSkipped.
-        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
-            "| Unchanged (not imported) | 5 |"
+        expect(conversationsRow(markdown, "⏭️ Unchanged")).toBe(
+            "| ⏭️ Unchanged | 5 |"
         );
-        expect(markdown).toContain("| Found (raw) | 12 |");
-        expect(markdown).toContain("| Kept (unique) | 10 |");
+        expect(markdown).toContain("| Found | 12 |");
+        expect(markdown).toContain("| Kept | 10 |");
         expect(markdown).toContain("| Duplicates removed | 2 |");
     });
 
@@ -145,9 +145,9 @@ describe("import report — selective import", () => {
             LINKS
         );
 
-        expect(markdown).toContain("| Kept (unique) | 10 |");
-        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
-            "| Unchanged (not imported) | 5 |"
+        expect(markdown).toContain("| Kept | 10 |");
+        expect(conversationsRow(markdown, "⏭️ Unchanged")).toBe(
+            "| ⏭️ Unchanged | 5 |"
         );
     });
 
@@ -165,12 +165,12 @@ describe("import report — selective import", () => {
             LINKS
         );
 
-        expect(conversationsRow(markdown, "Not selected")).toBe(
-            "| Not selected | 6 |"
-        );
+        // Selected, not the declined remainder: it is what the outcome
+        // table below has to add up to.
+        expect(markdown).toContain("| Selected | 4 |");
     });
 
-    it("leaves the row out of a full import, where nothing was offered", () => {
+    it("reports the whole kept population as selected on a full import", () => {
         const report = populatedReport();
         report.setAnalysisInfo(analysis());
 
@@ -183,7 +183,7 @@ describe("import report — selective import", () => {
             LINKS
         );
 
-        expect(conversationsRow(markdown, "Not selected")).toBeUndefined();
+        expect(markdown).toContain("| Selected | 10 |");
     });
 });
 
@@ -206,15 +206,14 @@ describe("import report — mobile direct (no analysis phase)", () => {
             LINKS
         );
 
-        expect(markdown).toContain("| Created | 3 |");
-        expect(markdown).toContain("| Updated | 2 |");
+        expect(markdown).toContain("| ✨ Created | 3 |");
+        expect(markdown).toContain("| 🔄 Updated | 2 |");
         // The single no-op write, because nothing else is known.
-        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
-            "| Unchanged (not imported) | 1 |"
+        expect(conversationsRow(markdown, "⏭️ Unchanged")).toBe(
+            "| ⏭️ Unchanged | 1 |"
         );
-        // Analysis-only rows must stay out rather than render as zero.
-        expect(markdown).not.toContain("| Found (raw) |");
-        expect(markdown).not.toContain("| Kept (unique) |");
+        // The archive block is analysis-only: absent, not rendered as zeros.
+        expect(markdown).not.toContain("### Archive");
     });
 
     it("falls back to the write counters for the completion dialog", () => {
@@ -248,13 +247,13 @@ describe("import report — every row names its own subject", () => {
 
         const filesBlock = markdown.slice(
             markdown.indexOf("### Files"),
-            markdown.indexOf("### Conversations")
+            markdown.indexOf("### Archive")
         );
         // One archive was not processed...
         expect(filesBlock).toContain("| Not processed | 1 |");
         // ...and five conversations were already up to date. Different words.
-        expect(conversationsRow(markdown, "Unchanged (not imported)")).toBe(
-            "| Unchanged (not imported) | 5 |"
+        expect(conversationsRow(markdown, "⏭️ Unchanged")).toBe(
+            "| ⏭️ Unchanged | 5 |"
         );
         // The overloaded label is gone from the note entirely, including the
         // per-archive Status column that used it a third time.
@@ -378,12 +377,10 @@ describe("import report — a rebuild is a request, not an outcome", () => {
             LINKS
         );
 
-        expect(
-            conversationsRow(markdown, "Unchanged (rebuild requested)")
-        ).toBe("| Unchanged (rebuild requested) | 7 |");
-        expect(conversationsRow(markdown, "Not selected")).toBe(
-            "| Not selected | 7 |"
-        );
+        // Only what the user kept is reported, and only as an intent the
+        // outcome table can be checked against.
+        expect(markdown).toContain("| Selected | 3 |");
+        expect(markdown).not.toContain("rebuild requested");
         expect(markdown).not.toContain("Unchanged (rebuilt)");
     });
 });

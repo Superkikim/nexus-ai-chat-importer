@@ -87,6 +87,13 @@ export interface ConversationLedger {
     noChange: number;
 
     /**
+     * Conversations this run was asked to import. It is what every outcome
+     * below adds up to, which is why the reports carry it rather than the
+     * declined remainder: on a full import nothing is declined, and the
+     * number is still the kept population.
+     */
+    selected: number;
+    /**
      * Conversations offered in the selection dialog that the user left
      * unchecked. `null` when no selection step ran (a full import).
      */
@@ -98,6 +105,16 @@ export interface ConversationLedger {
     /** Duplicate ids collapsed across archives. */
     duplicates: number;
 }
+
+/** What happened to a note, for the index listings. */
+type NoteOutcome = "created" | "updated" | "recreated";
+
+/** Which outcome wins when one note is written twice in a single run. */
+const OUTCOME_RANK: Record<NoteOutcome, number> = {
+    created: 0,
+    updated: 1,
+    recreated: 2,
+};
 
 interface ReportCrossLinks {
     summaryFileName: string;
@@ -479,42 +496,51 @@ export class ImportReport {
         lines.push(`| Not processed | ${skippedSet.size} |`);
         lines.push("");
 
-        lines.push("### Conversations");
-        lines.push("");
-        lines.push("| Metric | Value |");
-        lines.push("| --- | ---: |");
-        lines.push(`| Created | ${ledger.created} |`);
-        lines.push(`| Updated | ${ledger.updated} |`);
-        if (ledger.recreated > 0) {
-            lines.push(`| Recreated | ${ledger.recreated} |`);
-        }
-        lines.push(`| Unchanged (not imported) | ${ledger.unchangedSkipped} |`);
-        if (ledger.reprocessed > 0) {
-            // "requested", not "rebuilt": this is the analysis pulling unchanged
-            // conversations back into the selection. On a selective import the
-            // user can then uncheck them, so claiming an outcome here would
-            // overstate what happened — the Not selected row covers the rest.
+        // The Archives table below carries provenance when there are several
+        // archives; with one, this line is the only place the name survives.
+        if (allFiles && allFiles.length === 1) {
+            const only = allFiles[0];
+            const timestamp = archiveTimestamps?.get(only.name);
             lines.push(
-                `| Unchanged (rebuild requested) | ${ledger.reprocessed} |`
+                `Archive: \`${only.name}\`${timestamp ? ` — ${timestamp}` : ""}`
             );
+            lines.push("");
         }
-        if (ledger.notSelected !== null) {
-            lines.push(`| Not selected | ${ledger.notSelected} |`);
-        }
-        if (ledger.empty > 0) {
-            lines.push(`| Empty (no content) | ${ledger.empty} |`);
-        }
-        lines.push(`| Failed | ${ledger.failed} |`);
+
+        // Two tables, two questions. The archive one ends on Selected, which
+        // is what the outcome table below it adds up to — a reader can check
+        // the arithmetic instead of taking nine flat rows on trust.
         if (ledger.analysisAvailable) {
-            lines.push(`| Found (raw) | ${ledger.totalFound} |`);
-            lines.push(`| Kept (unique) | ${ledger.uniqueKept} |`);
+            lines.push("### Archive");
+            lines.push("");
+            lines.push("| Metric | Value |");
+            lines.push("| --- | ---: |");
+            lines.push(`| Found | ${ledger.totalFound} |`);
             lines.push(`| Duplicates removed | ${ledger.duplicates} |`);
+            lines.push(`| Kept | ${ledger.uniqueKept} |`);
+            lines.push(`| Selected | ${ledger.selected} |`);
+            lines.push("");
         }
+
+        lines.push("### Notes");
+        lines.push("");
+        lines.push("| Outcome | Conversations |");
+        lines.push("| --- | ---: |");
+        lines.push(`| ✨ Created | ${ledger.created} |`);
+        lines.push(`| 🔄 Updated | ${ledger.updated} |`);
+        lines.push(`| ♻️ Recreated | ${ledger.recreated} |`);
+        lines.push(`| ⏭️ Unchanged | ${ledger.unchangedSkipped} |`);
+        if (ledger.empty > 0) {
+            lines.push(`| 🚫 Empty (no content) | ${ledger.empty} |`);
+        }
+        lines.push(`| ❌ Failed | ${ledger.failed} |`);
         lines.push("");
 
         lines.push(this.generateAttachmentSummary(totalAttachments));
 
-        if (allFiles && allFiles.length > 0) {
+        // Twelve columns earn their place only when there is something to
+        // compare. With a single archive every cell repeats the Overview.
+        if (allFiles && allFiles.length > 1) {
             const sortedFiles = [...allFiles].sort(
                 (a, b) => a.lastModified - b.lastModified
             );
@@ -666,15 +692,12 @@ export class ImportReport {
                 filePath: string;
                 updateTime: number;
                 sourceFile?: string;
-                status: "created" | "updated";
+                status: NoteOutcome;
             }
         >();
         const failedEntries: ReportEntry[] = [];
 
-        const upsertEntry = (
-            entry: ReportEntry,
-            status: "created" | "updated"
-        ) => {
+        const upsertEntry = (entry: ReportEntry, status: NoteOutcome) => {
             const current = createdOrUpdatedByPath.get(entry.filePath);
             if (!current) {
                 createdOrUpdatedByPath.set(entry.filePath, {
@@ -698,10 +721,13 @@ export class ImportReport {
                 sourceFile: shouldRefreshMetadata
                     ? entry.sourceFile
                     : current.sourceFile,
+                // A note listed twice keeps the strongest thing that
+                // happened to it: a rebuild outranks an append, which
+                // outranks a first write.
                 status:
-                    current.status === "updated" || status === "updated"
-                        ? "updated"
-                        : "created",
+                    OUTCOME_RANK[status] >= OUTCOME_RANK[current.status]
+                        ? status
+                        : current.status,
             });
         };
 
@@ -717,10 +743,8 @@ export class ImportReport {
             for (const entry of section.updated) {
                 upsertEntry(entry, "updated");
             }
-            // The index is a way back to a note, not an accounting table: a
-            // recreated note is an existing one, so it lists with the updated.
             for (const entry of section.recreated) {
-                upsertEntry(entry, "updated");
+                upsertEntry(entry, "recreated");
             }
 
             failedEntries.push(...section.failed);
@@ -736,6 +760,13 @@ export class ImportReport {
             );
         const updatedEntries = indexedEntries
             .filter((entry) => entry.status === "updated")
+            .sort((a, b) =>
+                a.title.localeCompare(b.title, undefined, {
+                    sensitivity: "base",
+                })
+            );
+        const recreatedEntries = indexedEntries
+            .filter((entry) => entry.status === "recreated")
             .sort((a, b) =>
                 a.title.localeCompare(b.title, undefined, {
                     sensitivity: "base",
@@ -761,6 +792,7 @@ export class ImportReport {
         lines.push(`- Conversations listed: ${sortedAllEntries.length}`);
         lines.push(`- New notes: ${createdEntries.length}`);
         lines.push(`- Updated notes: ${updatedEntries.length}`);
+        lines.push(`- Recreated notes: ${recreatedEntries.length}`);
         lines.push(`- Failed conversations: ${failedEntries.length}`);
         lines.push("");
 
@@ -788,6 +820,19 @@ export class ImportReport {
                 const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
                 const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
                 lines.push(`- 🔄 ${titleLink}`);
+            }
+            lines.push("");
+        }
+
+        // Only when a rebuild happened: most imports never produce one, and an
+        // empty section on a phone is a screenful of nothing.
+        if (recreatedEntries.length > 0) {
+            lines.push("## ♻️ Recreated Notes");
+            lines.push("");
+            for (const entry of recreatedEntries) {
+                const sanitizedTitle = entry.title.replace(/\n/g, " ").trim();
+                const titleLink = `[[${entry.filePath}\\|${sanitizedTitle}]]`;
+                lines.push(`- ♻️ ${titleLink}`);
             }
             lines.push("");
         }
@@ -1138,6 +1183,10 @@ export class ImportReport {
             // Resolved. On the mobile flow an unchanged conversation reaches
             // the processor and is recorded by addSkipped, so the write
             // counter carries the same meaning the analysis would have.
+            selected:
+                this.selection?.selected ??
+                analysis?.uniqueConversationsKept ??
+                writes.totalProcessed,
             notSelected: this.selection
                 ? Math.max(0, this.selection.offered - this.selection.selected)
                 : null,

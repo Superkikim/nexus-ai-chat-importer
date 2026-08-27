@@ -1234,11 +1234,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         const now = Date.now() / 1000;
-        const datePrefix = formatTimestamp(now, "prefix");
-        const timeStr = formatTimestamp(now, "time")
-            .replace(/:/g, "")
-            .replace(/ /g, "");
-        let basePrefix = `${datePrefix}-${timeStr}`;
+        let basePrefix = formatTimestamp(now, "fileStamp");
         let counter = 2;
         let summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
         let heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
@@ -1249,7 +1245,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             (await this.app.vault.adapter.exists(heavyPath)) ||
             (await this.app.vault.adapter.exists(mobilePath))
         ) {
-            basePrefix = `${datePrefix}-${timeStr}-${counter}`;
+            basePrefix = `${formatTimestamp(now, "fileStamp")}-${counter}`;
             summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
             heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
             mobilePath = `${folderPath}/${basePrefix} - index mobile.md`;
@@ -1299,21 +1295,32 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 ? this.settings.messageTimestampFormat
                 : undefined
         );
+        // Archive counters come from the analysis phase, which the mobile
+        // flow skips. Omitted rather than written as zeros nobody can tell
+        // apart from a real count.
+        const archiveFrontmatter = ledger.analysisAvailable
+            ? `totalConversationsFound: ${ledger.totalFound}
+totalDuplicatesRemoved: ${ledger.duplicates}
+totalConversationsKept: ${ledger.uniqueKept}
+totalSelected: ${ledger.selected}
+`
+            : "";
+
+        // One key per quantity, grouped as the report reads: the operation,
+        // then the archives, then what became of the notes. The archive block
+        // ends on the number the note block adds up to.
         const commonFrontmatter = `importdate: ${currentDate}
 provider: ${provider}
+importMode: ${isSelectiveImport ? "selective" : "all"}
 totalFilesAnalyzed: ${files.length}
 totalFilesProcessed: ${processedFiles.length}
-totalFilesSkipped: ${skippedFiles.length}
-totalConversations: ${stats.totalConversations}
+totalFilesNotProcessed: ${skippedFiles.length}
+${archiveFrontmatter}totalEmpty: ${ledger.empty}
 totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
 totalRecreated: ${stats.recreated}
-totalSkipped: ${stats.unchanged}
+totalUnchanged: ${stats.unchanged}
 totalFailed: ${stats.failed}
-totalUnchanged: ${ledger.unchanged}
-totalReprocessed: ${ledger.reprocessed}
-totalNotSelected: ${ledger.notSelected ?? 0}
-totalEmpty: ${ledger.empty}
 `;
 
         const summaryContent = `---
