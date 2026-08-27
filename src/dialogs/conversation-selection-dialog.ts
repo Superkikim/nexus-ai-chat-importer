@@ -81,14 +81,16 @@ export class ConversationSelectionDialog extends Modal {
             isLoading: false,
         };
 
-        // Auto-select all if setting is enabled
+        this.applyFiltersAndSort();
+
+        // Auto-select what the filter shows, not the whole archive: unchanged
+        // conversations are in the list now, and selecting one rebuilds its
+        // note. "Select All" applies to the visible rows for the same reason.
         if (plugin?.settings?.autoSelectAllOnOpen) {
-            conversations.forEach((conv) => {
+            this.state.filteredConversations.forEach((conv) => {
                 this.state.selectedIds.add(conv.id);
             });
         }
-
-        this.applyFiltersAndSort();
     }
 
     onOpen() {
