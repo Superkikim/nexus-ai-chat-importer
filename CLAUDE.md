@@ -38,14 +38,15 @@ npm run test:coverage      # Run tests with coverage report
 npm run test               # Interactive test UI
 ```
 
-**174 tests** across 24 test files. Tests live alongside source files as `*.test.ts`.
+**434 tests** across 50 test files. Tests live alongside source files as `*.test.ts`.
 
 ## Pre-Commit Checklist
 
 **Always run before committing:**
 
 ```bash
-npm run test:run           # All 174 tests must pass
+npm run type-check         # Must be clean — vitest does NOT type-check
+npm run test:run           # All 434 tests must pass
 npx eslint src/            # Zero errors on modified files
 npm run build              # Build must succeed
 ```
