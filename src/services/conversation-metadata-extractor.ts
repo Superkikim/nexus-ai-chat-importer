@@ -42,6 +42,13 @@ import { Logger, ScopedLogger } from "../logger";
 import { normalizePerplexityConversationFile } from "../providers/perplexity/perplexity-normalizer";
 import { deriveMistralVibeConversationTitle } from "../providers/vibe/vibe-title";
 
+/**
+ * What to do with a conversation the vault already has, current: drop it from
+ * the selection, offer it so the user can decide, or pull it in to rebuild.
+ * "offer" and "rebuild" both keep it; only "rebuild" is a stated intent.
+ */
+export type UnchangedPolicy = "drop" | "offer" | "rebuild";
+
 export type ConversationExistenceStatus =
     | "new"
     | "updated"
@@ -238,13 +245,11 @@ export class ConversationMetadataExtractor {
         forcedProvider?: string,
         existingConversations?: Map<string, ConversationCatalogEntry>,
         /**
-         * Keep conversations whose update_time has not moved. Without this an
-         * unchanged conversation is dropped here, long before any per-import
-         * reprocess flag is consulted, so a rebuild could never be requested.
-         * Selective import always passes true; a full import passes the
-         * reprocess flag.
+         * Selective import always offers them: the selection dialog decides.
+         * A full import drops them unless a rebuild was requested, since it
+         * has no later step where the user could choose.
          */
-        includeUnchanged = false
+        unchangedPolicy: UnchangedPolicy = "drop"
     ): Promise<MetadataExtractionResult> {
         const batchStartedAt = Date.now();
         this.metadataLogger.debug(`Begin metadata extraction batch`, {
@@ -438,7 +443,7 @@ export class ConversationMetadataExtractor {
         const filterResult = this.filterConversationsForSelection(
             Array.from(conversationMap.values()),
             existingConversations,
-            includeUnchanged
+            unchangedPolicy
         );
 
         for (const conversation of filterResult.conversations) {
@@ -847,7 +852,7 @@ export class ConversationMetadataExtractor {
     private filterConversationsForSelection(
         bestVersions: ConversationMetadata[],
         existingConversations?: Map<string, ConversationCatalogEntry>,
-        includeUnchanged = false
+        unchangedPolicy: UnchangedPolicy = "drop"
     ): {
         conversations: ConversationMetadata[];
         ignoredConversations: ConversationMetadata[];
@@ -903,13 +908,15 @@ export class ConversationMetadataExtractor {
                 // keeps telling the truth about what is already in the vault.
                 conversation.existenceStatus = "unchanged";
                 unchangedCount++;
-                if (includeUnchanged) {
-                    conversation.hasNewerContent = false;
-                    conversationsForSelection.push(conversation);
-                    reprocessedCount++;
-                } else {
+                if (unchangedPolicy === "drop") {
                     ignoredConversations.push(conversation);
                     droppedUnchangedCount++;
+                } else {
+                    conversation.hasNewerContent = false;
+                    conversationsForSelection.push(conversation);
+                    // Only a stated rebuild counts as one. Offering a
+                    // conversation for selection is not asking for anything.
+                    if (unchangedPolicy === "rebuild") reprocessedCount++;
                 }
             }
         }

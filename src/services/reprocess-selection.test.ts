@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { ConversationMetadataExtractor } from "./conversation-metadata-extractor";
+import {
+    ConversationMetadataExtractor,
+    UnchangedPolicy,
+} from "./conversation-metadata-extractor";
 import { DefaultProviderRegistry } from "../providers/provider-adapter";
 import { buildZip, toFile } from "../tests/zip-fixtures";
 import type { ConversationCatalogEntry } from "../types/plugin";
@@ -60,7 +63,7 @@ function vaultEntry(id: string, updateTime: number): ConversationCatalogEntry {
     };
 }
 
-async function analyse(includeUnchanged: boolean) {
+async function analyse(unchangedPolicy: UnchangedPolicy) {
     const extractor = new ConversationMetadataExtractor(
         new DefaultProviderRegistry(),
         createTestPlugin()
@@ -77,13 +80,13 @@ async function analyse(includeUnchanged: boolean) {
         [file],
         "chatgpt",
         existing,
-        includeUnchanged
+        unchangedPolicy
     );
 }
 
 describe("reprocess pulls unchanged conversations back into the selection", () => {
     it("drops unchanged conversations by default", async () => {
-        const result = await analyse(false);
+        const result = await analyse("drop");
 
         expect(result.conversations.map((c) => c.id)).toEqual(["conv-new"]);
         expect(result.analysisInfo?.conversationsUnchanged).toBe(1);
@@ -91,8 +94,22 @@ describe("reprocess pulls unchanged conversations back into the selection", () =
         expect(result.analysisInfo?.conversationsReprocessed).toBe(0);
     });
 
+    it("offers them to the selection without claiming a rebuild", async () => {
+        const result = await analyse("offer");
+
+        expect(result.conversations.map((c) => c.id).sort()).toEqual([
+            "conv-new",
+            "conv-unchanged",
+        ]);
+        expect(result.analysisInfo?.conversationsUnchanged).toBe(1);
+        expect(result.analysisInfo?.conversationsDroppedUnchanged).toBe(0);
+        // Nobody asked for anything yet: the user still has to select the
+        // conversation and tick the rebuild box.
+        expect(result.analysisInfo?.conversationsReprocessed).toBe(0);
+    });
+
     it("keeps them when a rebuild is requested", async () => {
-        const result = await analyse(true);
+        const result = await analyse("rebuild");
 
         expect(result.conversations.map((c) => c.id).sort()).toEqual([
             "conv-new",
@@ -107,7 +124,7 @@ describe("reprocess pulls unchanged conversations back into the selection", () =
     });
 
     it("still reports an unchanged conversation as unchanged", async () => {
-        const result = await analyse(true);
+        const result = await analyse("rebuild");
 
         const rebuilt = result.conversations.find(
             (c) => c.id === "conv-unchanged"
@@ -140,7 +157,7 @@ describe("reprocess is provider-agnostic", () => {
         };
     }
 
-    async function analyseClaude(includeUnchanged: boolean) {
+    async function analyseClaude(unchangedPolicy: UnchangedPolicy) {
         const extractor = new ConversationMetadataExtractor(
             new DefaultProviderRegistry(),
             createTestPlugin()
@@ -185,12 +202,12 @@ describe("reprocess is provider-agnostic", () => {
             [toFile(bytes, "claude-export.zip")],
             "claude",
             existing,
-            includeUnchanged
+            unchangedPolicy
         );
     }
 
     it("skips an unchanged Claude conversation by default", async () => {
-        const result = await analyseClaude(false);
+        const result = await analyseClaude("drop");
 
         expect(result.conversations).toHaveLength(0);
         expect(result.analysisInfo?.conversationsUnchanged).toBe(1);
@@ -198,7 +215,7 @@ describe("reprocess is provider-agnostic", () => {
     });
 
     it("rebuilds it when asked, exactly as for ChatGPT", async () => {
-        const result = await analyseClaude(true);
+        const result = await analyseClaude("rebuild");
 
         expect(result.conversations.map((c) => c.id)).toEqual([
             "claude-unchanged",
