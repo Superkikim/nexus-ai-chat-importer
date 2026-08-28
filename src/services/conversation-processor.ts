@@ -699,15 +699,20 @@ export class ConversationProcessor {
                     return;
                 }
 
+                // The archive is newer than the note — that is the only way
+                // this path runs — so the note's stamp follows it even when no
+                // message came with it. Providers move update_time for things
+                // that produce no content, and leaving the old stamp behind
+                // meant the conversation was offered as "Updated" at every
+                // future import, forever, with nothing to show for it.
+                content = this.updateMetadata(
+                    content,
+                    chatUpdateTime,
+                    standardConversation
+                );
+
                 // Unified update logic - append only what the note lacks
                 if (newMessages.length > 0) {
-                    // Update frontmatter metadata only when there are new messages.
-                    content = this.updateMetadata(
-                        content,
-                        chatUpdateTime,
-                        standardConversation
-                    );
-
                     // Process attachments on new messages only. Note message IDs
                     // are the source of truth here, which also covers providers
                     // whose raw ids differ from the standard ones (e.g. Claude
@@ -757,6 +762,7 @@ export class ConversationProcessor {
                         )
                     );
                 } else {
+                    // Same stamp, same content: the note was already current.
                     importReport.addSkipped(
                         chatTitle,
                         filePath,

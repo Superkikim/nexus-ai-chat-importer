@@ -88,13 +88,16 @@ function createProcessor(noteContent: string) {
     return { processor, writeToFile, logger };
 }
 
-function conversationOf(messages: StandardMessage[]): StandardConversation {
+function conversationOf(
+    messages: StandardMessage[],
+    updateTime = 2000
+): StandardConversation {
     return {
         id: "thread-1",
         title: "Test conversation",
         provider: "chatgpt",
         createTime: 1000,
-        updateTime: 2000,
+        updateTime,
         messages,
         metadata: {},
     };
@@ -200,7 +203,7 @@ describe("ConversationProcessor reconciliation", () => {
         expect(seen[0].map((m) => m.id)).toEqual(["m1", "m2"]);
     });
 
-    it("does not re-add an artifact the note already contains", async () => {
+    it("refreshes the stamp of a note that has nothing to add", async () => {
         // The synthetic message is already recorded in the note.
         const { processor, writeToFile } = createProcessor(
             noteWith(["m1", "m2", "nexus-library-artifact-omitted"])
@@ -220,7 +223,60 @@ describe("ConversationProcessor reconciliation", () => {
             true
         );
 
-        expect(writeToFile).not.toHaveBeenCalled();
+        // The archive is newer than the note — that is why this path ran — so
+        // the note takes the new stamp. What it must not do is append the
+        // artifact it already carries.
+        expect(writeToFile).toHaveBeenCalledTimes(1);
+        const written = writeToFile.mock.calls[0][1];
+        expect(written).not.toContain("update_time: 2026-01-01T00:00:00.000Z");
+        expect(written.match(/nexus-library-artifact-omitted/g)).toHaveLength(
+            1
+        );
+        expect(importReport.getUpdatedCount()).toBe(1);
+    });
+
+    /**
+     * Providers move update_time for things that produce no message. ChatGPT
+     * did it to a real conversation between two exports: same five nodes, same
+     * ids, same text, stamp ten days later. The note kept the old stamp, so
+     * every later import offered it as "Updated" again and did nothing about
+     * it — a promise that could never resolve.
+     */
+    it("closes the loop when only the stamp moved", async () => {
+        const { processor, writeToFile } = createProcessor(
+            noteWith(["m1", "m2"])
+        );
+        const adapter = {
+            getTitle: () => "Problème de succession Bally",
+            getCreateTime: () => 1_780_517_756,
+            getUpdateTime: () => 1_781_427_506,
+            convertChat: vi.fn(),
+            getProviderName: () => "chatgpt",
+            processMessageAttachments: vi.fn(),
+        };
+        const importReport = new ImportReport();
+        importReport.startFileSection("chatgpt_export.zip");
+
+        await processor.updateExistingNote(
+            adapter,
+            // The archive carries exactly what the note already holds.
+            conversationOf([...EXISTING_MESSAGES], 1_781_427_506),
+            "note.md",
+            2,
+            importReport,
+            ZIP,
+            false,
+            true
+        );
+
+        const written = writeToFile.mock.calls[0][1];
+        expect(written).toContain("update_time: 2026-06-14T08:58:26.000Z");
+        // Reported as updated with nothing added, which is what happened.
+        expect(importReport.getUpdatedCount()).toBe(1);
+        expect(
+            (processor.counters as { totalNonEmptyMessagesAdded: number })
+                .totalNonEmptyMessagesAdded
+        ).toBe(0);
     });
 
     it("reconciles before extraction on the Reprocess path", async () => {
