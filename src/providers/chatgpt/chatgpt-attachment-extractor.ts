@@ -20,6 +20,7 @@
 import { StandardAttachment } from "../../types/standard";
 import { ensureFolderExists } from "../../utils";
 import { formatFileSize, sanitizeFileName } from "../../utils/file-utils";
+import { resolveAttachmentTarget } from "../../utils/attachment-target";
 import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
 import {
@@ -350,7 +351,7 @@ export class ChatGPTAttachmentExtractor {
 
         const writeResult = await writeZipEntryToVault(
             entry,
-            async (detection) => {
+            async (detection, bytes) => {
                 // Voice recordings reach this point only when they are not
                 // listed in the asset index — detect and skip them
                 if (sourceIsDat && detection.detectedExtension === "wav") {
@@ -403,7 +404,11 @@ export class ChatGPTAttachmentExtractor {
                     );
                 }
 
-                return this.resolveFileConflict(targetPath);
+                return resolveAttachmentTarget(
+                    this.plugin.app.vault.adapter,
+                    targetPath,
+                    bytes
+                );
             },
             this.plugin.app.vault
         );
@@ -426,29 +431,6 @@ export class ChatGPTAttachmentExtractor {
     private hasMeaningfulFileName(attachment: StandardAttachment): boolean {
         if (!attachment.fileName) return false;
         return !attachment.fileName.startsWith(`image_${attachment.fileId}`);
-    }
-
-    /**
-     * Resolve file conflicts by adding numeric suffix
-     */
-    private async resolveFileConflict(originalPath: string): Promise<string> {
-        let finalPath = originalPath;
-        let counter = 1;
-
-        while (await this.plugin.app.vault.adapter.exists(finalPath)) {
-            // File exists, try with suffix
-            const lastDot = originalPath.lastIndexOf(".");
-            if (lastDot === -1) {
-                finalPath = `${originalPath}_${counter}`;
-            } else {
-                const nameWithoutExt = originalPath.substring(0, lastDot);
-                const extension = originalPath.substring(lastDot);
-                finalPath = `${nameWithoutExt}_${counter}${extension}`;
-            }
-            counter++;
-        }
-
-        return finalPath;
     }
 
     /**
