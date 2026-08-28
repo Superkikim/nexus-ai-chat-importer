@@ -56,10 +56,10 @@ describe("PerplexityAdapter", () => {
         };
 
         expect(adapter.detect([entriesChat])).toBe(true);
-        expect(adapter.getId(entriesChat as unknown)).toBe("context-abc");
-        expect(adapter.getTitle(entriesChat as unknown)).toBe("Entries Thread");
-        expect(adapter.getCreateTime(entriesChat as unknown)).toBe(1706745600);
-        expect(adapter.getUpdateTime(entriesChat as unknown)).toBe(1706749200);
+        expect(adapter.getId(entriesChat as any)).toBe("context-abc");
+        expect(adapter.getTitle(entriesChat as any)).toBe("Entries Thread");
+        expect(adapter.getCreateTime(entriesChat as any)).toBe(1706745600);
+        expect(adapter.getUpdateTime(entriesChat as any)).toBe(1706749200);
     });
 
     it("uses turn uuid for incremental append detection", () => {

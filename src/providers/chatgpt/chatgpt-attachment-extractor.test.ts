@@ -48,7 +48,7 @@ function createZipMock(
 }
 
 interface PluginMock {
-    plugin: unknown;
+    plugin: any;
     writtenFiles: Map<string, ArrayBuffer>;
 }
 

@@ -12,7 +12,7 @@ import { StandardMessage } from "../../types/standard";
  */
 
 async function createFormatter() {
-    (window as unknown).moment = (value: number) => ({
+    (window as any).moment = (value: number) => ({
         format: (pattern: string) => {
             if (pattern === "L") return "01/01/2024";
             if (pattern === "LTS") return "10:00:00";
@@ -23,13 +23,13 @@ async function createFormatter() {
     const { MessageFormatter } = await import(
         "../../formatters/message-formatter"
     );
-    const logger = { error: () => {} } as unknown;
+    const logger = { error: () => {} } as any;
     const plugin = {
         settings: {
             useCustomMessageTimestampFormat: false,
             messageTimestampFormat: "locale",
         },
-    } as unknown;
+    } as any;
     return new MessageFormatter(logger, plugin);
 }
 

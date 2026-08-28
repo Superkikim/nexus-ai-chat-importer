@@ -354,12 +354,19 @@ export async function generateUniqueFileName(
 }
 
 // Function to check if the full file path exists
+/**
+ * Whether the vault's storage already holds this path.
+ *
+ * Asks the adapter, not the metadata index: the index is keyed by exact case,
+ * while macOS and Windows filesystems are not. Two conversations whose titles
+ * differ only in case produced one path on disk and two index entries, so no
+ * collision was detected and the create failed with "File already exists".
+ */
 export async function doesFilePathExist(
     filePath: string,
     vault: Vault
 ): Promise<boolean> {
-    const file = vault.getAbstractFileByPath(filePath);
-    return file !== null; // Return true if the file exists, false otherwise
+    return vault.adapter.exists(filePath);
 }
 
 /**

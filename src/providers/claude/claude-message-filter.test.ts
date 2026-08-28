@@ -36,7 +36,7 @@ function createTestPlugin() {
         error: () => {},
         child: () => logger,
     };
-    return { logger } as unknown;
+    return { logger } as any;
 }
 
 function message(overrides: Partial<ClaudeMessage>): ClaudeMessage {
@@ -49,7 +49,7 @@ function message(overrides: Partial<ClaudeMessage>): ClaudeMessage {
         attachments: [],
         files: [],
         ...overrides,
-    };
+    } as ClaudeMessage;
 }
 
 function conversation(
@@ -81,7 +81,7 @@ describe("Claude message exportability", () => {
                         {
                             type: "text",
                             text: "Hello from a block",
-                        } as unknown,
+                        } as any,
                     ],
                 })
             )
@@ -96,7 +96,7 @@ describe("Claude message exportability", () => {
                         {
                             type: "text",
                             text: "",
-                        } as unknown,
+                        } as any,
                     ],
                 })
             )
@@ -116,7 +116,7 @@ describe("Claude message exportability", () => {
                                 version_uuid: "artifact-version",
                                 content: "Artifact body",
                             },
-                        } as unknown,
+                        } as any,
                     ],
                 })
             )
@@ -160,7 +160,7 @@ describe("Claude message exportability", () => {
                         {
                             file_uuid: "file-1",
                             file_name: null,
-                        } as unknown,
+                        } as any,
                     ],
                 })
             )
@@ -172,7 +172,7 @@ describe("Claude message exportability", () => {
             message({ uuid: "text", text: "Hello" }),
             message({
                 uuid: "block",
-                content: [{ type: "text", text: "Block text" } as unknown],
+                content: [{ type: "text", text: "Block text" } as any],
             }),
             message({ uuid: "file", files: [{ file_name: "image.png" }] }),
             message({
@@ -189,7 +189,7 @@ describe("Claude message exportability", () => {
             message({ uuid: "empty" }),
             message({
                 uuid: "unresolved-file",
-                files: [{ file_uuid: "file-uuid", file_name: null } as unknown],
+                files: [{ file_uuid: "file-uuid", file_name: null } as any],
             }),
         ];
         const chat = conversation(messages);
@@ -200,9 +200,9 @@ describe("Claude message exportability", () => {
         );
         const adapter = new ClaudeAdapter(plugin);
 
-        const metadata = (extractor as unknown).extractClaudeMetadata([
+        const metadata = (extractor as any).extractClaudeMetadata([
             chat,
-        ]) as unknown[];
+        ]) as any[];
         const converted = await ClaudeConverter.convertMessages(messages);
         const newMessages = adapter.getNewMessages(chat, []);
 
@@ -221,11 +221,11 @@ describe("Claude message exportability", () => {
             createTestPlugin()
         );
 
-        const metadata = (extractor as unknown).extractClaudeMetadata([
+        const metadata = (extractor as any).extractClaudeMetadata([
             conversation(emptyMessages, {
                 uuid: "b626f1bf-9153-437f-ac81-7bcb58097e11",
             }),
-        ]) as unknown[];
+        ]) as any[];
 
         expect(metadata).toHaveLength(0);
     });
@@ -248,9 +248,9 @@ describe("Claude message exportability", () => {
             const sourceCorpses = conversations.filter((chat) =>
                 corpseIds.has(chat.uuid)
             );
-            const metadata = (extractor as unknown).extractClaudeMetadata(
+            const metadata = (extractor as any).extractClaudeMetadata(
                 sourceCorpses
-            ) as unknown[];
+            ) as any[];
 
             expect(sourceCorpses).toHaveLength(corpseIds.size);
             expect(metadata).toHaveLength(0);
@@ -277,9 +277,9 @@ describe("Claude message exportability", () => {
                 createTestPlugin()
             );
 
-            const metadata = (extractor as unknown).extractClaudeMetadata(
+            const metadata = (extractor as any).extractClaudeMetadata(
                 conversations
-            ) as unknown[];
+            ) as any[];
             const retainedIds = new Set(metadata.map((item) => item.id));
 
             expect(conversations).toHaveLength(128);
