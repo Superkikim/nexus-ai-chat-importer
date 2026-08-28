@@ -858,30 +858,48 @@ export class ConversationProcessor {
             try {
                 await this.fileService.writeToFile(finalFilePath, content);
             } catch (error: unknown) {
-                if (!this.isNameTooLongError(error)) {
+                if (this.isFileAlreadyExistsError(error)) {
+                    // doesFilePathExist now asks the filesystem, so reaching
+                    // here means a genuine race. Take the next free name
+                    // rather than lose the conversation.
+                    this.plugin.logger.warn(
+                        "Conversation path was taken between the check and the write; retrying with a unique name",
+                        {
+                            provider: standardConversation.provider,
+                            conversationId: chatId,
+                            path: finalFilePath,
+                        }
+                    );
+                    finalFilePath = await generateUniqueFileName(
+                        finalFilePath,
+                        this.plugin.app.vault.adapter,
+                        CONVERSATION_NOTE_FILENAME_MAX_BYTES
+                    );
+                    await this.fileService.writeToFile(finalFilePath, content);
+                } else if (this.isNameTooLongError(error)) {
+                    const fallbackPath = this.buildFallbackConversationPath(
+                        finalFilePath,
+                        chatId
+                    );
+                    this.plugin.logger.warn(
+                        "Conversation filename exceeded platform limits; retrying with fallback name",
+                        {
+                            provider: standardConversation.provider,
+                            conversationId: chatId,
+                            originalPath: finalFilePath,
+                            fallbackPath,
+                        }
+                    );
+
+                    finalFilePath = await generateUniqueFileName(
+                        fallbackPath,
+                        this.plugin.app.vault.adapter,
+                        CONVERSATION_NOTE_FILENAME_MAX_BYTES
+                    );
+                    await this.fileService.writeToFile(finalFilePath, content);
+                } else {
                     throw error;
                 }
-
-                const fallbackPath = this.buildFallbackConversationPath(
-                    finalFilePath,
-                    chatId
-                );
-                this.plugin.logger.warn(
-                    "Conversation filename exceeded platform limits; retrying with fallback name",
-                    {
-                        provider: standardConversation.provider,
-                        conversationId: chatId,
-                        originalPath: finalFilePath,
-                        fallbackPath,
-                    }
-                );
-
-                finalFilePath = await generateUniqueFileName(
-                    fallbackPath,
-                    this.plugin.app.vault.adapter,
-                    CONVERSATION_NOTE_FILENAME_MAX_BYTES
-                );
-                await this.fileService.writeToFile(finalFilePath, content);
             }
 
             const messageCount = standardConversation.messages.length;
@@ -1164,6 +1182,22 @@ export class ConversationProcessor {
         }
 
         return filePath;
+    }
+
+    /**
+     * Obsidian reports a path already taken on disk with this message. It
+     * reaches us when the vault's own check said the path was free, which the
+     * case-insensitive filesystems make possible whenever two titles differ
+     * only in case.
+     */
+    private isFileAlreadyExistsError(error: unknown): boolean {
+        const message =
+            error instanceof Error
+                ? error.message
+                : typeof error === "string"
+                ? error
+                : "";
+        return message.toLowerCase().includes("already exists");
     }
 
     private isNameTooLongError(error: unknown): boolean {
