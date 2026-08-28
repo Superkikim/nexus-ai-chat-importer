@@ -184,8 +184,12 @@
         "nothing_changed": "Nothing in your vault changed.",
         "attachments": {
             "label": "Attachments:",
-            "summary": "{{found}}/{{total}} extracted ({{percentage}}%)",
-            "missing_failed": "{{missing}} missing, {{failed}} failed"
+            "total": "{{count}} in total",
+            "extracted": "{{count}} extracted to the vault",
+            "inline": "{{count}} kept in the note",
+            "not_provided": "{{count}} not provided by the export",
+            "missing": "{{count}} missing from the export",
+            "failed": "{{count}} failed"
         },
         "report": {
             "label": "📄 Detailed report:"

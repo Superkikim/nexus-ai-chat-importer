@@ -184,8 +184,12 @@
         "nothing_changed": "Rien n'a changé dans votre coffre.",
         "attachments": {
             "label": "Pièces jointes :",
-            "summary": "{{found}}/{{total}} extraites ({{percentage}}%)",
-            "missing_failed": "{{missing}} manquantes, {{failed}} échouées"
+            "total": "{{count}} au total",
+            "extracted": "{{count}} extraites dans le coffre",
+            "inline": "{{count}} conservées dans la note",
+            "not_provided": "{{count}} absentes de l'export",
+            "missing": "{{count}} manquantes dans l'export",
+            "failed": "{{count}} en échec"
         },
         "report": {
             "label": "📄 Rapport détaillé :"

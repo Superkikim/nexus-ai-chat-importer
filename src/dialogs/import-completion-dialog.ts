@@ -37,6 +37,8 @@ export interface ImportCompletionStats {
     emptyConversations: number;
     failed: number;
     attachmentsFound: number;
+    attachmentsInline: number;
+    attachmentsNotProvided: number;
     attachmentsTotal: number;
     attachmentsMissing: number;
     attachmentsFailed: number;
@@ -221,22 +223,62 @@ export class ImportCompletionDialog extends Modal {
         labelEl.textContent = label;
     }
 
+    /**
+     * What became of the attachments, term by term.
+     *
+     * It used to read "found / total extracted (%)" and paint itself red
+     * below half. On a Claude export that is always red: Claude ships no
+     * files at all, so nothing can be extracted and nothing failed either.
+     * A ratio cannot say that; a breakdown can.
+     */
     private createAttachmentsSection(container: HTMLElement) {
         const section = container.createDiv(
             "attachments-section nexus-dialog-section nexus-completion-panel nexus-completion-panel-center"
         );
 
-        const percentage = Math.round(
-            (this.stats.attachmentsFound / this.stats.attachmentsTotal) * 100
-        );
+        const parts: string[] = [];
+        if (this.stats.attachmentsFound > 0) {
+            parts.push(
+                t("import_completion.attachments.extracted", {
+                    count: String(this.stats.attachmentsFound),
+                })
+            );
+        }
+        if (this.stats.attachmentsInline > 0) {
+            parts.push(
+                t("import_completion.attachments.inline", {
+                    count: String(this.stats.attachmentsInline),
+                })
+            );
+        }
+        if (this.stats.attachmentsNotProvided > 0) {
+            parts.push(
+                t("import_completion.attachments.not_provided", {
+                    count: String(this.stats.attachmentsNotProvided),
+                })
+            );
+        }
+        if (this.stats.attachmentsMissing > 0) {
+            parts.push(
+                t("import_completion.attachments.missing", {
+                    count: String(this.stats.attachmentsMissing),
+                })
+            );
+        }
+        if (this.stats.attachmentsFailed > 0) {
+            parts.push(
+                t("import_completion.attachments.failed", {
+                    count: String(this.stats.attachmentsFailed),
+                })
+            );
+        }
 
-        const icon = percentage === 100 ? "✅" : percentage > 50 ? "⚠️" : "❌";
-        const color =
-            percentage === 100
-                ? "var(--color-green)"
-                : percentage > 50
-                ? "var(--color-orange)"
-                : "var(--color-red)";
+        // Only a real failure is a failure: an attachment the export never
+        // carried is a property of the export, not a problem with the import.
+        const lost =
+            this.stats.attachmentsMissing + this.stats.attachmentsFailed;
+        const icon = lost > 0 ? "⚠️" : "📎";
+        const color = lost > 0 ? "var(--color-orange)" : "var(--text-normal)";
 
         const attachmentText = section.createDiv();
         attachmentText.appendText(`${icon} `);
@@ -244,27 +286,16 @@ export class ImportCompletionDialog extends Modal {
             text: t("import_completion.attachments.label"),
         });
         attachmentText.appendText(
-            ` ${t("import_completion.attachments.summary", {
-                found: String(this.stats.attachmentsFound),
-                total: String(this.stats.attachmentsTotal),
-                percentage: String(percentage),
+            ` ${t("import_completion.attachments.total", {
+                count: String(this.stats.attachmentsTotal),
             })}`
         );
         attachmentText.style.color = color;
 
-        if (
-            this.stats.attachmentsMissing > 0 ||
-            this.stats.attachmentsFailed > 0
-        ) {
+        if (parts.length > 0) {
             const details = section.createDiv();
             details.addClass("nexus-completion-panel-detail");
-            details.textContent = t(
-                "import_completion.attachments.missing_failed",
-                {
-                    missing: String(this.stats.attachmentsMissing),
-                    failed: String(this.stats.attachmentsFailed),
-                }
-            );
+            details.textContent = parts.join(" · ");
         }
     }
 

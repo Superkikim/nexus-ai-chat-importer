@@ -1225,6 +1225,8 @@ export class ImportReport {
             emptyConversations: ledger.empty,
             failed: ledger.failed,
             attachmentsFound: attachmentStats.found,
+            attachmentsInline: attachmentStats.inline,
+            attachmentsNotProvided: attachmentStats.notProvided,
             attachmentsTotal: attachmentStats.total,
             attachmentsMissing: attachmentStats.missing,
             attachmentsFailed: attachmentStats.failed,

@@ -184,8 +184,12 @@
         "nothing_changed": "Nulla è cambiato nel tuo vault.",
         "attachments": {
             "label": "Allegati:",
-            "summary": "{{found}}/{{total}} estratti ({{percentage}}%)",
-            "missing_failed": "{{missing}} mancanti, {{failed}} falliti"
+            "total": "{{count}} in totale",
+            "extracted": "{{count}} estratte nel vault",
+            "inline": "{{count}} mantenute nella nota",
+            "not_provided": "{{count}} non incluse nell'esportazione",
+            "missing": "{{count}} assenti dall'esportazione",
+            "failed": "{{count}} non riuscite"
         },
         "report": {
             "label": "📄 Report dettagliato:"

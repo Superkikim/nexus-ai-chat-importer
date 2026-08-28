@@ -184,8 +184,12 @@
         "nothing_changed": "No ha cambiado nada en tu bóveda.",
         "attachments": {
             "label": "Adjuntos:",
-            "summary": "{{found}}/{{total}} extraídos ({{percentage}}%)",
-            "missing_failed": "{{missing}} faltantes, {{failed}} fallidos"
+            "total": "{{count}} en total",
+            "extracted": "{{count}} extraídas a la bóveda",
+            "inline": "{{count}} conservadas en la nota",
+            "not_provided": "{{count}} no incluidas en la exportación",
+            "missing": "{{count}} ausentes de la exportación",
+            "failed": "{{count}} con error"
         },
         "report": {
             "label": "📄 Informe detallado:"

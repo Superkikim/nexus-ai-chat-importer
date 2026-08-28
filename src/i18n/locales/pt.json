@@ -184,8 +184,12 @@
         "nothing_changed": "Nada mudou no seu cofre.",
         "attachments": {
             "label": "Anexos:",
-            "summary": "{{found}}/{{total}} extraídos ({{percentage}}%)",
-            "missing_failed": "{{missing}} em falta, {{failed}} falhados"
+            "total": "{{count}} no total",
+            "extracted": "{{count}} extraídas para o cofre",
+            "inline": "{{count}} mantidas na nota",
+            "not_provided": "{{count}} não incluídas na exportação",
+            "missing": "{{count}} ausentes da exportação",
+            "failed": "{{count}} com falha"
         },
         "report": {
             "label": "📄 Relatório detalhado:"

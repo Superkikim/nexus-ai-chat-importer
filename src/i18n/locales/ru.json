@@ -184,8 +184,12 @@
         "nothing_changed": "В хранилище ничего не изменилось.",
         "attachments": {
             "label": "Вложения:",
-            "summary": "{{found}}/{{total}} извлечено ({{percentage}}%)",
-            "missing_failed": "{{missing}} отсутствует, {{failed}} с ошибками"
+            "total": "всего: {{count}}",
+            "extracted": "извлечено в хранилище: {{count}}",
+            "inline": "оставлено в заметке: {{count}}",
+            "not_provided": "нет в экспорте: {{count}}",
+            "missing": "не найдено в экспорте: {{count}}",
+            "failed": "с ошибкой: {{count}}"
         },
         "report": {
             "label": "📄 Подробный отчёт:"

@@ -184,8 +184,12 @@
         "nothing_changed": "保管庫に変更はありませんでした。",
         "attachments": {
             "label": "添付ファイル：",
-            "summary": "{{found}}/{{total}} 件を抽出（{{percentage}}%）",
-            "missing_failed": "{{missing}} 件欠落、{{failed}} 件失敗"
+            "total": "合計 {{count}} 件",
+            "extracted": "保管庫に {{count}} 件を保存",
+            "inline": "ノート内に {{count}} 件",
+            "not_provided": "エクスポートに含まれない {{count}} 件",
+            "missing": "エクスポートで見つからない {{count}} 件",
+            "failed": "失敗 {{count}} 件"
         },
         "report": {
             "label": "📄 詳細レポート："

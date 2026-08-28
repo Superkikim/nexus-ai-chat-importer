@@ -184,8 +184,12 @@
         "nothing_changed": "保险库没有任何变化。",
         "attachments": {
             "label": "附件：",
-            "summary": "{{found}}/{{total}} 已提取（{{percentage}}%）",
-            "missing_failed": "{{missing}} 缺失，{{failed}} 失败"
+            "total": "共 {{count}} 个",
+            "extracted": "已保存到保险库 {{count}} 个",
+            "inline": "保留在笔记中 {{count}} 个",
+            "not_provided": "导出中未包含 {{count}} 个",
+            "missing": "导出中缺失 {{count}} 个",
+            "failed": "失败 {{count}} 个"
         },
         "report": {
             "label": "📄 详细报告："

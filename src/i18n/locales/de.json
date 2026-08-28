@@ -184,8 +184,12 @@
         "nothing_changed": "In Ihrem Tresor hat sich nichts geändert.",
         "attachments": {
             "label": "Anhänge:",
-            "summary": "{{found}}/{{total}} extrahiert ({{percentage}}%)",
-            "missing_failed": "{{missing}} fehlend, {{failed}} fehlgeschlagen"
+            "total": "{{count}} insgesamt",
+            "extracted": "{{count}} in den Tresor extrahiert",
+            "inline": "{{count}} in der Notiz belassen",
+            "not_provided": "{{count}} nicht im Export enthalten",
+            "missing": "{{count}} im Export nicht auffindbar",
+            "failed": "{{count}} fehlgeschlagen"
         },
         "report": {
             "label": "📄 Detaillierter Bericht:"
