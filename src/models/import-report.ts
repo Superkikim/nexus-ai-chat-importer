@@ -1254,9 +1254,25 @@ export class ImportReport {
             }`;
         }
 
-        return isSelectiveImport
-            ? "no selected conversations"
-            : "no importable conversations";
+        // "Nothing was imported from this archive" covers three situations a
+        // reader reacts to differently: an archive with nothing exploitable,
+        // one whose every conversation arrived in a newer archive, and one
+        // the vault is already ahead of. The per-file stats tell them apart.
+        const stats = this.fileStats?.get(fileName);
+
+        if (stats && stats.totalConversations === 0) {
+            return "no importable conversations";
+        }
+
+        if (stats && stats.uniqueContributed === 0) {
+            return "superseded by another archive";
+        }
+
+        if (isSelectiveImport) {
+            return "no selected conversations";
+        }
+
+        return stats ? "already up to date" : "no importable conversations";
     }
 
     private formatIgnoredArchiveReason(reason: string): string {

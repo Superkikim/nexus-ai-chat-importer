@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import { ImportReport } from "./import-report";
-import type { AnalysisInfo } from "../services/conversation-metadata-extractor";
+import type {
+    AnalysisInfo,
+    FileAnalysisStats,
+} from "../services/conversation-metadata-extractor";
 
 /**
  * Characterization tests for the three report flows that actually run.
@@ -363,6 +366,94 @@ describe("conversation ledger", () => {
         expect(ledger.unchangedSkipped + ledger.reprocessed).toBe(
             ledger.unchanged
         );
+    });
+});
+
+describe("import report — an unprocessed archive says why", () => {
+    /**
+     * Three situations used to share one sentence, "no importable
+     * conversations": an archive with nothing exploitable in it, one whose
+     * every conversation had already arrived in a newer archive, and one the
+     * vault is already ahead of. A reader throws away the first, ignores the
+     * second and keeps the third.
+     */
+    function reasonFor(
+        stats: Partial<FileAnalysisStats>,
+        isSelective = false
+    ): string {
+        const report = populatedReport();
+        report.setFileStats(
+            new Map([
+                [
+                    "stale.zip",
+                    {
+                        fileName: "stale.zip",
+                        totalConversations: 0,
+                        duplicates: 0,
+                        uniqueContributed: 0,
+                        selectedForImport: 0,
+                        newConversations: 0,
+                        updatedConversations: 0,
+                        unchangedConversations: 0,
+                        ...stats,
+                    },
+                ],
+            ])
+        );
+
+        const markdown = report.generateSummaryReportContent(
+            [fakeFile("export.zip"), fakeFile("stale.zip")],
+            ["export.zip"],
+            ["stale.zip"],
+            isSelective,
+            undefined,
+            LINKS
+        );
+
+        const row = markdown
+            .split("\n")
+            .find((line) => line.startsWith("| `stale.zip`"));
+        return row?.split("|")[4].trim() ?? "";
+    }
+
+    it("names an archive that held nothing exploitable", () => {
+        expect(reasonFor({ totalConversations: 0 })).toBe(
+            "no importable conversations"
+        );
+    });
+
+    it("names an archive a newer one had already provided", () => {
+        expect(
+            reasonFor({
+                totalConversations: 1085,
+                duplicates: 1085,
+                uniqueContributed: 0,
+            })
+        ).toBe("superseded by another archive");
+    });
+
+    it("names an archive the vault is already ahead of", () => {
+        expect(
+            reasonFor({
+                totalConversations: 40,
+                duplicates: 0,
+                uniqueContributed: 40,
+                unchangedConversations: 40,
+            })
+        ).toBe("already up to date");
+    });
+
+    it("keeps saying nothing was selected on a selective import", () => {
+        expect(
+            reasonFor(
+                {
+                    totalConversations: 40,
+                    duplicates: 0,
+                    uniqueContributed: 40,
+                },
+                true
+            )
+        ).toBe("no selected conversations");
     });
 });
 
