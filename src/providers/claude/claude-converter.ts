@@ -1144,7 +1144,13 @@ export class ClaudeConverter {
                     fileType,
                     fileId: att.file_name || `inline-attachment-${index}`,
                     url: documentPath,
-                    status: { processed: true, found: true },
+                    // localPath is what the accounting reads: without it the
+                    // file counts as inline content, which it no longer is.
+                    status: {
+                        processed: true,
+                        found: true,
+                        localPath: documentPath,
+                    },
                 });
                 continue;
             }

@@ -109,6 +109,9 @@ describe("Claude inline attachments", () => {
         // No inline copy left behind, and the formatter renders the link.
         expect(att?.extractedContent).toBeUndefined();
         expect(att?.url).toBe(created[0].path);
+        // The report counts a file by its localPath: without it this would be
+        // tallied as inline content, which it stopped being.
+        expect(att?.status?.localPath).toBe(created[0].path);
     });
 
     it("writes it once when several messages carry the same file", async () => {
