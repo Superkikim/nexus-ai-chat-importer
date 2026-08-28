@@ -168,17 +168,20 @@
         "title": "Импорт завершён",
         "success_message": "✅ Разговоры успешно импортированы",
         "stats": {
-            "zip_files_processed": "Обработано ZIP-файлов",
-            "unique_conversations": "Уникальных разговоров",
-            "duplicates": "Дубликаты",
             "new": "Новые",
             "updated": "Обновлённые",
             "recreated": "Пересозданы",
             "unchanged": "Без изменений",
-            "not_selected": "Не выбрано",
-            "empty_suffix": "{{count}} без экспортируемого содержимого",
             "failed": "Ошибка"
         },
+        "archive": {
+            "conversations": "бесед: {{count}}",
+            "zips": "ZIP-файлов: {{count}}",
+            "duplicates": "дубликатов удалено: {{count}}",
+            "not_selected": "не выбрано: {{count}}",
+            "empty": "без экспортируемого содержимого: {{count}}"
+        },
+        "nothing_changed": "В хранилище ничего не изменилось.",
         "attachments": {
             "label": "Вложения:",
             "summary": "{{found}}/{{total}} извлечено ({{percentage}}%)",

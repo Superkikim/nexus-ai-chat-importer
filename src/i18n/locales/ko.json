@@ -168,17 +168,20 @@
         "title": "가져오기 완료",
         "success_message": "✅ 대화를 성공적으로 가져왔습니다",
         "stats": {
-            "zip_files_processed": "처리된 ZIP 파일",
-            "unique_conversations": "고유 대화",
-            "duplicates": "중복",
             "new": "신규",
             "updated": "업데이트됨",
             "recreated": "다시 만듦",
             "unchanged": "변경 없음",
-            "not_selected": "선택 안 함",
-            "empty_suffix": "내보낼 내용 없음 {{count}}개",
             "failed": "실패"
         },
+        "archive": {
+            "conversations": "대화 {{count}}개",
+            "zips": "ZIP 파일 {{count}}개",
+            "duplicates": "중복 {{count}}개 제거",
+            "not_selected": "선택 안 함 {{count}}개",
+            "empty": "내보낼 내용 없음 {{count}}개"
+        },
+        "nothing_changed": "보관함에서 바뀐 것이 없습니다.",
         "attachments": {
             "label": "첨부 파일:",
             "summary": "{{found}}/{{total}}개 추출됨 ({{percentage}}%)",

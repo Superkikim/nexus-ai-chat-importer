@@ -1687,13 +1687,18 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     padding: 20px 24px 24px 24px;
 }
 
+/* The dialog shows only the outcomes that happened, so the count varies from
+   one to five: a fixed three-column grid would strand a lone card in a corner.
+   They centre and wrap instead. */
 .nexus-import-completion-dialog .nexus-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 12px;
 }
 
 .nexus-import-completion-dialog .nexus-stat-card {
+    flex: 0 1 140px;
     text-align: center;
     padding: 12px;
     background-color: var(--background-primary);
@@ -1713,6 +1718,15 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-import-completion-dialog .nexus-stat-card-label {
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+/* Where the notes came from: context for the cards above, not a result of
+   its own, so it reads as a sentence rather than competing with them. */
+.nexus-import-completion-dialog .nexus-completion-archive-line {
+    margin-top: 12px;
+    text-align: center;
     font-size: 0.85em;
     color: var(--text-muted);
 }
@@ -1770,14 +1784,14 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
         padding: 14px 14px 18px 14px;
     }
 
-    .nexus-import-completion-dialog .nexus-stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .nexus-import-completion-dialog .nexus-stat-card {
+        flex: 1 1 120px;
     }
 }
 
 @media (max-width: 480px) {
-    .nexus-import-completion-dialog .nexus-stats-grid {
-        grid-template-columns: 1fr;
+    .nexus-import-completion-dialog .nexus-stat-card {
+        flex: 1 1 100%;
     }
 }
 

@@ -168,17 +168,20 @@
         "title": "インポート完了",
         "success_message": "✅ 会話が正常にインポートされました",
         "stats": {
-            "zip_files_processed": "処理済みZIPファイル",
-            "unique_conversations": "固有の会話",
-            "duplicates": "重複",
             "new": "新規",
             "updated": "更新済み",
             "recreated": "再作成",
             "unchanged": "変更なし",
-            "not_selected": "未選択",
-            "empty_suffix": "エクスポート可能な内容なし {{count}} 件",
             "failed": "失敗"
         },
+        "archive": {
+            "conversations": "会話 {{count}} 件",
+            "zips": "ZIP ファイル {{count}} 個",
+            "duplicates": "重複 {{count}} 件を除外",
+            "not_selected": "未選択 {{count}} 件",
+            "empty": "エクスポート可能な内容なし {{count}} 件"
+        },
+        "nothing_changed": "保管庫に変更はありませんでした。",
         "attachments": {
             "label": "添付ファイル：",
             "summary": "{{found}}/{{total}} 件を抽出（{{percentage}}%）",

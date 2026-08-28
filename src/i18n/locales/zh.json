@@ -168,17 +168,20 @@
         "title": "导入完成",
         "success_message": "✅ 对话已成功导入",
         "stats": {
-            "zip_files_processed": "已处理 ZIP 文件",
-            "unique_conversations": "唯一对话",
-            "duplicates": "重复",
             "new": "新建",
             "updated": "已更新",
             "recreated": "已重新生成",
             "unchanged": "无变化",
-            "not_selected": "未选择",
-            "empty_suffix": "{{count}} 个无可导出内容",
             "failed": "失败"
         },
+        "archive": {
+            "conversations": "{{count}} 个会话",
+            "zips": "{{count}} 个 ZIP 文件",
+            "duplicates": "移除 {{count}} 个重复",
+            "not_selected": "{{count}} 个未选择",
+            "empty": "{{count}} 个无可导出内容"
+        },
+        "nothing_changed": "保险库没有任何变化。",
         "attachments": {
             "label": "附件：",
             "summary": "{{found}}/{{total}} 已提取（{{percentage}}%）",

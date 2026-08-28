@@ -168,17 +168,20 @@
         "title": "Importation terminée",
         "success_message": "✅ Conversations importées avec succès",
         "stats": {
-            "zip_files_processed": "Fichiers ZIP traités",
-            "unique_conversations": "Conversations uniques",
-            "duplicates": "Doublons",
             "new": "Nouveau",
             "updated": "Mis à jour",
             "recreated": "Recréées",
             "unchanged": "Inchangées",
-            "not_selected": "Non sélectionnées",
-            "empty_suffix": "{{count}} sans contenu exportable",
             "failed": "Échoués"
         },
+        "archive": {
+            "conversations": "{{count}} conversations",
+            "zips": "{{count}} fichiers ZIP",
+            "duplicates": "{{count}} doublons retirés",
+            "not_selected": "{{count}} non sélectionnées",
+            "empty": "{{count}} sans contenu exportable"
+        },
+        "nothing_changed": "Rien n'a changé dans votre coffre.",
         "attachments": {
             "label": "Pièces jointes :",
             "summary": "{{found}}/{{total}} extraites ({{percentage}}%)",

@@ -93,103 +93,111 @@ export class ImportCompletionDialog extends Modal {
         this.createActionButtons(contentEl);
     }
 
+    /**
+     * Two tiers, because the numbers answer two questions. What happened to
+     * the notes gets cards, and only the outcomes that actually occurred: a
+     * grid where four of seven cards read zero says nothing. What the archive
+     * held is context for those cards, so it goes underneath as one line.
+     */
     private createStatsSection(container: HTMLElement) {
-        const section = container.createDiv(
-            "stats-section nexus-stats-grid nexus-dialog-section"
-        );
+        const outcomes: Array<{
+            icon: string;
+            value: number;
+            label: string;
+            color: string;
+        }> = [
+            {
+                icon: "✨",
+                value: this.stats.created,
+                label: t("import_completion.stats.new"),
+                color: "var(--color-green)",
+            },
+            {
+                icon: "🔄",
+                value: this.stats.updated,
+                label: t("import_completion.stats.updated"),
+                color: "var(--color-orange)",
+            },
+            {
+                icon: "♻️",
+                value: this.stats.recreated,
+                label: t("import_completion.stats.recreated"),
+                color: "var(--color-purple)",
+            },
+            {
+                icon: "⏭️",
+                value: this.stats.unchanged,
+                label: t("import_completion.stats.unchanged"),
+                color: "var(--text-muted)",
+            },
+            {
+                icon: "❌",
+                value: this.stats.failed,
+                label: t("import_completion.stats.failed"),
+                color: "var(--color-red)",
+            },
+        ].filter((outcome) => outcome.value > 0);
 
-        // Files cartouche
-        this.createStatCartouche(
-            section,
-            "📁",
-            this.stats.totalFiles.toString(),
-            t("import_completion.stats.zip_files_processed")
-        );
+        if (outcomes.length === 0) {
+            const nothing = container.createDiv(
+                "nexus-dialog-section nexus-completion-panel nexus-completion-panel-center"
+            );
+            nothing.textContent = t("import_completion.nothing_changed");
+        } else {
+            const section = container.createDiv(
+                "stats-section nexus-stats-grid nexus-dialog-section"
+            );
+            outcomes.forEach((outcome) => {
+                this.createStatCartouche(
+                    section,
+                    outcome.icon,
+                    outcome.value.toString(),
+                    outcome.label,
+                    outcome.color
+                );
+            });
+        }
 
-        // Total conversations cartouche (unique UUIDs in ZIPs)
-        this.createStatCartouche(
-            section,
-            "💬",
-            this.stats.totalConversations.toString(),
-            t("import_completion.stats.unique_conversations")
-        );
+        this.createArchiveLine(container);
+    }
 
-        // Duplicates cartouche (always shown to explain difference between total and created)
-        this.createStatCartouche(
-            section,
-            "🔁",
-            this.stats.duplicates.toString(),
-            t("import_completion.stats.duplicates"),
-            "var(--text-muted)"
-        );
+    /** Where those notes came from, as a sentence rather than more cards. */
+    private createArchiveLine(container: HTMLElement) {
+        const parts: string[] = [
+            t("import_completion.archive.conversations", {
+                count: String(this.stats.totalConversations),
+            }),
+            t("import_completion.archive.zips", {
+                count: String(this.stats.totalFiles),
+            }),
+        ];
 
-        // Created cartouche
-        this.createStatCartouche(
-            section,
-            "✨",
-            this.stats.created.toString(),
-            t("import_completion.stats.new"),
-            "var(--color-green)"
-        );
-
-        // Updated cartouche
-        this.createStatCartouche(
-            section,
-            "🔄",
-            this.stats.updated.toString(),
-            t("import_completion.stats.updated"),
-            "var(--color-orange)"
-        );
-
-        // Recreated cartouche. Only a rebuild produces one, so it stays out
-        // of the way of the imports that never ask for it.
-        if (this.stats.recreated > 0) {
-            this.createStatCartouche(
-                section,
-                "♻️",
-                this.stats.recreated.toString(),
-                t("import_completion.stats.recreated"),
-                "var(--color-purple)"
+        if (this.stats.duplicates > 0) {
+            parts.push(
+                t("import_completion.archive.duplicates", {
+                    count: String(this.stats.duplicates),
+                })
             );
         }
 
-        // Unchanged cartouche. The suffix used to be hardcoded English.
-        const unchangedLabel =
-            this.stats.emptyConversations > 0
-                ? `${t("import_completion.stats.unchanged")} (${t(
-                      "import_completion.stats.empty_suffix",
-                      { count: String(this.stats.emptyConversations) }
-                  )})`
-                : t("import_completion.stats.unchanged");
-        this.createStatCartouche(
-            section,
-            "⏭️",
-            this.stats.unchanged.toString(),
-            unchangedLabel,
-            "var(--text-muted)"
-        );
-
-        // Only a selective import has a declined population to report.
         if (this.stats.notSelected !== null && this.stats.notSelected > 0) {
-            this.createStatCartouche(
-                section,
-                "☐",
-                this.stats.notSelected.toString(),
-                t("import_completion.stats.not_selected"),
-                "var(--text-muted)"
+            parts.push(
+                t("import_completion.archive.not_selected", {
+                    count: String(this.stats.notSelected),
+                })
             );
         }
 
-        // Failed cartouche (only if > 0)
-        if (this.stats.failed > 0) {
-            this.createStatCartouche(
-                section,
-                "❌",
-                this.stats.failed.toString(),
-                t("import_completion.stats.failed"),
-                "var(--color-red)"
+        if (this.stats.emptyConversations > 0) {
+            parts.push(
+                t("import_completion.archive.empty", {
+                    count: String(this.stats.emptyConversations),
+                })
             );
         }
+
+        const line = container.createDiv("nexus-completion-archive-line");
+        line.textContent = parts.join(" · ");
     }
 
     private createStatCartouche(

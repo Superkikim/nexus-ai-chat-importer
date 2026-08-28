@@ -168,17 +168,20 @@
         "title": "Import Completed",
         "success_message": "✅ Successfully imported conversations",
         "stats": {
-            "zip_files_processed": "ZIP Files Processed",
-            "unique_conversations": "Unique Conversations",
-            "duplicates": "Duplicates",
             "new": "New",
             "updated": "Updated",
             "recreated": "Recreated",
             "unchanged": "Unchanged",
-            "not_selected": "Not selected",
-            "empty_suffix": "{{count}} with no exportable content",
             "failed": "Failed"
         },
+        "archive": {
+            "conversations": "{{count}} conversations",
+            "zips": "{{count}} ZIP files",
+            "duplicates": "{{count}} duplicates removed",
+            "not_selected": "{{count}} not selected",
+            "empty": "{{count}} with no exportable content"
+        },
+        "nothing_changed": "Nothing in your vault changed.",
         "attachments": {
             "label": "Attachments:",
             "summary": "{{found}}/{{total}} extracted ({{percentage}}%)",
