@@ -92,9 +92,11 @@ export class ClaudeAttachmentExtractor {
     ): Promise<StandardAttachment> {
         const fileName = attachment.fileName;
 
-        // If content was already extracted from the JSON (inline attachments),
-        // skip the ZIP lookup entirely
-        if (attachment.extractedContent) {
+        // Nothing to look up when the converter already dealt with it: either
+        // the content is inline in the note, or it was too large for that and
+        // was written beside the conversation. Falling through would hand a
+        // "not provided by export" placeholder to a file that is right there.
+        if (attachment.extractedContent || attachment.url) {
             return attachment;
         }
 

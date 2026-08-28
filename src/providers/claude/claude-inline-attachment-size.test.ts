@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { ClaudeConverter } from "./claude-converter";
 import { ClaudeAttachment, ClaudeMessage } from "./claude-types";
+import { ClaudeAttachmentExtractor } from "./claude-attachment-extractor";
+import type { ZipArchiveReader } from "../../utils/zip-loader";
 
 /**
  * A pasted log or HTML page arrives in conversations.json as one enormous
@@ -134,6 +136,37 @@ describe("Claude inline attachments", () => {
         await convert([messageWith([attachment("paste", HUGE)])], plugin);
 
         expect(created[0].path).toMatch(/\/paste\.txt$/);
+    });
+
+    it("survives the attachment extractor, which has nothing to look up", async () => {
+        // The extractor runs after the converter and replaces anything it
+        // cannot find in the ZIP with a "not provided by export" placeholder.
+        // A file the converter just wrote must not be handed that.
+        const { plugin, created } = createPlugin();
+        const messages = await convert(
+            [messageWith([attachment("dump.log", HUGE)])],
+            plugin
+        );
+
+        const extractor = new ClaudeAttachmentExtractor(
+            plugin as unknown as ConstructorParameters<
+                typeof ClaudeAttachmentExtractor
+            >[0],
+            plugin.logger as unknown as ConstructorParameters<
+                typeof ClaudeAttachmentExtractor
+            >[1]
+        );
+        const processed = await extractor.extractAttachments(
+            {
+                has: () => false,
+                get: () => null,
+            } as unknown as ZipArchiveReader,
+            "conv-uuid",
+            messages[0].attachments ?? []
+        );
+
+        expect(processed[0].url).toBe(created[0].path);
+        expect(processed[0].extractedContent).toBeUndefined();
     });
 
     it("falls back to inlining when the write fails", async () => {
