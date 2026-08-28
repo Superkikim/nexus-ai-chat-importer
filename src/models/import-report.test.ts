@@ -106,8 +106,10 @@ describe("import report — desktop import-all (analysis available)", () => {
         expect(markdown).toContain("| ❌ Failed | 1 |");
         // 5 unchanged conversations dropped at analysis time — not the single
         // no-op write recorded by addSkipped.
+        // 5 dropped by the analysis plus the fixture's one no-op write:
+        // both are conversations that left the vault untouched.
         expect(conversationsRow(markdown, "⏭️ Unchanged")).toBe(
-            "| ⏭️ Unchanged | 5 |"
+            "| ⏭️ Unchanged | 6 |"
         );
         expect(markdown).toContain("| Found | 12 |");
         expect(markdown).toContain("| Kept | 10 |");
@@ -125,7 +127,7 @@ describe("import report — desktop import-all (analysis available)", () => {
         expect(stats.duplicates).toBe(2);
         expect(stats.created).toBe(3);
         expect(stats.updated).toBe(2);
-        expect(stats.unchanged).toBe(5);
+        expect(stats.unchanged).toBe(6); // 5 dropped + the no-op write
         expect(stats.emptyConversations).toBe(1);
         expect(stats.failed).toBe(1);
     });
@@ -146,8 +148,10 @@ describe("import report — selective import", () => {
         );
 
         expect(markdown).toContain("| Kept | 10 |");
+        // 5 dropped by the analysis plus the fixture's one no-op write:
+        // both are conversations that left the vault untouched.
         expect(conversationsRow(markdown, "⏭️ Unchanged")).toBe(
-            "| ⏭️ Unchanged | 5 |"
+            "| ⏭️ Unchanged | 6 |"
         );
     });
 
@@ -252,8 +256,10 @@ describe("import report — every row names its own subject", () => {
         // One archive was not processed...
         expect(filesBlock).toContain("| Not processed | 1 |");
         // ...and five conversations were already up to date. Different words.
+        // 5 dropped by the analysis plus the fixture's one no-op write:
+        // both are conversations that left the vault untouched.
         expect(conversationsRow(markdown, "⏭️ Unchanged")).toBe(
-            "| ⏭️ Unchanged | 5 |"
+            "| ⏭️ Unchanged | 6 |"
         );
         // The overloaded label is gone from the note entirely, including the
         // per-archive Status column that used it a third time.
@@ -291,7 +297,8 @@ describe("conversation ledger", () => {
         expect(ledger.totalFound).toBe(12);
         expect(ledger.uniqueKept).toBe(10);
         expect(ledger.unchanged).toBe(5);
-        expect(ledger.unchangedSkipped).toBe(5);
+        // The 5 the analysis dropped, plus the fixture's no-op write.
+        expect(ledger.unchangedSkipped).toBe(6);
         expect(ledger.totalConversations).toBe(10);
         expect(ledger.duplicates).toBe(2);
         // Write counters stay themselves — the no-op is not the skip count.
@@ -333,11 +340,16 @@ describe("conversation ledger", () => {
         // What the vault holds, versus what we did about it.
         expect(ledger.unchanged).toBe(5);
         expect(ledger.reprocessed).toBe(5);
-        expect(ledger.unchangedSkipped).toBe(0);
+        // Nothing was dropped; the 1 is the fixture's no-op write, an
+        // outcome of the import rather than a state of the archive.
+        expect(ledger.unchangedSkipped).toBe(1);
     });
 
     it("splits unchanged into dropped and reprocessed without losing any", () => {
-        const report = populatedReport();
+        // No write-side entries, so the ledger carries the analysis alone and
+        // the archive-side invariant is visible on its own.
+        const report = new ImportReport();
+        report.startFileSection("export.zip");
         report.setAnalysisInfo(
             analysis({
                 conversationsUnchanged: 7,
@@ -351,6 +363,90 @@ describe("conversation ledger", () => {
         expect(ledger.unchangedSkipped + ledger.reprocessed).toBe(
             ledger.unchanged
         );
+    });
+});
+
+describe("import report — the outcomes account for every selected conversation", () => {
+    /**
+     * The Notes table sits under the Archive table's "Selected" row, so the
+     * two have to reconcile. They did not: a selective import offers every
+     * existing conversation, which left `conversationsDroppedUnchanged` at
+     * zero, and that zero was chosen over the write counter — so a selected
+     * conversation the import left alone was reported nowhere and the
+     * arithmetic came up short.
+     */
+    const sum = (report: ImportReport) => {
+        const l = report.getConversationLedger();
+        return (
+            l.created +
+            l.updated +
+            l.recreated +
+            l.unchangedSkipped +
+            l.empty +
+            l.failed
+        );
+    };
+
+    it("balances on a selective import that left a selection untouched", () => {
+        const report = new ImportReport();
+        report.startFileSection("export.zip");
+        report.addCreated("New", "p/a.md", 1_700_000_000, 1_700_000_100, 5);
+        report.addUpdated("Upd", "p/b.md", 1_700_000_000, 1_700_000_200, 2);
+        // The unchanged one the user selected anyway, without a rebuild.
+        report.addSkipped(
+            "Same",
+            "p/c.md",
+            1_700_000_000,
+            1_700_000_000,
+            4,
+            "No Updates"
+        );
+        report.setAnalysisInfo(
+            analysis({
+                uniqueConversationsKept: 119,
+                conversationsUnchanged: 116,
+                // "offer": nothing was dropped, the dialog showed them all.
+                conversationsDroppedUnchanged: 0,
+                conversationsReprocessed: 0,
+            })
+        );
+        report.setSelection(119, 3);
+
+        expect(sum(report)).toBe(report.getConversationLedger().selected);
+    });
+
+    it("balances on a full import that dropped its unchanged conversations", () => {
+        const report = new ImportReport();
+        report.startFileSection("export.zip");
+        report.addCreated("New", "p/a.md", 1_700_000_000, 1_700_000_100, 5);
+        report.addUpdated("Upd", "p/b.md", 1_700_000_000, 1_700_000_200, 2);
+        report.setAnalysisInfo(
+            analysis({
+                uniqueConversationsKept: 10,
+                conversationsUnchanged: 8,
+                conversationsDroppedUnchanged: 8,
+                conversationsReprocessed: 0,
+            })
+        );
+
+        expect(sum(report)).toBe(report.getConversationLedger().selected);
+    });
+
+    it("balances on a rebuild, where nothing is left untouched", () => {
+        const report = new ImportReport();
+        report.startFileSection("export.zip");
+        report.addRecreated("A", "p/a.md", 1_700_000_000, 1_700_000_100, 5);
+        report.addRecreated("B", "p/b.md", 1_700_000_000, 1_700_000_100, 6);
+        report.setAnalysisInfo(
+            analysis({
+                uniqueConversationsKept: 2,
+                conversationsUnchanged: 2,
+                conversationsDroppedUnchanged: 0,
+                conversationsReprocessed: 2,
+            })
+        );
+
+        expect(sum(report)).toBe(report.getConversationLedger().selected);
     });
 });
 

@@ -1190,8 +1190,15 @@ export class ImportReport {
             notSelected: this.selection
                 ? Math.max(0, this.selection.offered - this.selection.selected)
                 : null,
+            // A sum, not a choice: the two counters hold disjoint populations.
+            // The analysis one counts conversations dropped before the import
+            // ever saw them (a full import without a rebuild); the write one
+            // counts those that reached the processor and produced nothing
+            // (a selective import, where every existing conversation is
+            // offered). Picking one made a selected-but-unchanged conversation
+            // vanish from the report and broke its arithmetic.
             unchangedSkipped:
-                analysis?.conversationsDroppedUnchanged ?? writes.skipped,
+                (analysis?.conversationsDroppedUnchanged ?? 0) + writes.skipped,
             totalConversations:
                 analysis?.uniqueConversationsKept ?? writes.totalProcessed,
             duplicates:
