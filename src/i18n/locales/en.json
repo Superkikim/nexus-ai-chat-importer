@@ -526,12 +526,12 @@
             "generic": "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly.",
             "perplexity": "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner Perplexity part*.zip files directly."
         },
-        "provider_mismatch": {
-            "chatgpt": "This ZIP file does not look like a ChatGPT export.",
-            "claude": "This ZIP file does not look like a Claude export.",
-            "vibe": "This ZIP file does not look like a Mistral Vibe export.",
-            "gemini": "This ZIP file does not look like a Gemini Takeout export.",
-            "perplexity": "This ZIP file does not look like a Perplexity Thread Exporter archive."
+        "wrong_provider": "This ZIP is a {{detected}} export, not a {{expected}} one. Pick the matching provider to import it.",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
         }
     },
     "commands": {

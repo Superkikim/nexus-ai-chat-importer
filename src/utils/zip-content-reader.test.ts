@@ -283,6 +283,25 @@ describe("resolveArchiveClassification", () => {
         expect(classification.supported).toBe(false);
         if (classification.supported) return;
         expect(classification.reason).toBe("provider-mismatch");
+        // Detection knows what it is; the refusal says so instead of leaving
+        // the user to guess which provider to try next.
+        expect(classification.message).toContain("Claude");
+        expect(classification.message).toContain("ChatGPT");
+    });
+
+    it("says an unrecognised archive is unrecognised, not the wrong provider", async () => {
+        const classification = await classify(
+            { "intercom_data/readme.txt": "not an AI export" },
+            "claude"
+        );
+
+        expect(classification.supported).toBe(false);
+        if (classification.supported) return;
+        expect(classification.reason).toBe("unsupported-format");
+        // Naming a provider here would send the user hunting for a setting
+        // that cannot help: this ZIP is no export at all.
+        expect(classification.message).not.toContain("Claude");
+        expect(classification.message).toContain("supported export format");
     });
 
     it("ignores archiver noise entries when checking for a solo payload", async () => {

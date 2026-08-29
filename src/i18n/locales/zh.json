@@ -526,12 +526,12 @@
             "generic": "此 ZIP 中包含其他 ZIP 文件。请解压外层 ZIP，然后直接导入内层的 ZIP 文件。",
             "perplexity": "此 ZIP 中包含其他 ZIP 文件。请解压外层 ZIP，然后直接导入其中 Perplexity 的 part*.zip 文件。"
         },
-        "provider_mismatch": {
-            "chatgpt": "此 ZIP 文件似乎不是 ChatGPT 导出文件。",
-            "claude": "此 ZIP 文件似乎不是 Claude 导出文件。",
-            "vibe": "此 ZIP 文件似乎不是 Mistral Vibe 导出文件。",
-            "gemini": "此 ZIP 文件似乎不是 Gemini Takeout 导出文件。",
-            "perplexity": "此 ZIP 文件似乎不是 Perplexity Thread Exporter 归档。"
+        "wrong_provider": "这个 ZIP 是 {{detected}} 的导出文件，不是 {{expected}} 的。请选择对应的提供方后再导入。",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
         }
     },
     "commands": {

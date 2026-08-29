@@ -33,7 +33,6 @@ import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
 import {
     resolveArchiveClassification,
     extractConversationsStream,
-    getArchiveProviderMismatchMessage,
     getArchiveUnsupportedFormatMessage,
     SupportedArchiveProvider,
 } from "../utils/zip-content-reader";
@@ -525,7 +524,10 @@ export class ConversationMetadataExtractor {
             return {
                 fileName,
                 reason: "unsupported-format",
-                message: this.getUnsupportedArchiveMessage(forcedProvider),
+                // The ZIP itself could not be read, so no provider would
+                // have helped: naming one sends the user to a setting that
+                // cannot fix a corrupt archive.
+                message: getArchiveUnsupportedFormatMessage(),
             };
         }
 
@@ -534,23 +536,6 @@ export class ConversationMetadataExtractor {
             reason: "read-error",
             message,
         };
-    }
-
-    private getUnsupportedArchiveMessage(forcedProvider?: string): string {
-        if (forcedProvider === "chatgpt") {
-            return getArchiveProviderMismatchMessage("chatgpt");
-        }
-        if (forcedProvider === "claude") {
-            return getArchiveProviderMismatchMessage("claude");
-        }
-        if (forcedProvider === "vibe") {
-            return getArchiveProviderMismatchMessage("vibe");
-        }
-        if (forcedProvider === "perplexity") {
-            return getArchiveProviderMismatchMessage("perplexity");
-        }
-
-        return getArchiveUnsupportedFormatMessage();
     }
 
     private extractSingleMetadataByProvider(

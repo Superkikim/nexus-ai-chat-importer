@@ -526,12 +526,12 @@
             "generic": "이 ZIP에는 다른 ZIP 파일이 들어 있습니다. 바깥쪽 ZIP을 풀고 안쪽 ZIP 파일을 직접 가져오세요.",
             "perplexity": "이 ZIP에는 다른 ZIP 파일이 들어 있습니다. 바깥쪽 ZIP을 풀고 안쪽의 Perplexity part*.zip 파일을 직접 가져오세요."
         },
-        "provider_mismatch": {
-            "chatgpt": "이 ZIP 파일은 ChatGPT 내보내기가 아닌 것 같습니다.",
-            "claude": "이 ZIP 파일은 Claude 내보내기가 아닌 것 같습니다.",
-            "vibe": "이 ZIP 파일은 Mistral Vibe 내보내기가 아닌 것 같습니다.",
-            "gemini": "이 ZIP 파일은 Gemini Takeout 내보내기가 아닌 것 같습니다.",
-            "perplexity": "이 ZIP 파일은 Perplexity Thread Exporter 아카이브가 아닌 것 같습니다."
+        "wrong_provider": "이 ZIP은 {{expected}}가 아니라 {{detected}} 내보내기입니다. 해당 제공자를 선택해 가져오세요.",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
         }
     },
     "commands": {

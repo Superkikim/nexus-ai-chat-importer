@@ -526,12 +526,12 @@
             "generic": "Diese ZIP-Datei enthält weitere ZIP-Dateien. Entpacken Sie das äußere Archiv und importieren Sie die inneren ZIP-Dateien direkt.",
             "perplexity": "Diese ZIP-Datei enthält weitere ZIP-Dateien. Entpacken Sie das äußere Archiv und importieren Sie die inneren Dateien part*.zip von Perplexity direkt."
         },
-        "provider_mismatch": {
-            "chatgpt": "Diese ZIP-Datei scheint kein ChatGPT-Export zu sein.",
-            "claude": "Diese ZIP-Datei scheint kein Claude-Export zu sein.",
-            "vibe": "Diese ZIP-Datei scheint kein Mistral Vibe-Export zu sein.",
-            "gemini": "Diese ZIP-Datei scheint kein Gemini Takeout-Export zu sein.",
-            "perplexity": "Diese ZIP-Datei scheint kein Archiv von Perplexity Thread Exporter zu sein."
+        "wrong_provider": "Dieses ZIP ist ein {{detected}}-Export, kein {{expected}}-Export. Wählen Sie den passenden Anbieter, um es zu importieren.",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
         }
     },
     "commands": {
