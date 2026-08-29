@@ -318,10 +318,36 @@ export class LongContentExtractor {
 
             const path = await this.write(payload, folder);
             if (path) written = path;
-            out.push(path ? `${prefix}[[${path}]]` : line);
+            if (!path) {
+                out.push(line);
+            } else if (prefix) {
+                // Already inside the attachment's own callout: the link
+                // replaces the body, the header above it stays.
+                out.push(`${prefix}[[${path}]]`);
+            } else {
+                // In the middle of a message: a collapsed callout keeps the
+                // content's place in the sentence instead of sending it to
+                // the bottom with the attachments.
+                out.push(...this.calloutFor(path));
+            }
         }
 
         return { content: out.join("\n"), path: written };
+    }
+
+    /**
+     * The collapsed callout that stands in for a line moved out of a message.
+     * Written unprefixed: the formatter quotes every content line, turning
+     * this into the nested callout the note's attachments already use.
+     */
+    private calloutFor(path: string): string[] {
+        const name = path.slice(path.lastIndexOf("/") + 1);
+        const kind = name.slice(name.lastIndexOf(".") + 1);
+        return [
+            `>[!nexus_attachment]- **${name}** (${kind})`,
+            ">",
+            `> [[${path}]]`,
+        ];
     }
 
     /** Writes the content, beautified, and returns its vault path. */

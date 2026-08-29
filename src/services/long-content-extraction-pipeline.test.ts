@@ -88,8 +88,21 @@ describe("LongContentExtractor", () => {
         // The prose around it stays; only the blob leaves.
         expect(out[0].content).toContain("Voici la sortie");
         expect(out[0].content).toContain("Qu'en penses-tu ?");
-        expect(out[0].content).toContain(`[[${created[0].path}]]`);
         expect(out[0].content).not.toContain("postgres Pulling");
+
+        // And it leaves behind a collapsed callout, in place — the formatter
+        // quotes these lines, making it the nested callout attachments use.
+        const lines = out[0].content.split("\n");
+        const at = lines.findIndex((l) =>
+            l.startsWith(">[!nexus_attachment]-")
+        );
+        expect(at).toBeGreaterThan(0);
+        expect(lines[at]).toContain("(txt)");
+        expect(lines[at + 1]).toBe(">");
+        expect(lines[at + 2]).toBe(`> [[${created[0].path}]]`);
+        // Still between the two sentences, not appended after them.
+        expect(lines.indexOf("Voici la sortie")).toBeLessThan(at);
+        expect(lines.indexOf("Qu'en penses-tu ?")).toBeGreaterThan(at);
     });
 
     it("writes the file beautified, not as the single line it was", async () => {
