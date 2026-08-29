@@ -134,10 +134,14 @@ describe("LongContentExtractor", () => {
             CONVERSATION
         );
 
-        const written = out[0].attachments?.[0].extractedContent ?? "";
+        const attachment = out[0].attachments?.[0];
         // Still one callout: the link is quoted like the content it replaced.
-        expect(written).toContain(`>> [[${created[0].path}]]`);
-        expect(written).toContain("[!nexus_attachment]");
+        expect(attachment?.extractedContent).toContain(
+            `>> [[${created[0].path}]]`
+        );
+        expect(attachment?.extractedContent).toContain("[!nexus_attachment]");
+        // And the report counts it as a file, not as text left in the note.
+        expect(attachment?.status?.localPath).toBe(created[0].path);
     });
 
     it("writes one file when two conversations paste the same thing", async () => {
@@ -188,6 +192,7 @@ describe("LongContentExtractor", () => {
         expect(written).toContain("[!nexus_attachment]");
         expect(written).toContain(`>> [[${created[0].path}]]`);
         expect(written).not.toContain("ligne 300");
+        expect(out[0].attachments?.[0].status?.localPath).toBe(created[0].path);
         // The file holds the body without the callout quoting.
         expect(created[0].content).toContain("ligne 300");
         expect(created[0].content).not.toContain(">>");

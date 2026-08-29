@@ -215,20 +215,37 @@ export class LongContentExtractor {
 
         const result: StandardMessage[] = [];
         for (const message of messages) {
-            const content = await this.rewrite(message.content, folder, "");
+            const content = (await this.rewrite(message.content, folder, ""))
+                .content;
             const attachments = [];
             for (const attachment of message.attachments ?? []) {
-                attachments.push(
-                    attachment.extractedContent
-                        ? {
-                              ...attachment,
-                              extractedContent: await this.rewriteCallout(
-                                  attachment.extractedContent,
-                                  folder
-                              ),
-                          }
-                        : attachment
+                if (!attachment.extractedContent) {
+                    attachments.push(attachment);
+                    continue;
+                }
+
+                const moved = await this.rewriteCallout(
+                    attachment.extractedContent,
+                    folder
                 );
+                attachments.push({
+                    ...attachment,
+                    extractedContent: moved.content,
+                    // The content is a file now, so the report must count it
+                    // as one: the stats read localPath to tell a file in the
+                    // vault from text sitting in the note.
+                    ...(moved.path
+                        ? {
+                              url: moved.path,
+                              status: {
+                                  ...(attachment.status ?? {}),
+                                  processed: true,
+                                  found: true,
+                                  localPath: moved.path,
+                              },
+                          }
+                        : {}),
+                });
             }
             result.push({ ...message, content, attachments });
         }
@@ -244,7 +261,7 @@ export class LongContentExtractor {
     private async rewriteCallout(
         content: string,
         folder: string
-    ): Promise<string> {
+    ): Promise<{ content: string; path: string | null }> {
         const lines = content.split("\n");
         const header = lines[0]?.startsWith(">>[!") ? lines[0] : null;
         const body = header ? lines.slice(1) : lines;
@@ -263,13 +280,17 @@ export class LongContentExtractor {
         if (payload.length > INLINE_BLOCK_MAX_BYTES) {
             const path = await this.write(payload, folder);
             if (path) {
-                return [header, ">>", `>> [[${path}]]`]
-                    .filter((line): line is string => line !== null)
-                    .join("\n");
+                return {
+                    content: [header, ">>", `>> [[${path}]]`]
+                        .filter((line): line is string => line !== null)
+                        .join("\n"),
+                    path,
+                };
             }
         }
 
-        return this.rewrite(content, folder, ">> ");
+        const rewritten = await this.rewrite(content, folder, ">> ");
+        return { content: rewritten.content, path: rewritten.path };
     }
 
     /**
@@ -281,11 +302,12 @@ export class LongContentExtractor {
         text: string | undefined,
         folder: string,
         prefix: string
-    ): Promise<string> {
-        if (!text) return text ?? "";
+    ): Promise<{ content: string; path: string | null }> {
+        if (!text) return { content: text ?? "", path: null };
 
         const lines = text.split("\n");
         const out: string[] = [];
+        let written: string | null = null;
 
         for (const line of lines) {
             const payload = prefix ? line.slice(prefix.length) : line;
@@ -295,10 +317,11 @@ export class LongContentExtractor {
             }
 
             const path = await this.write(payload, folder);
+            if (path) written = path;
             out.push(path ? `${prefix}[[${path}]]` : line);
         }
 
-        return out.join("\n");
+        return { content: out.join("\n"), path: written };
     }
 
     /** Writes the content, beautified, and returns its vault path. */
