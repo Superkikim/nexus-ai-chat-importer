@@ -183,13 +183,13 @@
         },
         "nothing_changed": "No ha cambiado nada en tu bóveda.",
         "attachments": {
-            "label": "Adjuntos:",
-            "total": "{{count}} en total",
-            "extracted": "{{count}} extraídas a la bóveda",
-            "inline": "{{count}} conservadas en la nota",
-            "not_provided": "{{count}} no incluidas en la exportación",
-            "missing": "{{count}} ausentes de la exportación",
-            "failed": "{{count}} con error"
+            "label": "Archivos",
+            "extracted": "Extraídas",
+            "inline": "En la nota",
+            "not_provided": "No están en la exportación",
+            "missing": "Ausentes",
+            "failed": "Con error",
+            "artifacts": "Artefactos"
         },
         "report": {
             "label": "📄 Informe detallado:"

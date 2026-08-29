@@ -183,13 +183,13 @@
         },
         "nothing_changed": "Nulla è cambiato nel tuo vault.",
         "attachments": {
-            "label": "Allegati:",
-            "total": "{{count}} in totale",
-            "extracted": "{{count}} estratte nel vault",
-            "inline": "{{count}} mantenute nella nota",
-            "not_provided": "{{count}} non incluse nell'esportazione",
-            "missing": "{{count}} assenti dall'esportazione",
-            "failed": "{{count}} non riuscite"
+            "label": "File",
+            "extracted": "Estratte",
+            "inline": "Nella nota",
+            "not_provided": "Non nell'esportazione",
+            "missing": "Mancanti",
+            "failed": "Non riuscite",
+            "artifacts": "Artefatti"
         },
         "report": {
             "label": "📄 Report dettagliato:"

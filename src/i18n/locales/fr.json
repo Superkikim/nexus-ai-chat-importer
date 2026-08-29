@@ -183,13 +183,13 @@
         },
         "nothing_changed": "Rien n'a changé dans votre coffre.",
         "attachments": {
-            "label": "Pièces jointes :",
-            "total": "{{count}} au total",
-            "extracted": "{{count}} extraites dans le coffre",
-            "inline": "{{count}} conservées dans la note",
-            "not_provided": "{{count}} absentes de l'export",
-            "missing": "{{count}} manquantes dans l'export",
-            "failed": "{{count}} en échec"
+            "label": "Fichiers",
+            "extracted": "Extraites",
+            "inline": "Dans la note",
+            "not_provided": "Absentes de l'export",
+            "missing": "Manquantes",
+            "failed": "En échec",
+            "artifacts": "Artefacts"
         },
         "report": {
             "label": "📄 Rapport détaillé :"

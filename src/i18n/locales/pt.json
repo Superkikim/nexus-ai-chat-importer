@@ -183,13 +183,13 @@
         },
         "nothing_changed": "Nada mudou no seu cofre.",
         "attachments": {
-            "label": "Anexos:",
-            "total": "{{count}} no total",
-            "extracted": "{{count}} extraídas para o cofre",
-            "inline": "{{count}} mantidas na nota",
-            "not_provided": "{{count}} não incluídas na exportação",
-            "missing": "{{count}} ausentes da exportação",
-            "failed": "{{count}} com falha"
+            "label": "Ficheiros",
+            "extracted": "Extraídas",
+            "inline": "Na nota",
+            "not_provided": "Fora da exportação",
+            "missing": "Ausentes",
+            "failed": "Com falha",
+            "artifacts": "Artefactos"
         },
         "report": {
             "label": "📄 Relatório detalhado:"

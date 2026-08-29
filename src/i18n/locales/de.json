@@ -183,13 +183,13 @@
         },
         "nothing_changed": "In Ihrem Tresor hat sich nichts geändert.",
         "attachments": {
-            "label": "Anhänge:",
-            "total": "{{count}} insgesamt",
-            "extracted": "{{count}} in den Tresor extrahiert",
-            "inline": "{{count}} in der Notiz belassen",
-            "not_provided": "{{count}} nicht im Export enthalten",
-            "missing": "{{count}} im Export nicht auffindbar",
-            "failed": "{{count}} fehlgeschlagen"
+            "label": "Dateien",
+            "extracted": "Extrahiert",
+            "inline": "In der Notiz",
+            "not_provided": "Nicht im Export",
+            "missing": "Fehlend",
+            "failed": "Fehlgeschlagen",
+            "artifacts": "Artefakte"
         },
         "report": {
             "label": "📄 Detaillierter Bericht:"

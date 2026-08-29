@@ -40,6 +40,7 @@ export interface ImportCompletionStats {
     attachmentsInline: number;
     attachmentsNotProvided: number;
     attachmentsTotal: number;
+    artifacts: number;
     attachmentsMissing: number;
     attachmentsFailed: number;
 }
@@ -81,7 +82,7 @@ export class ImportCompletionDialog extends Modal {
         this.createStatsSection(contentEl);
 
         // Attachments summary (if any)
-        if (this.stats.attachmentsTotal > 0) {
+        if (this.stats.attachmentsTotal > 0 || this.stats.artifacts > 0) {
             this.createAttachmentsSection(contentEl);
         }
 
@@ -224,79 +225,75 @@ export class ImportCompletionDialog extends Modal {
     }
 
     /**
-     * What became of the attachments, term by term.
+     * What became of the files, in the same cards as the notes above.
      *
-     * It used to read "found / total extracted (%)" and paint itself red
-     * below half. On a Claude export that is always red: Claude ships no
-     * files at all, so nothing can be extracted and nothing failed either.
-     * A ratio cannot say that; a breakdown can.
+     * This used to be a sentence reading "found / total extracted (%)", red
+     * below half — which made every Claude import look failed, since Claude
+     * ships no files and nothing can be extracted. Cards say what happened to
+     * each population instead, and only a real loss is coloured.
      */
     private createAttachmentsSection(container: HTMLElement) {
+        const outcomes: Array<{
+            icon: string;
+            value: number;
+            label: string;
+            color: string;
+        }> = [
+            {
+                icon: "📎",
+                value: this.stats.attachmentsFound,
+                label: t("import_completion.attachments.extracted"),
+                color: "var(--color-green)",
+            },
+            {
+                icon: "📄",
+                value: this.stats.attachmentsInline,
+                label: t("import_completion.attachments.inline"),
+                color: "var(--text-normal)",
+            },
+            {
+                icon: "🎨",
+                value: this.stats.artifacts,
+                label: t("import_completion.attachments.artifacts"),
+                color: "var(--color-purple)",
+            },
+            {
+                icon: "ℹ️",
+                value: this.stats.attachmentsNotProvided,
+                label: t("import_completion.attachments.not_provided"),
+                color: "var(--text-muted)",
+            },
+            {
+                icon: "⚠️",
+                value: this.stats.attachmentsMissing,
+                label: t("import_completion.attachments.missing"),
+                color: "var(--color-orange)",
+            },
+            {
+                icon: "❌",
+                value: this.stats.attachmentsFailed,
+                label: t("import_completion.attachments.failed"),
+                color: "var(--color-red)",
+            },
+        ].filter((outcome) => outcome.value > 0);
+
+        if (outcomes.length === 0) return;
+
+        const heading = container.createDiv("nexus-completion-group-label");
+        heading.textContent = t("import_completion.attachments.label");
+
         const section = container.createDiv(
-            "attachments-section nexus-dialog-section nexus-completion-panel nexus-completion-panel-center"
+            "attachments-section nexus-stats-grid nexus-dialog-section"
         );
-
-        const parts: string[] = [];
-        if (this.stats.attachmentsFound > 0) {
-            parts.push(
-                t("import_completion.attachments.extracted", {
-                    count: String(this.stats.attachmentsFound),
-                })
+        outcomes.forEach((outcome) => {
+            this.createStatCartouche(
+                section,
+                outcome.icon,
+                outcome.value.toString(),
+                outcome.label,
+                outcome.color
             );
-        }
-        if (this.stats.attachmentsInline > 0) {
-            parts.push(
-                t("import_completion.attachments.inline", {
-                    count: String(this.stats.attachmentsInline),
-                })
-            );
-        }
-        if (this.stats.attachmentsNotProvided > 0) {
-            parts.push(
-                t("import_completion.attachments.not_provided", {
-                    count: String(this.stats.attachmentsNotProvided),
-                })
-            );
-        }
-        if (this.stats.attachmentsMissing > 0) {
-            parts.push(
-                t("import_completion.attachments.missing", {
-                    count: String(this.stats.attachmentsMissing),
-                })
-            );
-        }
-        if (this.stats.attachmentsFailed > 0) {
-            parts.push(
-                t("import_completion.attachments.failed", {
-                    count: String(this.stats.attachmentsFailed),
-                })
-            );
-        }
-
-        // Only a real failure is a failure: an attachment the export never
-        // carried is a property of the export, not a problem with the import.
-        const lost =
-            this.stats.attachmentsMissing + this.stats.attachmentsFailed;
-        const icon = lost > 0 ? "⚠️" : "📎";
-        const color = lost > 0 ? "var(--color-orange)" : "var(--text-normal)";
-
-        const attachmentText = section.createDiv();
-        attachmentText.appendText(`${icon} `);
-        attachmentText.createEl("strong", {
-            text: t("import_completion.attachments.label"),
         });
-        attachmentText.appendText(
-            ` ${t("import_completion.attachments.total", {
-                count: String(this.stats.attachmentsTotal),
-            })}`
-        );
-        attachmentText.style.color = color;
-
-        if (parts.length > 0) {
-            const details = section.createDiv();
-            details.addClass("nexus-completion-panel-detail");
-            details.textContent = parts.join(" · ");
-        }
     }
 
     private createReportSection(container: HTMLElement) {

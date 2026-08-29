@@ -1216,7 +1216,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const strategy = adapter.getReportNamingStrategy();
             providerName = strategy.getProviderName();
             const columnInfo = strategy.getProviderSpecificColumn();
-            report.setProviderSpecificColumnHeader(columnInfo.header);
+            report.setProviderSpecificColumnHeader(
+                columnInfo.header,
+                !!columnInfo.countsImportedAttachments
+            );
         }
 
         const folderPath = `${reportFolder}/${providerName}`;

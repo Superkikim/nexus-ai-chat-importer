@@ -369,6 +369,59 @@ describe("conversation ledger", () => {
     });
 });
 
+describe("import report — attachments and artifacts are counted apart", () => {
+    /**
+     * `providerSpecificCount` means different things per provider: artifacts
+     * for Claude, the attachment tally for ChatGPT and Vibe. It used to be
+     * added into the attachment totals for everyone, so a ChatGPT
+     * conversation with three attachments reported six, five of them
+     * "extracted" — and Claude's artifacts vanished inside a number labelled
+     * attachments.
+     */
+    function reportWith(counts: number, countsAttachments: boolean) {
+        const report = new ImportReport();
+        report.startFileSection("export.zip");
+        report.setProviderSpecificColumnHeader(
+            countsAttachments ? "Attachments" : "Artifacts",
+            countsAttachments
+        );
+        report.addCreated(
+            "A",
+            "a.md",
+            1_700_000_000,
+            1_700_000_100,
+            5,
+            {
+                total: 3,
+                found: 2,
+                inline: 0,
+                notProvided: 0,
+                missing: 1,
+                failed: 0,
+            },
+            counts
+        );
+        return report.getCompletionStats();
+    }
+
+    it("does not count a ChatGPT attachment twice", () => {
+        const stats = reportWith(3, true);
+
+        expect(stats.attachmentsTotal).toBe(3);
+        expect(stats.attachmentsFound).toBe(2);
+        expect(stats.attachmentsMissing).toBe(1);
+        expect(stats.artifacts).toBe(0);
+    });
+
+    it("keeps Claude artifacts out of the attachment numbers", () => {
+        const stats = reportWith(7, false);
+
+        expect(stats.attachmentsTotal).toBe(3);
+        expect(stats.attachmentsFound).toBe(2);
+        expect(stats.artifacts).toBe(7);
+    });
+});
+
 describe("import report — an unprocessed archive says why", () => {
     /**
      * Three situations used to share one sentence, "no importable

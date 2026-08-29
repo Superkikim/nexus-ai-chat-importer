@@ -133,6 +133,13 @@ export class ImportReport {
     private currentFileName: string = "";
     private globalErrors: { message: string; details: string }[] = [];
     private providerSpecificColumnHeader: string = "Attachments";
+    /**
+     * Whether `providerSpecificCount` re-counts the attachments an entry
+     * already carries. ChatGPT and Vibe fill that column with their own
+     * attachment tally, Claude with the artifacts it generated — one is a
+     * duplicate of what attachmentStats holds, the other is extra files.
+     */
+    private providerSpecificCountsAttachments = false;
     private operationStartTime: number = Date.now();
     private fileStats?: Map<string, FileAnalysisStats>;
     private analysisInfo?: AnalysisInfo;
@@ -179,8 +186,9 @@ export class ImportReport {
         return this.fileSections.get(this.currentFileName);
     }
 
-    setProviderSpecificColumnHeader(header: string) {
+    setProviderSpecificColumnHeader(header: string, countsAttachments = false) {
         this.providerSpecificColumnHeader = header;
+        this.providerSpecificCountsAttachments = countsAttachments;
     }
 
     setCustomTimestampFormat(format?: MessageTimestampFormat) {
@@ -214,16 +222,31 @@ export class ImportReport {
                     total.missing += entry.attachmentStats.missing;
                     total.failed += entry.attachmentStats.failed;
                 }
-
-                // Artifacts are always successfully created — count as found
-                if (entry.providerSpecificCount) {
-                    total.total += entry.providerSpecificCount;
-                    total.found += entry.providerSpecificCount;
-                }
             });
         });
 
         return total;
+    }
+
+    /**
+     * Files the provider generated, which exist beside the attachments rather
+     * than among them. Claude's artifacts are the only ones today; providers
+     * whose column merely re-counts attachments contribute nothing here.
+     */
+    private getTotalArtifacts(): number {
+        if (this.providerSpecificCountsAttachments) return 0;
+
+        let count = 0;
+        this.fileSections.forEach((section) => {
+            [
+                ...section.created,
+                ...section.updated,
+                ...section.recreated,
+            ].forEach((entry) => {
+                count += entry.providerSpecificCount ?? 0;
+            });
+        });
+        return count;
     }
 
     private getFileSectionAttachmentStats(
@@ -247,11 +270,6 @@ export class ImportReport {
                     total.notProvided += entry.attachmentStats.notProvided;
                     total.missing += entry.attachmentStats.missing;
                     total.failed += entry.attachmentStats.failed;
-                }
-
-                if (entry.providerSpecificCount) {
-                    total.total += entry.providerSpecificCount;
-                    total.found += entry.providerSpecificCount;
                 }
             }
         );
@@ -1226,6 +1244,7 @@ export class ImportReport {
             failed: ledger.failed,
             attachmentsFound: attachmentStats.found,
             attachmentsInline: attachmentStats.inline,
+            artifacts: this.getTotalArtifacts(),
             attachmentsNotProvided: attachmentStats.notProvided,
             attachmentsTotal: attachmentStats.total,
             attachmentsMissing: attachmentStats.missing,

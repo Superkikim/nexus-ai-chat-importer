@@ -183,13 +183,13 @@
         },
         "nothing_changed": "Nothing in your vault changed.",
         "attachments": {
-            "label": "Attachments:",
-            "total": "{{count}} in total",
-            "extracted": "{{count}} extracted to the vault",
-            "inline": "{{count}} kept in the note",
-            "not_provided": "{{count}} not provided by the export",
-            "missing": "{{count}} missing from the export",
-            "failed": "{{count}} failed"
+            "label": "Files",
+            "extracted": "Extracted",
+            "inline": "In the note",
+            "not_provided": "Not in the export",
+            "missing": "Missing",
+            "failed": "Failed",
+            "artifacts": "Artifacts"
         },
         "report": {
             "label": "📄 Detailed report:"

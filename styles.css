@@ -1722,6 +1722,18 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     color: var(--text-muted);
 }
 
+/* Names the row of cards under it, quietly: the cards carry the numbers. */
+.nexus-import-completion-dialog .nexus-completion-group-label {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    text-align: center;
+    font-size: 0.8em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
 /* Where the notes came from: context for the cards above, not a result of
    its own, so it reads as a sentence rather than competing with them. */
 .nexus-import-completion-dialog .nexus-completion-archive-line {

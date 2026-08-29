@@ -183,13 +183,13 @@
         },
         "nothing_changed": "保管庫に変更はありませんでした。",
         "attachments": {
-            "label": "添付ファイル：",
-            "total": "合計 {{count}} 件",
-            "extracted": "保管庫に {{count}} 件を保存",
-            "inline": "ノート内に {{count}} 件",
-            "not_provided": "エクスポートに含まれない {{count}} 件",
-            "missing": "エクスポートで見つからない {{count}} 件",
-            "failed": "失敗 {{count}} 件"
+            "label": "ファイル",
+            "extracted": "保存済み",
+            "inline": "ノート内",
+            "not_provided": "エクスポート外",
+            "missing": "見つからない",
+            "failed": "失敗",
+            "artifacts": "アーティファクト"
         },
         "report": {
             "label": "📄 詳細レポート："
