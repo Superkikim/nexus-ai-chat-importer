@@ -1,75 +1,55 @@
 # Release Notes for Nexus AI Chat Importer
 
-## Version 1.7.0 — ChatGPT Images & Privacy Portal, plus Reprocess for every provider
+## Version 1.7.0 — ChatGPT images, selective import rebuilt, honest reports
 
 ![Version](https://img.shields.io/badge/version-1.7.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
 
-ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation, including cases where ChatGPT omitted the final message that presented the file. It also accepts OpenAI's Privacy Portal downloads without any manual unpacking. Separately, and for **every supported provider**, a new option rebuilds notes that an earlier plugin version created. Legacy exports and the missing-file placeholder remain supported.
+ChatGPT ships generated images and documents in its export library again, and Nexus finds them. Selective import gains status filters and a rebuild option of its own. Reports and the completion dialog were rebuilt around what actually happened to your notes — several counters were wrong, some since the beginning.
 
 ### ✨ New
 
-- **ChatGPT — OpenAI Privacy Portal archives import directly**
-  - When the in-app export never arrives, OpenAI's Privacy Portal delivers an account-level ZIP that wraps the conversation export alongside billing, profile and activity data — previously rejected with *"This ZIP contains other ZIP files"*
-  - Import the outer ZIP as-is: the conversation archive inside it is located and imported normally, with no manual extraction
-  - The container is identified by its contents, never by its filename — OpenAI has delivered the same archive under several different names
-  - The inner archive is read in place rather than unpacked, so a 200 MB export costs no extra memory
-  - If the container turns out not to hold a usable export, it is left untouched and the existing guidance message still applies
+- **ChatGPT — Privacy Portal archives import directly**
+  The account-level ZIP from OpenAI wraps the conversation export alongside billing and profile data. Import it as-is; the inner archive is read in place, so a 200 MB export costs no extra memory. It is recognised by its contents, since OpenAI has delivered it under several filenames.
 
-- **Reprocess existing notes — all providers**
-  - A conversation whose content has not changed since the last import is skipped as *Unchanged*. That is the right default, but it also meant a plugin update improving how notes are built could never reach notes an earlier version created
-  - A new **Reprocess existing notes** checkbox in the file selection dialog rebuilds them anyway, in both **Import All** and **Select Specific**
-  - With it ticked, Unchanged conversations also appear in the selective list, so a rebuild can be limited to chosen conversations
-  - Notes are rewritten in place rather than deleted and recreated, so Obsidian backlinks and file history survive
-  - Manual edits to a rebuilt note are lost: the note is regenerated from the export. The dialog says so next to the checkbox
-  - Not ChatGPT-specific: the option lives in the shared import flow and applies to ChatGPT, Claude, Mistral Vibe and Perplexity
-  - Available in all ten interface languages
+- **ChatGPT — Generated images and documents imported again**
+  Recent exports (August 2026+) carry them in the file library. Each file is extracted under its real name and embedded in the message that produced it, with the generation prompt when it can be identified. When the export omits the message that presented a file, the file is placed at its real creation time in a minimal message — no invented text, and repeated imports never duplicate it.
 
-- **ChatGPT — Generated images imported again**
-  - Recent exports (observed August 2026+) ship generated images through the file library (`library_files.json`), with the payload present in the ZIP and linked to its conversation and generation
-  - Each image is extracted under its real name into `Attachments/chatgpt/images/`, embedded in the assistant message that produced it, and presented exactly like legacy DALL-E imports — prompt callout included when the prompt can be identified safely
+- **Rebuild existing notes**
+  A conversation already current in your vault is skipped, which is the right default — but it also meant plugin improvements could never reach older notes. Two controls now rebuild them: a checkbox in the file dialog for *Import All*, and one in the conversation list for *Select Specific*. Notes are rewritten in place, so backlinks survive. Manual edits are lost.
 
-- **ChatGPT — Recovery when the export omits the presenting message**
-  - Exports sometimes contain the conversation but not the final message that carried the generated file
-  - The file is then restored at its real creation time in a minimal assistant message that shows only the file (and its prompt when available) — no invented text, and a stable identifier so repeated imports never duplicate it
+- **Filter conversations by status**
+  New, Updated and Unchanged chips replace the old dropdown. Unchanged conversations appear in the list for the first time — off by default, since they have nothing to import unless you ask for a rebuild.
 
-- **ChatGPT — Generated documents imported**
-  - Library documents linked to an exported conversation (Canvas reports, `.docx`, etc.) go through the same reconciliation pass: extracted to `Attachments/chatgpt/documents/` under their original name and linked from their producing message
-
-- **ChatGPT — Placeholders replaced on Reprocess**
-  - Re-importing a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files
-  - Reconciliation is idempotent: a second Reprocess produces the same note, with no duplicate messages and no duplicate attachment callouts
+- **Large Claude attachments become files**
+  Claude ships attached text inside the export rather than as files, and Nexus inlined all of it. A pasted log or web page could put 138 000 characters on a single line and make a 3.5 MB note. Past 20 KB the content is written next to the conversation and linked instead. One note in this state dropped to 2 KB.
 
 ### 🔧 Improved
 
-- Extracted library files are counted in the standard **Extracted to vault** bucket of import reports, never twice
-- A library file whose conversation is absent from the export is ignored cleanly (debug log only — no report noise)
-- Unknown future library artifact types are logged and skipped without interrupting the import
+- **Recreated is its own outcome.** A rebuilt note is regenerated from scratch, not updated with new messages. Reports and the completion dialog now say which.
+- **The completion dialog shows only what happened** — no more grid of zeros. A second row covers files: extracted, kept in the note, artifacts, absent from the export. Archive numbers moved to a single line underneath.
+- **Import summaries reconcile.** An Archive block ending on *Selected*, then a Notes block that adds up to it.
+- **A refused archive says what it is** — *"this ZIP is a Mistral Vibe export, not a Claude one"* instead of a generic refusal repeated for every case.
+- **An archive that contributed nothing says why** — superseded by a newer archive, already up to date, or holding nothing importable.
+- Report filenames are sortable (`20260829-161009`).
 
 ### 🐛 Fixed
 
-- **Attachment-only messages no longer show *[No content found]*** — a message whose content is only an attachment or generated file now renders without the misleading empty-content notice
-- **Generation prompt kept for raw image requests** — prompts written without an explicit "generate" verb (e.g. a bare visual description) are no longer dropped from the image callout
-
-- **Unicode conversation titles preserved in filenames**
-  - Conversation titles that start with non-ASCII letters, such as Cyrillic or Chinese, no longer lose their leading characters when note filenames are generated
-  - Unsafe leading punctuation is still removed, so hidden-file protections remain intact
-
-- **Missing-image placeholder no longer makes a blanket claim**
-  - The text read *"recent exports no longer include generated images"*, which became wrong once exports started shipping them again
-  - It now states plainly that **this** export did not include the image
-
-- **CLI — imports no longer fail with `moment2 is not a function`**
-  - The CLI shim polyfilled `window` but never attached `moment` to it, so every note creation threw and imports reported `0 created / N failed`
-  - The CLI is functional again; this affected the optional command-line tool only, never the plugin inside Obsidian
+- **Attachment counts were wrong.** ChatGPT and Vibe totals were doubled, Claude artifacts were hidden inside them, and a Claude import showed a red *0/10 extracted* although nothing had failed — Claude exports simply carry no files. Artifacts now have their own counter.
+- **A rebuild duplicated attachments.** Re-extracting wrote a second identical copy beside the first and re-linked the note to it. Files already in your vault are reused; Claude and Vibe attachment names are stable across imports.
+- **A conversation could be lost to a filename collision.** Two titles differing only in case share one file on macOS and Windows; the second was reported as failed and never imported.
+- **A conversation could be offered as *Updated* forever.** Providers move the update date for things that produce no message; the note kept the old date and was proposed again at every import, with nothing to add.
+- **A selected conversation the import left alone vanished from the report**, and the numbers no longer added up.
+- Attachment-only messages no longer show *[No content found]*.
+- Generation prompts are kept for image requests without an explicit "generate" verb.
+- Filenames keep leading non-ASCII letters — Cyrillic, Chinese and other scripts are no longer trimmed.
+- **CLI** — imports no longer fail with `moment2 is not a function`. This affected the optional command-line tool only.
 
 ### ℹ️ Notes
 
-- Whether a given export contains generated files is decided by OpenAI and has varied over time; when a file is absent from the archive, the visible placeholder remains — the plugin cannot recover files the export does not contain
-- Generated-file recovery needs no setting: it is automatic in all import modes (full, selective, incremental, Reprocess)
-- Reprocess is deliberately opt-in per import rather than a saved preference — rebuilding is destructive to manual edits, so it should be a decision you make each time
-- **Claude reminder** — recent Claude exports arrive as several ZIPs; import `conversations-000.zip`, the one holding `conversations.json`. Since 1.6.9 it is recognised by its contents, so no manual provider selection is needed
-
----
+- Whether an export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the placeholder stays.
+- Rebuilding is opt-in per import rather than a saved preference: it overwrites manual edits, so it should be a decision you make each time.
+- To enrich notes imported from an older export, re-import with the rebuild option — placeholders are replaced by the real files, without duplicate messages.
+- **Claude reminder** — recent exports arrive as several ZIPs; import the one holding `conversations.json`. Since 1.6.9 it is recognised by its contents.
 
 ## Version 1.6.9 — Claude Split Export Detection
 

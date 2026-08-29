@@ -76,28 +76,35 @@ Import and organize AI chat exports from **ChatGPT**, **Claude**, **Mistral Vibe
 
 ## ✨ What's New
 
-### v1.7.0 — ChatGPT Images & Privacy Portal, plus Reprocess for every provider
+### v1.7.0 — ChatGPT images, selective import rebuilt, honest reports
 
-ChatGPT now includes some generated images and documents in its new export library. Nexus 1.7.0 finds them, extracts them, and restores them to their conversation — including cases where ChatGPT omitted the final message that presented the file. It also accepts OpenAI's Privacy Portal downloads directly. Separately, and for **every provider**, you can now rebuild notes that an earlier plugin version created.
+ChatGPT exports ship generated images and documents again, and Nexus finds them. Selective import gets status filters and a rebuild option of its own. Reports and the completion dialog were rebuilt around what actually happened to your notes.
 
 ✨ **New**
-- **ChatGPT — Privacy Portal archives import directly** — the account-level ZIP from OpenAI's Privacy Portal wraps the conversation export alongside billing and profile data; import the outer ZIP as-is instead of extracting it by hand. The container is recognised by its contents, not its filename, which OpenAI has changed between downloads
-- **ChatGPT — Generated images imported again** — recent exports (observed August 2026+) ship generated images in the file library; each image is extracted under its real name and embedded in the message that produced it, with the generation prompt when it can be identified safely
-- **ChatGPT — Omitted-message recovery** — when the export contains the conversation but not the message that presented the file, the image is placed at its real creation time in a minimal assistant message (no invented text)
-- **ChatGPT — Generated documents imported** — library documents (Canvas reports, `.docx`, etc.) linked to an exported conversation are extracted to your attachments folder and linked from their producing message
-- **Placeholder replacement via Reprocess** — reimporting a conversation with a newer export replaces old *"generated image not in export"* placeholders with the real files, without duplicate messages (see [Reprocess Existing Notes](#-reprocess-existing-notes))
-- **Reprocess existing notes — all providers** — a new checkbox in the file selection dialog rebuilds notes already in your vault instead of skipping them, in both import modes. Works for ChatGPT, Claude, Mistral Vibe and Perplexity alike; notes are rewritten in place so backlinks survive, and manual edits to them are lost
+- **ChatGPT — Privacy Portal archives import directly** — import the account-level ZIP as-is, no manual extraction. It is recognised by its contents, not its filename
+- **ChatGPT — Generated images and documents imported again** — extracted under their real names and embedded in the message that produced them, prompt included when it can be identified. When the export omits the message that presented a file, the file is still placed at its real time
+- **Rebuild existing notes** — a checkbox in the file dialog for *Import All*, another in the conversation list for *Select Specific*. Manual edits to a rebuilt note are lost
+- **Filter conversations by status** — New, Updated and Unchanged chips in the selection list. Unchanged conversations are listed for the first time
+- **Large Claude attachments become files** — a pasted log or page over 20 KB is written next to the conversation and linked, instead of swelling the note
+
+🔧 **Improved**
+- Imports report a **Recreated** outcome, distinct from Updated
+- The completion dialog shows only what happened, with a separate row for files: extracted, in the note, artifacts, absent
+- Import summaries reconcile: what the archive held, then what became of your notes
+- A refused archive says what it is — *"a Mistral Vibe export, not a Claude one"*
 
 🐛 **Fixed**
+- Attachment counts were wrong: ChatGPT and Vibe totals were doubled, and Claude artifacts were hidden inside them
+- A rebuild no longer duplicates attachments already in your vault
+- A conversation whose title differed only in case from another was lost instead of imported
+- A conversation the export re-stamped without adding messages is no longer offered as *Updated* forever
 - Attachment-only messages no longer show *[No content found]*
-- Generation prompt kept for raw image requests that carry no explicit "generate" verb
-- Missing-image placeholder now says *this export did not include the image*, instead of claiming generated images are never included
-- Conversation filenames now preserve leading non-ASCII letters, so titles beginning with Cyrillic, Chinese, and other Unicode scripts are no longer trimmed
-- **CLI** — imports no longer fail with `moment2 is not a function` (the CLI was creating no notes at all; the plugin inside Obsidian was never affected)
+- Filenames keep leading non-ASCII letters — Cyrillic, Chinese and other scripts are no longer trimmed
+- **CLI** — imports no longer fail with `moment2 is not a function` (the plugin inside Obsidian was never affected)
 
-> ⚠️ **Note**: whether a given export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the plugin keeps the visible placeholder — it cannot recover files the export does not contain, and future OpenAI export behavior may change again.
+> ⚠️ **Note**: whether an export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the placeholder stays.
 
-💡 **Tip**: to enrich notes imported from an older export, re-import your archive with **Reprocess existing notes** ticked — placeholders are replaced by the real files and the conversation is rebuilt, without duplicate messages. A fresh export helps only if the images were missing from the old archive in the first place.
+💡 **Tip**: to enrich notes imported from an older export, re-import with the rebuild option — placeholders are replaced by the real files, without duplicate messages.
 
 ---
 
@@ -386,22 +393,25 @@ Perfect when you want control:
    - 🆕 **New** / 🔄 **Updated** / ✅ **Unchanged**
 5. **Filter conversations** (optional):
    - 🔍 **Search by keyword** - Type in the search box to filter by title
-   - 📊 **Filter by status** - Show New, Updated, or Unchanged
-   - ♻️ **Show existing conversations only** - Shows only Updated + Unchanged entries
+   - 📊 **Status chips** - New, Updated and Unchanged, toggled independently. New + Updated by default
    - 📅 **Sort** - By date, title, or status
 6. **Select conversations**:
    - ✅ Check individual conversations
    - ✅ Use "Select All" / "Deselect All" buttons
-7. Click **Import Selected**
+7. Tick **Rebuild selected notes if they exist** to regenerate them (optional)
+8. Click **Import Selected**
 
-**Important behavior:**
-- Selecting an **Updated** conversation overwrites and rebuilds the matching note.
-- **Unchanged** conversations appear in the list only when **Reprocess existing notes** is ticked (see below). Selecting one then rebuilds it.
+**What happens to what you select:**
+
+| | Rebuild off | Rebuild on |
+|---|---|---|
+| **New** | created | created |
+| **Updated** | new messages added | rebuilt from scratch |
+| **Unchanged** | left alone | rebuilt from scratch |
 
 **Cool features:**
 - ✅ **Keyword search** - Find conversations by title instantly
-- ✅ **Smart filtering** - Show only what you need
-- ✅ **Existing-only reprocess filter** - Rebuild selected existing notes intentionally
+- ✅ **Status chips** - Combine New, Updated and Unchanged however you like
 - ✅ **Multi-ZIP support (desktop)** - Process multiple exports at once
 - ✅ **Single-ZIP safety mode (mobile)** - One archive per run for stable imports
 - ✅ **Duplicate detection** - Automatically finds duplicates across ZIPs
@@ -411,14 +421,13 @@ Perfect when you want control:
 
 > Applies to **every provider** — ChatGPT, Claude, Mistral Vibe and Perplexity.
 
-By default a conversation whose content has not changed since your last import is left alone — it is reported as **Unchanged** and skipped. That is what you want most of the time, and it is what makes repeated imports fast.
+By default a conversation already current in your vault is left alone and reported as **Unchanged**. That is what makes repeated imports fast — and what stops a plugin update from ever reaching notes an older version created.
 
-It is *not* what you want after a plugin update that improves how notes are built: your existing notes were created by the old version, and nothing about the export has changed, so they would never be rebuilt.
+Two controls rebuild them:
 
-Tick **Reprocess existing notes** in the file selection dialog to rebuild them anyway:
+- **Import All** — tick **Reprocess existing notes** in the file selection dialog
+- **Select Specific** — tick **Rebuild selected notes if they exist** above the conversation list
 
-- Works with both **Import All** and **Select Specific**
-- With the box ticked, Unchanged conversations also appear in the selective list, so you can rebuild only the ones you care about
 - Notes are **rewritten in place**, so Obsidian backlinks and file history survive
 - ⚠️ **Manual edits to rebuilt notes are lost** — the note is regenerated from the export
 
@@ -431,7 +440,7 @@ After each import run with at least one supported archive, you get linked report
 
 **What's in it:**
 - ✅ **Import Summary** - stats, archive status, errors, attachments
-- ✅ **Index Heavy** - full conversation index (new / updated / failed tables)
+- ✅ **Index Heavy** - full conversation index (new / updated / recreated / failed tables)
 - ✅ **Index Mobile** - compact list optimized for mobile browsing
 
 **Where to find them:**
@@ -446,18 +455,18 @@ After each import run with at least one supported archive, you get linked report
 Each import now writes three cross-linked reports:
 
 1. **Import Summary**
-- Global counters (files, conversations, attachments)
-- Per-archive status table (`processed` / `skipped`) with reason
-- Consolidated errors
+- What the archive held: found, duplicates removed, kept, selected
+- What became of your notes: created, updated, recreated, unchanged, failed — adding up to what was selected
+- Attachments, per-archive status with a reason, and errors
 
 2. **Index Heavy**
 - Full per-conversation listing
-- Separate sections for created, updated, and failed items
+- Separate sections for created, updated, recreated and failed items
 - Best suited for desktop review and audits
 
 3. **Index Mobile**
 - Lightweight conversation index
-- Split into `✨ New Notes` and `🔄 Updated Notes`
+- Split into `✨ New Notes`, `🔄 Updated Notes` and `♻️ Recreated Notes`
 - Faster to open on mobile and small screens
 
 ## 📁 Data Organization
@@ -812,7 +821,7 @@ You can reimport the same ZIP multiple times. The plugin supports two behaviors:
 - In **Full Import** mode, if an archive was already imported, mobile lets you choose between:
   - **Reprocess and recreate all notes**
   - **Add/update missing/updated notes**
-- In **Selective Import**, use **Show existing conversations only** to reprocess specific existing notes.
+- In **Selective Import**, tick **Rebuild selected notes if they exist** to rebuild the conversations you pick.
 
 ## 💻 Command-Line Interface (CLI)
 
