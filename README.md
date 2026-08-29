@@ -98,7 +98,8 @@ ChatGPT exports ship generated images and documents again, and Nexus finds them.
 - A rebuild no longer duplicates attachments already in your vault
 - A conversation whose title differed only in case from another was lost instead of imported
 - A conversation the export re-stamped without adding messages is no longer offered as *Updated* forever
-- Attachment-only messages no longer show *[No content found]*
+- **Conversations are no longer lost when a later export ships them empty** — Claude sometimes re-exports a conversation stripped of its content. That emptied copy won as the most recent one, and the conversation quietly never reached the vault. The complete version is kept instead
+- Attachment-only messages are imported instead of being treated as empty, and no longer show *[No content found]*
 - Filenames keep leading non-ASCII letters — Cyrillic, Chinese and other scripts are no longer trimmed
 - **CLI** — imports no longer fail with `moment2 is not a function` (the plugin inside Obsidian was never affected)
 

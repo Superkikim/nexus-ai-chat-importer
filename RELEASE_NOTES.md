@@ -39,7 +39,8 @@ ChatGPT ships generated images and documents in its export library again, and Ne
 - **A conversation could be lost to a filename collision.** Two titles differing only in case share one file on macOS and Windows; the second was reported as failed and never imported.
 - **A conversation could be offered as *Updated* forever.** Providers move the update date for things that produce no message; the note kept the old date and was proposed again at every import, with nothing to add.
 - **A selected conversation the import left alone vanished from the report**, and the numbers no longer added up.
-- Attachment-only messages no longer show *[No content found]*.
+- **Conversations silently dropped are imported again.** The analysis treated any message as content, so a conversation Claude had re-exported with its messages emptied still counted as valid — that emptied copy won as the most recent version, and the conversation was then quietly discarded at write time with nothing to show. Content decides now, so the complete version of the conversation wins.
+- **Attachment-only messages are imported** rather than treated as empty, and no longer show *[No content found]*.
 - Generation prompts are kept for image requests without an explicit "generate" verb.
 - Filenames keep leading non-ASCII letters — Cyrillic, Chinese and other scripts are no longer trimmed.
 - **CLI** — imports no longer fail with `moment2 is not a function`. This affected the optional command-line tool only.
