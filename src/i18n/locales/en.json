@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}} conversation(s) hold oversized attachments. Open the report in your Nexus reports folder to rebuild them."
+        "repair_notes": {
+            "title": "Repair notes that slow Obsidian down",
+            "intro": "{{count}} conversation(s) hold pasted content on a single enormous line. Obsidian reads a line whole, so these slow indexing across your whole vault.",
+            "and_more": "…and {{count}} more",
+            "what_happens": "Nexus can move that content into files beside each conversation and leave a collapsed link in its place — the same thing it now does when importing.",
+            "backup_note": "Each note is copied beside itself before being touched, so nothing is lost. You can delete the copies once you are satisfied.",
+            "buttons": {
+                "repair": "Repair them",
+                "ignore": "Leave them alone"
+            }
         }
     },
     "folder_migration": {

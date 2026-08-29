@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}} conversazione/i contengono allegati troppo grandi. Apri il report nella cartella dei report Nexus per rigenerarle."
+        "repair_notes": {
+            "title": "Riparare le note che rallentano Obsidian",
+            "intro": "{{count}} conversazione/i contengono contenuto incollato su un'unica riga enorme. Obsidian legge una riga per intero, quindi rallentano l'indicizzazione dell'intero vault.",
+            "and_more": "… e altre {{count}}",
+            "what_happens": "Nexus può spostare quel contenuto in file accanto a ogni conversazione e lasciare al suo posto un link ripiegato, come fa ora durante l'importazione.",
+            "backup_note": "Ogni nota viene copiata accanto a sé prima di essere modificata: nulla va perso. Potrai eliminare le copie quando vorrai.",
+            "buttons": {
+                "repair": "Ripara",
+                "ignore": "Lascia stare"
+            }
         }
     },
     "folder_migration": {

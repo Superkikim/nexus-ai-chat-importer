@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}} 件の会話に大きすぎる添付があります。Nexus のレポートフォルダーにあるレポートを開いて再構築してください。"
+        "repair_notes": {
+            "title": "Obsidian を遅くしているノートを修復",
+            "intro": "{{count}} 件の会話に、1 行に収まった巨大な貼り付け内容があります。Obsidian は 1 行をまとめて読むため、保管庫全体のインデックス作成が遅くなります。",
+            "and_more": "…ほか {{count}} 件",
+            "what_happens": "Nexus はその内容を会話の隣のファイルへ移し、跡地に折りたたんだリンクを残せます。インポート時と同じ処理です。",
+            "backup_note": "変更前に各ノートを隣にコピーするので、何も失われません。納得できたらコピーは削除できます。",
+            "buttons": {
+                "repair": "修復する",
+                "ignore": "そのままにする"
+            }
         }
     },
     "folder_migration": {

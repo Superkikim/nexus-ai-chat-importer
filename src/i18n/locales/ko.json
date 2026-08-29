@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}}개의 대화에 지나치게 큰 첨부가 있습니다. Nexus 보고서 폴더의 보고서를 열어 다시 만드세요."
+        "repair_notes": {
+            "title": "Obsidian을 느리게 만드는 노트 복구",
+            "intro": "{{count}}개의 대화에 붙여넣은 내용이 한 줄로 들어 있습니다. Obsidian은 한 줄을 통째로 읽기 때문에 보관함 전체의 색인이 느려집니다.",
+            "and_more": "… 외 {{count}}개",
+            "what_happens": "Nexus가 그 내용을 대화 옆 파일로 옮기고 자리에는 접힌 링크를 남길 수 있습니다. 가져오기에서 하는 것과 같습니다.",
+            "backup_note": "수정 전에 각 노트를 옆에 복사하므로 잃는 것은 없습니다. 확인 후 복사본은 삭제해도 됩니다.",
+            "buttons": {
+                "repair": "복구하기",
+                "ignore": "그대로 두기"
+            }
         }
     },
     "folder_migration": {

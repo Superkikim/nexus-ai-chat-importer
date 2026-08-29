@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}} conversa(s) contêm anexos demasiado grandes. Abra o relatório na sua pasta de relatórios Nexus para as reconstruir."
+        "repair_notes": {
+            "title": "Reparar as notas que tornam o Obsidian lento",
+            "intro": "{{count}} conversa(s) contêm conteúdo colado numa única linha enorme. O Obsidian lê cada linha por inteiro, o que atrasa a indexação de todo o cofre.",
+            "and_more": "… e mais {{count}}",
+            "what_happens": "O Nexus pode mover esse conteúdo para ficheiros junto de cada conversa e deixar um link recolhido no lugar — tal como já faz ao importar.",
+            "backup_note": "Cada nota é copiada ao lado antes de ser alterada, nada se perde. Pode apagar as cópias quando quiser.",
+            "buttons": {
+                "repair": "Reparar",
+                "ignore": "Deixar como está"
+            }
         }
     },
     "folder_migration": {

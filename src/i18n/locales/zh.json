@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}} 个会话包含过大的附件。打开 Nexus 报告文件夹中的报告即可重新生成。"
+        "repair_notes": {
+            "title": "修复拖慢 Obsidian 的笔记",
+            "intro": "{{count}} 个会话把粘贴的内容放在了一行里。Obsidian 会整行读取，因此整个保险库的索引都被拖慢。",
+            "and_more": "… 还有 {{count}} 个",
+            "what_happens": "Nexus 可以把这些内容移到会话旁边的文件中，并在原处留下一个折叠链接——和现在导入时的做法一样。",
+            "backup_note": "修改前会在原处复制一份笔记，不会丢失任何内容。确认无误后可以删除这些副本。",
+            "buttons": {
+                "repair": "修复",
+                "ignore": "保持不变"
+            }
         }
     },
     "folder_migration": {

@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}} conversation(s) contiennent des pièces jointes surdimensionnées. Ouvrez le rapport dans votre dossier de rapports Nexus pour les reconstruire."
+        "repair_notes": {
+            "title": "Réparer les notes qui ralentissent Obsidian",
+            "intro": "{{count}} conversation(s) contiennent du contenu collé sur une seule ligne démesurée. Obsidian lit une ligne d'un bloc, ce qui ralentit l'indexation de tout votre coffre.",
+            "and_more": "… et {{count}} de plus",
+            "what_happens": "Nexus peut déplacer ce contenu dans des fichiers à côté de chaque conversation et laisser un lien replié à sa place — ce qu'il fait désormais à l'import.",
+            "backup_note": "Chaque note est copiée à côté d'elle-même avant modification, rien n'est perdu. Vous pourrez supprimer les copies une fois rassuré.",
+            "buttons": {
+                "repair": "Réparer",
+                "ignore": "Ne rien faire"
+            }
         }
     },
     "folder_migration": {

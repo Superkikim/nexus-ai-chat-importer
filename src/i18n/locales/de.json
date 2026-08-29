@@ -362,8 +362,16 @@
                 "proceed": "Proceed"
             }
         },
-        "oversized_notes": {
-            "notice": "{{count}} Konversation(en) enthalten übergroße Anhänge. Öffnen Sie den Bericht im Nexus-Berichtsordner, um sie neu zu erstellen."
+        "repair_notes": {
+            "title": "Notizen reparieren, die Obsidian ausbremsen",
+            "intro": "{{count}} Konversation(en) enthalten eingefügten Inhalt in einer einzigen riesigen Zeile. Obsidian liest eine Zeile am Stück, was die Indizierung des gesamten Tresors verlangsamt.",
+            "and_more": "… und {{count}} weitere",
+            "what_happens": "Nexus kann diesen Inhalt in Dateien neben der Konversation auslagern und an seiner Stelle einen eingeklappten Link hinterlassen — genau wie beim Import.",
+            "backup_note": "Jede Notiz wird vorher daneben kopiert, es geht nichts verloren. Die Kopien können Sie später löschen.",
+            "buttons": {
+                "repair": "Reparieren",
+                "ignore": "Unverändert lassen"
+            }
         }
     },
     "folder_migration": {
