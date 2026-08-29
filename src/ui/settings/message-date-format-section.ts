@@ -28,7 +28,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
     get title() {
         return t("settings.timestamps.section_title");
     }
-    readonly order = 21;
+    readonly order = 11;
 
     render(containerEl: HTMLElement): void {
         // Add custom styling for better readability

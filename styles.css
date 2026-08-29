@@ -602,16 +602,17 @@
 }
 
 /* Timestamp preview styling */
+/* The preview belongs to the format it previews, so it sits under the
+   dropdown rather than in a panel of its own competing with it. */
 .nexus-timestamp-preview {
-    background: var(--background-secondary);
-    border-radius: 6px;
-    padding: 1em;
-    margin-top: 1em;
-    border-left: 3px solid var(--interactive-accent);
+    padding: 0 0 0.4em;
+    margin-top: -0.4em;
 }
 
 .nexus-preview-line {
-    margin-bottom: 0.5em;
+    margin-bottom: 0.2em;
+    color: var(--text-muted);
+    font-size: 0.9em;
 }
 
 .nexus-preview-code {
@@ -625,10 +626,9 @@
 }
 
 .nexus-format-description {
-    font-size: 0.9em;
-    color: var(--text-muted);
+    font-size: 0.85em;
+    color: var(--text-faint);
     line-height: 1.4;
-    margin-top: 0.5em;
 }
 
 /* Folder path input styling - force consistent layout with column structure */

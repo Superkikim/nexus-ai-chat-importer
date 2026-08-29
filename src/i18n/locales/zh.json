@@ -563,9 +563,8 @@
     "support_box": {
         "header": "支持此插件",
         "header_highlight": "支持此插件",
-        "default_message_emphasis": "Nexus 已超过 15,000 次下载。当前每月只有约 5 位用户通过捐赠支持开发。",
-        "default_message": "我在个人时间维护这个插件，维持开发环境也有持续成本。新增 provider 支持还需要付费订阅，才能进行准确测试并提供可靠支持。",
-        "reality_check": "如果 Nexus 对你有价值，欢迎考虑一次性或按月捐赠。感谢所有已经在支持这个项目的用户。",
+        "default_message_emphasis": "Nexus 的下载量已超过 15,000 次。你的支持让开发得以继续，也覆盖了我的工具与订阅开销。",
+        "default_message": "我目前处于失业状态，每一份支持都非常重要。",
         "button_alt": "支持我的工作"
     }
 }

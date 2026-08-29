@@ -563,9 +563,8 @@
     "support_box": {
         "header": "Apoiar este plugin",
         "header_highlight": "Apoiar este plugin",
-        "default_message_emphasis": "O Nexus ultrapassou os 15.000 downloads. Neste momento, apenas cerca de 5 utilizadores por mês fazem doações para apoiar o desenvolvimento.",
-        "default_message": "Mantenho este plugin no meu tempo livre, e manter o meu ecossistema de desenvolvimento a funcionar tem custos contínuos. Adicionar novos providers também exige subscrições pagas para eu poder testar e oferecer suporte fiável.",
-        "reality_check": "Se o Nexus é valioso para si, considere uma doação única ou mensal. Obrigado a todas as pessoas que já apoiam o projeto.",
+        "default_message_emphasis": "O Nexus ultrapassou os 15 000 downloads. O seu apoio mantém o desenvolvimento e cobre os meus custos de ferramentas e subscrições.",
+        "default_message": "Estou atualmente desempregado, por isso cada contribuição conta mesmo.",
         "button_alt": "Apoiar o meu trabalho"
     }
 }
