@@ -83,11 +83,11 @@ describe("contentFileName", () => {
     it("gives the same name to the same content", () => {
         // The property the 1.7.0 cleanup depends on: a note repaired now and
         // the same conversation re-imported later must land on one file.
-        const a = contentFileName("some very long paste", "txt");
-        const b = contentFileName("some very long paste", "txt");
+        const a = contentFileName("some very long content", "txt");
+        const b = contentFileName("some very long content", "txt");
 
         expect(a).toBe(b);
-        expect(a).toMatch(/^paste-[0-9a-f]{8}\.txt$/);
+        expect(a).toMatch(/^attachment-[0-9a-f]{8}\.txt$/);
     });
 
     it("separates different content", () => {

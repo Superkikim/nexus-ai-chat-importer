@@ -151,8 +151,8 @@ export function beautify(text: string, kind: ExtractedKind): string {
 }
 
 /**
- * A name derived from the content, so the same paste always lands on the same
- * file — whether it was extracted during an import or by the 1.7.0 cleanup of
+ * A name derived from the content, so the same content always lands on the
+ * same file — whether it was extracted during an import or by the 1.7.0 cleanup of
  * notes an older version wrote. Two paths, one file, no orphan.
  *
  * FNV-1a rather than a cryptographic digest: it is synchronous, it works the
@@ -165,7 +165,7 @@ export function contentFileName(content: string, kind: ExtractedKind): string {
         hash ^= content.charCodeAt(i);
         hash = Math.imul(hash, 0x01000193) >>> 0;
     }
-    return `paste-${hash.toString(16).padStart(8, "0")}.${kind}`;
+    return `attachment-${hash.toString(16).padStart(8, "0")}.${kind}`;
 }
 
 export interface ExtractionTarget {

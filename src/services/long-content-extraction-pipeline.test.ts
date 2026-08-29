@@ -83,7 +83,7 @@ describe("LongContentExtractor", () => {
 
         expect(created).toHaveLength(1);
         expect(created[0].path).toMatch(
-            /^Nexus\/Attachments\/chatgpt\/documents\/Home Assistant Docker Stack\/paste-[0-9a-f]{8}\.txt$/
+            /^Nexus\/Attachments\/chatgpt\/documents\/Home Assistant Docker Stack\/attachment-[0-9a-f]{8}\.txt$/
         );
         // The prose around it stays; only the blob leaves.
         expect(out[0].content).toContain("Voici la sortie");
