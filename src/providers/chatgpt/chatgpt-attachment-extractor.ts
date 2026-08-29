@@ -443,13 +443,16 @@ export class ChatGPTAttachmentExtractor {
         messageId?: string
     ): Promise<LocatedZipFile | null> {
         if (!attachment.fileId) {
+            // Routine: plenty of ChatGPT attachments carry a name and no id,
+            // and the filename lookup below handles them. Warning on each one
+            // buried the messages that do need reading.
             const context =
                 conversationId && messageId
                     ? `conversation: ${conversationId}, message: ${messageId}`
                     : conversationId
                     ? `conversation: ${conversationId}`
                     : "unknown context";
-            this.logger.warn(
+            this.logger.debug(
                 `No fileId provided for attachment: ${attachment.fileName} (${context})`
             );
 
