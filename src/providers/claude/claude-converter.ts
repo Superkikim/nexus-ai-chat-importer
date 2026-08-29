@@ -32,18 +32,7 @@ import {
 } from "./claude-types";
 import { isExportableClaudeMessage } from "./claude-message-filter";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
-import { sanitizeFileName } from "../../utils/file-utils";
-import { resolveAttachmentTarget } from "../../utils/attachment-target";
 import type NexusAiChatImporterPlugin from "../../main";
-
-/**
- * Above this, a message's inline text is written beside the conversation
- * instead of into it. Measured against this user's export: the median inline
- * attachment is 5.7 KB and the 90th percentile 12 KB, so the threshold moves
- * roughly one attachment in thirty — the pasted logs and HTML pages that turn
- * a note into megabytes on a handful of lines.
- */
-const INLINE_ATTACHMENT_MAX_BYTES = 20 * 1024;
 
 type ArtifactInput = {
     _format?: string;
@@ -388,11 +377,6 @@ export class ClaudeConverter {
                 conversationCreateTime
             );
 
-        // One entry per document written out of the note, so a conversation
-        // that carries the same attachment on several messages writes it once
-        // and links to it from each.
-        const extractedDocuments = new Map<string, string>();
-
         // PHASE 3: Process messages and replace artifacts with links
         for (let msgIndex = 0; msgIndex < messages.length; msgIndex++) {
             const message = messages[msgIndex];
@@ -432,10 +416,7 @@ export class ClaudeConverter {
             // Add inline attachments (text/docs with extracted_content in JSON)
             const inlineAttachments = await this.processInlineAttachments(
                 message.attachments || [],
-                conversationId,
-                conversationTitle,
-                conversationCreateTime,
-                extractedDocuments
+                conversationId
             );
 
             const standardMessage: StandardMessage = {
@@ -1089,20 +1070,13 @@ export class ClaudeConverter {
 
     /**
      * Text a message carried, which Claude ships inside conversations.json
-     * rather than as a file in the ZIP.
-     *
-     * Small content lives in the note, inside a collapsed callout. Past
-     * INLINE_ATTACHMENT_MAX_BYTES it is written beside the conversation and
-     * the callout keeps only a link: a pasted log or HTML page reaches
-     * hundreds of kilobytes on a single line, and Obsidian's parser walks
-     * every line whole — three such notes are enough to make indexing crawl.
+     * rather than as a file in the ZIP. It goes into the note, inside a
+     * collapsed callout; anything too long for a note is moved out later by
+     * LongContentExtractor, which does the same for every provider.
      */
     private static async processInlineAttachments(
         attachments: ClaudeAttachment[],
-        conversationId?: string,
-        conversationTitle?: string,
-        conversationCreateTime?: number,
-        extractedDocuments?: Map<string, string>
+        conversationId?: string
     ): Promise<StandardAttachment[]> {
         if (!attachments || attachments.length === 0) return [];
         const result: StandardAttachment[] = [];
@@ -1127,33 +1101,6 @@ export class ClaudeConverter {
                     ? ` — [Open original conversation](https://claude.ai/chat/${conversationId})`
                     : "";
             const header = `>>[!nexus_attachment]- **${displayName}** (${label})${link}`;
-
-            const documentPath = await this.extractLargeInlineAttachment(
-                att,
-                displayName,
-                conversationTitle,
-                conversationCreateTime,
-                extractedDocuments
-            );
-            if (documentPath) {
-                // No extractedContent: the shared formatter renders the same
-                // callout it gives every other document, link included.
-                result.push({
-                    fileName: displayName,
-                    fileSize: att.file_size || att.extracted_content.length,
-                    fileType,
-                    fileId: att.file_name || `inline-attachment-${index}`,
-                    url: documentPath,
-                    // localPath is what the accounting reads: without it the
-                    // file counts as inline content, which it no longer is.
-                    status: {
-                        processed: true,
-                        found: true,
-                        localPath: documentPath,
-                    },
-                });
-                continue;
-            }
 
             // For code files: wrap in fenced code block inside the nested callout
             // For text: prefix each line with >> for nested callout rendering
@@ -1183,83 +1130,6 @@ export class ClaudeConverter {
         }
 
         return result;
-    }
-
-    /**
-     * Writes oversized inline content next to the conversation and returns its
-     * vault path, or null when the content belongs in the note.
-     *
-     * The file keeps its own extension rather than becoming markdown: a `.md`
-     * is a note to Obsidian, and putting a pasted log back in the index is the
-     * problem we are moving it out of the note to avoid.
-     */
-    private static async extractLargeInlineAttachment(
-        att: ClaudeAttachment,
-        displayName: string,
-        conversationTitle?: string,
-        conversationCreateTime?: number,
-        extractedDocuments?: Map<string, string>
-    ): Promise<string | null> {
-        const content = att.extracted_content ?? "";
-        if (
-            !this.plugin ||
-            new Blob([content]).size <= INLINE_ATTACHMENT_MAX_BYTES
-        ) {
-            return null;
-        }
-
-        const key = `${displayName}::${content.length}`;
-        const already = extractedDocuments?.get(key);
-        if (already) return already;
-
-        try {
-            const { ensureFolderExists } = await import("../../utils");
-            const folder = `${
-                this.plugin.settings.attachmentFolder
-            }/claude/documents/${this.getArtifactFolderName(
-                conversationTitle,
-                conversationCreateTime
-            )}`;
-            const folderResult = await ensureFolderExists(
-                folder,
-                this.plugin.app.vault
-            );
-            if (!folderResult.success) {
-                throw new Error(folderResult.error || "folder unavailable");
-            }
-
-            const safeName = sanitizeFileName(displayName);
-            // A name with no extension would land as a file Obsidian cannot
-            // open at all; .txt is what this content is.
-            const fileName = safeName.includes(".")
-                ? safeName
-                : `${safeName}.txt`;
-
-            const bytes = new TextEncoder().encode(content);
-            const filePath = await resolveAttachmentTarget(
-                this.plugin.app.vault.adapter,
-                `${folder}/${fileName}`,
-                bytes
-            );
-            if (!(await this.plugin.app.vault.adapter.exists(filePath))) {
-                await this.plugin.app.vault.create(filePath, content);
-            }
-            extractedDocuments?.set(key, filePath);
-            return filePath;
-        } catch (error) {
-            // Keeping the content inline is worse for the index but never
-            // loses it, so a failed write falls back rather than throwing.
-            this.plugin.logger
-                .child("ClaudeAttachments")
-                .warn(
-                    "Could not write an oversized attachment beside the note",
-                    {
-                        displayName,
-                        error: String(error),
-                    }
-                );
-            return null;
-        }
     }
 
     private static getCodeLanguage(fileName: string): string | null {

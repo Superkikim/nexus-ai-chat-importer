@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} conversation(s) contiennent des pièces jointes surdimensionnées. Ouvrez le rapport dans votre dossier de rapports Nexus pour les reconstruire."
         }
     },
     "folder_migration": {

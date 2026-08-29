@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} Konversation(en) enthalten übergroße Anhänge. Öffnen Sie den Bericht im Nexus-Berichtsordner, um sie neu zu erstellen."
         }
     },
     "folder_migration": {

@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}}개의 대화에 지나치게 큰 첨부가 있습니다. Nexus 보고서 폴더의 보고서를 열어 다시 만드세요."
         }
     },
     "folder_migration": {

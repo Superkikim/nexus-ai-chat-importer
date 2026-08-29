@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} conversa(s) contêm anexos demasiado grandes. Abra o relatório na sua pasta de relatórios Nexus para as reconstruir."
         }
     },
     "folder_migration": {

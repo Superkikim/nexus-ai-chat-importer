@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} conversation(s) hold oversized attachments. Open the report in your Nexus reports folder to rebuild them."
         }
     },
     "folder_migration": {

@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "В {{count}} беседах есть слишком большие вложения. Откройте отчёт в папке отчётов Nexus, чтобы пересоздать их."
         }
     },
     "folder_migration": {

@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} conversación(es) contienen adjuntos demasiado grandes. Abre el informe en tu carpeta de informes de Nexus para reconstruirlas."
         }
     },
     "folder_migration": {

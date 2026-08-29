@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} 件の会話に大きすぎる添付があります。Nexus のレポートフォルダーにあるレポートを開いて再構築してください。"
         }
     },
     "folder_migration": {

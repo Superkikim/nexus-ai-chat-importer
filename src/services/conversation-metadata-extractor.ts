@@ -412,8 +412,7 @@ export class ConversationMetadataExtractor {
                     error instanceof Error ? error.message : String(error);
                 const ignoredArchive = this.classifyReadFailure(
                     file.name,
-                    message,
-                    forcedProvider
+                    message
                 );
                 ignoredArchives.push(ignoredArchive);
 
@@ -509,8 +508,7 @@ export class ConversationMetadataExtractor {
 
     private classifyReadFailure(
         fileName: string,
-        message: string,
-        forcedProvider?: string
+        message: string
     ): IgnoredArchiveInfo {
         const normalized = message.toLowerCase();
         const looksUnsupportedArchive =

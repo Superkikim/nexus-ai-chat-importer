@@ -24,6 +24,7 @@ import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
+import { LongContentExtractor } from "./long-content-extractor";
 import {
     ProviderRegistry,
     ProviderAdapter,
@@ -47,6 +48,7 @@ export class ConversationProcessor {
     private fileService: FileService;
     private noteFormatter: NoteFormatter;
     private providerRegistry: ProviderRegistry;
+    private longContentExtractorInstance?: LongContentExtractor;
     private counters = {
         totalExistingConversations: 0,
         totalNewConversationsToImport: 0,
@@ -72,6 +74,20 @@ export class ConversationProcessor {
             plugin
         );
         this.providerRegistry = providerRegistry;
+    }
+
+    /**
+     * Built on first use rather than in the constructor: the pipeline tests
+     * hand-wire an instance through Object.create and would otherwise reach a
+     * field nobody assigned.
+     */
+    private get longContentExtractor(): LongContentExtractor {
+        if (!this.longContentExtractorInstance) {
+            this.longContentExtractorInstance = new LongContentExtractor(
+                this.plugin
+            );
+        }
+        return this.longContentExtractorInstance;
     }
 
     /**
@@ -672,6 +688,12 @@ export class ConversationProcessor {
                         );
                     }
 
+                    standardConversation.messages =
+                        await this.longContentExtractor.extract(
+                            standardConversation.messages,
+                            standardConversation
+                        );
+
                     // Regenerate entire content
                     const newContent =
                         this.noteFormatter.generateMarkdownContent(
@@ -730,6 +752,12 @@ export class ConversationProcessor {
                     // Always calculate attachment stats (even if not processed)
                     attachmentStats =
                         this.calculateAttachmentStats(processedNewMessages);
+
+                    processedNewMessages =
+                        await this.longContentExtractor.extract(
+                            processedNewMessages,
+                            standardConversation
+                        );
 
                     content +=
                         "\n\n" +
@@ -842,6 +870,11 @@ export class ConversationProcessor {
                 attachmentStats = this.calculateAttachmentStats(
                     standardConversation.messages
                 );
+                standardConversation.messages =
+                    await this.longContentExtractor.extract(
+                        standardConversation.messages,
+                        standardConversation
+                    );
             }
 
             if (standardConversation.messages.length === 0) {

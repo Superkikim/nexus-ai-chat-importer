@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} 个会话包含过大的附件。打开 Nexus 报告文件夹中的报告即可重新生成。"
         }
     },
     "folder_migration": {

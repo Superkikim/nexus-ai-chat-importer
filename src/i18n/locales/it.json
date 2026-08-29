@@ -361,6 +361,9 @@
             "buttons": {
                 "proceed": "Proceed"
             }
+        },
+        "oversized_notes": {
+            "notice": "{{count}} conversazione/i contengono allegati troppo grandi. Apri il report nella cartella dei report Nexus per rigenerarle."
         }
     },
     "folder_migration": {
