@@ -681,11 +681,6 @@ export class ConversationProcessor {
                                 chatId,
                                 zip
                             );
-
-                        // Calculate attachment stats
-                        attachmentStats = this.calculateAttachmentStats(
-                            standardConversation.messages
-                        );
                     }
 
                     standardConversation.messages =
@@ -693,6 +688,15 @@ export class ConversationProcessor {
                             standardConversation.messages,
                             standardConversation
                         );
+
+                    // Counted last: the extractor turns oversized content into
+                    // files, and the stats read what each attachment ended up
+                    // being rather than what it was on arrival.
+                    if (zip && adapter.processMessageAttachments) {
+                        attachmentStats = this.calculateAttachmentStats(
+                            standardConversation.messages
+                        );
+                    }
 
                     // Regenerate entire content
                     const newContent =
@@ -749,15 +753,17 @@ export class ConversationProcessor {
                             );
                     }
 
-                    // Always calculate attachment stats (even if not processed)
-                    attachmentStats =
-                        this.calculateAttachmentStats(processedNewMessages);
-
                     processedNewMessages =
                         await this.longContentExtractor.extract(
                             processedNewMessages,
                             standardConversation
                         );
+
+                    // Always calculate attachment stats (even if not
+                    // processed), and after the extractor, so an attachment it
+                    // turned into a file counts as one.
+                    attachmentStats =
+                        this.calculateAttachmentStats(processedNewMessages);
 
                     content +=
                         "\n\n" +
@@ -866,15 +872,17 @@ export class ConversationProcessor {
                         zip
                     );
 
-                // Calculate attachment stats
-                attachmentStats = this.calculateAttachmentStats(
-                    standardConversation.messages
-                );
                 standardConversation.messages =
                     await this.longContentExtractor.extract(
                         standardConversation.messages,
                         standardConversation
                     );
+
+                // Counted after the extractor: an attachment it turned into a
+                // file must be reported as a file, not as text in the note.
+                attachmentStats = this.calculateAttachmentStats(
+                    standardConversation.messages
+                );
             }
 
             if (standardConversation.messages.length === 0) {

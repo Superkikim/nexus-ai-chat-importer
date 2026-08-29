@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { LongContentExtractor } from "./long-content-extractor";
-import { StandardMessage } from "../types/standard";
+import { StandardAttachment, StandardMessage } from "../types/standard";
 
 /**
  * The rule lives on the standard conversation, so it holds whatever the
@@ -209,6 +209,31 @@ describe("LongContentExtractor", () => {
         // The file holds the body without the callout quoting.
         expect(created[0].content).toContain("ligne 300");
         expect(created[0].content).not.toContain(">>");
+    });
+
+    it("is counted as a file, which means the stats must run after it", async () => {
+        // The processor computed attachment stats before this pass, so an
+        // attachment the extractor had just turned into a file still reported
+        // as text in the note: 572 inline and none extracted, for an import
+        // that had written ninety-nine files.
+        const { plugin, created } = createPlugin();
+        const blob = "x ".repeat(6000);
+        const attachment: StandardAttachment = {
+            fileName: "paste.txt",
+            fileType: "txt",
+            fileSize: blob.length,
+            fileId: "a1",
+            extractedContent: `>>[!nexus_attachment]- **paste.txt** (txt)\n>>\n>> ${blob}`,
+        };
+
+        const before = attachment.status?.localPath;
+        const out = await new LongContentExtractor(plugin as never).extract(
+            [message({ attachments: [attachment] })],
+            CONVERSATION
+        );
+
+        expect(before).toBeUndefined();
+        expect(out[0].attachments?.[0].status?.localPath).toBe(created[0].path);
     });
 
     it("leaves an ordinary conversation completely alone", async () => {

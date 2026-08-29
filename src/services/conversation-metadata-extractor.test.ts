@@ -24,7 +24,7 @@ function createTestPlugin() {
         // Real Logger exposes scoped child loggers; adapters build them eagerly.
         child: () => logger,
     };
-    return { logger } as any;
+    return { logger } as unknown;
 }
 
 describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
@@ -55,11 +55,11 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
                     },
                 },
             },
-        } as any;
+        } as unknown;
 
-        const metadata = (extractor as any).extractChatGPTMetadata([
+        const metadata = (extractor as unknown).extractChatGPTMetadata([
             chat,
-        ]) as any[];
+        ]) as unknown[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -91,11 +91,11 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
                     content: [],
                 },
             ],
-        } as any;
+        } as unknown;
 
-        const metadata = (extractor as any).extractClaudeMetadata([
+        const metadata = (extractor as unknown).extractClaudeMetadata([
             conv,
-        ]) as any[];
+        ]) as unknown[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -129,11 +129,11 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
                 createdAt: "2024-02-01T10:05:00.000Z",
                 contentChunks: [],
             },
-        ] as any;
+        ] as unknown;
 
-        const metadata = (extractor as any).extractMistralVibeMetadata([
+        const metadata = (extractor as unknown).extractMistralVibeMetadata([
             conversation,
-        ]) as any[];
+        ]) as unknown[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -168,9 +168,9 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
             ],
         };
 
-        const metadata = (extractor as any).extractPerplexityMetadata([
+        const metadata = (extractor as unknown).extractPerplexityMetadata([
             conversation,
-        ]) as any[];
+        ]) as unknown[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
@@ -210,11 +210,11 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
                     ],
                 },
             ],
-        } as any;
+        } as unknown;
 
-        const metadata = (extractor as any).extractPerplexityMetadata([
+        const metadata = (extractor as unknown).extractPerplexityMetadata([
             conversation,
-        ]) as any[];
+        ]) as unknown[];
         expect(metadata).toHaveLength(1);
 
         const m = metadata[0];
