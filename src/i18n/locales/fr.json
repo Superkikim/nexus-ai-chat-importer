@@ -520,7 +520,8 @@
         "report_failed": "Échec de la création du fichier journal. Consultez la console pour plus de détails.",
         "attachment_map_failed": "Échec de la construction de la carte des pièces jointes. Consultez la console pour plus de détails.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Importer un nouveau fichier",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "{{count}} archive(s) n'ont pas pu être lues ({{provider}}). Voir la console pour le détail."
     },
     "archive_messages": {
         "empty": "Le fichier ZIP ne contient aucun fichier. Vérifiez que vous avez sélectionné le bon fichier d'export.",

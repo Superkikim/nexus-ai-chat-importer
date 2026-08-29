@@ -520,7 +520,8 @@
         "report_failed": "Не удалось создать файл журнала. Проверьте консоль для получения подробной информации.",
         "attachment_map_failed": "Не удалось создать карту вложений. Проверьте консоль для получения подробной информации.",
         "ribbon_tooltip": "Nexus AI Chat Importer — импорт нового файла",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "Не удалось прочитать архивов: {{count}} ({{provider}}). Подробности в консоли."
     },
     "archive_messages": {
         "empty": "ZIP-архив не содержит файлов. Проверьте, что выбран правильный файл экспорта.",

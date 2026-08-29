@@ -520,7 +520,8 @@
         "report_failed": "ログファイルの作成に失敗しました。詳細はコンソールをご確認ください。",
         "attachment_map_failed": "添付ファイルマップの構築に失敗しました。詳細はコンソールをご確認ください。",
         "ribbon_tooltip": "Nexus AI Chat Importer - 新しいファイルをインポート",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "{{count}} 個のアーカイブを読み込めませんでした（{{provider}}）。詳細はコンソールを確認してください。"
     },
     "archive_messages": {
         "empty": "この ZIP ファイルにはファイルが含まれていません。正しいエクスポートファイルを選択したか確認してください。",

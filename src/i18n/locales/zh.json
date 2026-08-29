@@ -520,7 +520,8 @@
         "report_failed": "创建日志文件失败，请查看控制台获取详细信息。",
         "attachment_map_failed": "构建附件映射失败，请查看控制台获取详细信息。",
         "ribbon_tooltip": "Nexus AI Chat Importer - 导入新文件",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "有 {{count}} 个压缩包无法读取（{{provider}}）。详情请查看控制台。"
     },
     "archive_messages": {
         "empty": "此 ZIP 文件不包含任何文件。请确认您选择的是正确的导出文件。",

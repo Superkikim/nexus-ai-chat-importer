@@ -520,7 +520,8 @@
         "report_failed": "Protokolldatei konnte nicht erstellt werden. Weitere Details in der Konsole.",
         "attachment_map_failed": "Anhangskarte konnte nicht erstellt werden. Weitere Details in der Konsole.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Neue Datei importieren",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "{{count}} Archiv(e) konnten nicht gelesen werden ({{provider}}). Details in der Konsole."
     },
     "archive_messages": {
         "empty": "Die ZIP-Datei enthält keine Dateien. Bitte prüfen Sie, ob Sie die richtige Exportdatei ausgewählt haben.",

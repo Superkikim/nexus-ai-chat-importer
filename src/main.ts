@@ -1817,22 +1817,42 @@ ${report.generateMobileIndexContent(files, links)}
             {}
         );
 
-        this.logger
-            .child("ImportFlow")
-            .warn("Archives ignored during metadata extraction", {
-                operation,
-                provider,
-                ignoredCount: ignoredArchives.length,
-                groupedCounts,
-                archives: ignoredArchives.map((archive) => ({
-                    fileName: archive.fileName,
-                    reason: archive.reason,
-                    message: archive.message,
-                })),
-            });
+        // Picking a provider in a folder holding several providers' exports
+        // rejects the others, every time, by design. That is a fact of the
+        // run, not a warning; only an archive we failed to read is.
+        const expected = ignoredArchives.every(
+            (archive) =>
+                archive.reason === "provider-mismatch" ||
+                archive.reason === "unsupported-format"
+        );
 
+        const details = {
+            operation,
+            provider,
+            ignoredCount: ignoredArchives.length,
+            groupedCounts,
+            archives: ignoredArchives.map((archive) => ({
+                fileName: archive.fileName,
+                reason: archive.reason,
+                message: archive.message,
+            })),
+        };
+
+        const flowLogger = this.logger.child("ImportFlow");
+        if (expected) {
+            flowLogger.debug(
+                "Archives ignored during metadata extraction",
+                details
+            );
+            return;
+        }
+
+        flowLogger.warn("Archives ignored during metadata extraction", details);
         new Notice(
-            `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
+            t("notices.import_archives_ignored", {
+                count: String(ignoredArchives.length),
+                provider,
+            }),
             5000
         );
     }
