@@ -1,6 +1,8 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+@AGENTS.md
+
+This file is the legacy technical orientation for Claude Code. `AGENTS.md` is the canonical source for shared working agreements, attribution, Git permissions, evidence, and validation. If this file conflicts with `AGENTS.md`, follow `AGENTS.md`.
 
 ## Project Overview
 
@@ -53,7 +55,7 @@ npm run build              # Build must succeed
 
 Fix any Prettier/ESLint issues with `npx eslint --fix src/<file>` before committing.
 
-**Commit discipline**: Make **granular commits** as work progresses — one logical change per commit. Do not batch unrelated changes. Use standard prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
+**Commit discipline**: Commit and push completed, validated work unless the maintainer explicitly says not to. Make granular commits — one logical change per commit. Do not batch unrelated changes. Use standard prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`. Never add AI-assistance attribution or commit trailers. Inspect staged content for public suitability before every commit.
 
 ## High-Level Architecture
 
