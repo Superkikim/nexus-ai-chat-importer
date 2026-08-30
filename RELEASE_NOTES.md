@@ -662,7 +662,7 @@ Versions ≤1.2.0 remain under MIT license (already released, can't be revoked).
 
 Thank you for your understanding and continued support! 🙏
 
-See [LICENSE.md](LICENSE.md) for full legal details.
+See [LICENSE](LICENSE) for full legal details.
 
 ---
 
