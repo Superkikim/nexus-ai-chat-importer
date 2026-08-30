@@ -55,3 +55,10 @@ conversation imports and are rejected. Import the conversation part.
   memory part. Select the conversation part instead.
 - A named attachment shows as missing: its bytes weren't in the export. Text that
   Claude already embedded in the conversation is still preserved.
+
+## Related
+
+- [Importing conversations](../importing.md) — the shared workflow, modes,
+  updates, and rebuilds
+- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+  [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

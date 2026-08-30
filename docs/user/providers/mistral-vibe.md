@@ -45,3 +45,10 @@ repacking can break the link between a message and its uploaded files.
   archive root and its array is not empty.
 - An uploaded file is missing: confirm the `chat-<id>-files/` directory is present
   and still named to match its chat file.
+
+## Related
+
+- [Importing conversations](../importing.md) — the shared workflow, modes,
+  updates, and rebuilds
+- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+  [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

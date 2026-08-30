@@ -109,3 +109,8 @@ These go to `<Attachment folder>/<provider>/documents/<note name>/` with a stabl
 name like `attachment-1a2b3c4d.txt` (the extension — `txt`, `md`, `html`, or
 `json` — is picked from the content), and are linked from the message. If the file
 cannot be written, the content stays in the note.
+
+## Related
+
+- [Attachments](attachments.md) · [Settings](settings.md) ·
+  [Import reports](reports.md) · [Importing conversations](importing.md)

@@ -63,3 +63,10 @@ More detail on the 2026 export internals:
   extract the outer archive and import the inner conversation `.zip`.
 - Generated image still a placeholder after re-importing: that export still didn't
   contain the file. Request a fresh export and rebuild the conversation.
+
+## Related
+
+- [Importing conversations](../importing.md) — the shared workflow, modes,
+  updates, and rebuilds
+- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+  [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

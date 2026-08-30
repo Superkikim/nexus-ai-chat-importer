@@ -3,9 +3,8 @@
 Nexus handles attachments on a **best-effort** basis: whatever is present in the
 export is saved and linked; whatever is missing is shown as an explicit
 placeholder rather than silently dropped. Every outcome is counted in the
-[import report](reports.md).
-
-There is no setting to turn this off or to hide missing attachments.
+[import report](reports.md). This behaviour is not configurable (see
+[Settings](settings.md#settings-you-might-have-read-about-elsewhere)).
 
 ## What happens to a file
 
@@ -51,4 +50,11 @@ See the provider page for specifics:
 If a newer export from your provider now includes files an earlier import could
 not get, re-import that archive with **Reprocess** / **Rebuild** (see
 [updates and rebuilds](importing.md#updates-and-rebuilds)). Placeholders are
-replaced with the real files, and the operation does not create duplicates.
+replaced with the real files, and the operation does not create duplicates — but
+note it **regenerates the whole note**, so any manual edits to those notes are
+lost.
+
+## Related
+
+- [What Nexus creates](output.md) · [Import reports](reports.md) ·
+  [Importing conversations](importing.md) · [Troubleshooting](troubleshooting.md)

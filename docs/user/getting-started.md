@@ -27,8 +27,12 @@
 
 ## Your first import
 
-1. Get your export from your provider and note where the `.zip` was saved. Do
-   **not** unzip it.
+1. Get your export from your provider and note where the `.zip` was saved — see
+   [ChatGPT](providers/chatgpt.md#get-your-export),
+   [Claude](providers/claude.md#get-your-export),
+   [Mistral Vibe](providers/mistral-vibe.md#get-your-export), or
+   [Perplexity](providers/perplexity.md#getting-a-compatible-export). Do **not**
+   unzip it.
 2. In Obsidian, run **Import AI conversations** — from the command palette, or the
    ribbon icon in the left sidebar.
 3. Select the `.zip` file. The plugin detects the provider from the archive.
@@ -46,3 +50,5 @@ change any of these locations later — see [Settings](settings.md).
   exports, and rebuilding notes.
 - [What Nexus creates](output.md) — how the notes and folders are structured.
 - [Settings](settings.md) — folders, filename date prefix, timestamp format.
+- [Command-line import](cli.md) — the optional desktop CLI (ChatGPT, Claude,
+  Mistral Vibe).

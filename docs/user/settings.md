@@ -64,3 +64,7 @@ Older documentation mentions toggles for disabling attachments, skipping missing
 attachments, showing attachment details, or a default import mode. **These are not
 part of the current plugin.** A leftover "auto-select all conversations" flag also
 exists in the code but has no UI and cannot be enabled.
+
+## Related
+
+- [What Nexus creates](output.md) · [Importing conversations](importing.md)

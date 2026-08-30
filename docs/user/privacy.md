@@ -57,3 +57,8 @@ location — moving the attachment folder scans your conversation notes; moving 
 conversation folder scans your reports and the `claude/artifacts` area of the
 attachment folder. It cannot tell which of those files it originally created, so
 keep unrelated notes out of the Nexus folders if that matters to you.
+
+## Related
+
+- [Import reports](reports.md) · [Settings](settings.md) ·
+  [What Nexus creates](output.md)

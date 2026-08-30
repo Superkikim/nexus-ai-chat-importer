@@ -50,3 +50,10 @@ imported.
   selected a loose JSON file, or an outer wrapper zip. Extract to the part zip(s).
 - No references in the notes: your export uses the newer schema, which does not
   include a source list.
+
+## Related
+
+- [Importing conversations](../importing.md) — the shared workflow, modes,
+  updates, and rebuilds
+- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+  [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

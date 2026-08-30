@@ -68,6 +68,11 @@ by its file path or title. Re-importing is how you keep notes current.
 > **Rebuilding replaces the whole note.** Any manual edits you made to a rebuilt
 > note are lost. A normal update never does this.
 
+The same operation has three names in the UI: **Reprocess existing notes** (the
+checkbox in Import All), **Rebuild selected notes if they exist** (the checkbox in
+Select Specific), and **Recreated** (how the result is labelled in the
+[report](reports.md)). They all mean *regenerate the note from scratch*.
+
 Notes on update behaviour:
 
 - A conversation whose export timestamp is in the same minute as the stored one,

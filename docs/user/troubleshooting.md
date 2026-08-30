@@ -27,7 +27,18 @@ notes, use **Reprocess** / **Rebuild** (see
 
 This is usually the export, not the plugin — the file simply wasn't in the archive.
 See [Attachments](attachments.md#why-an-attachment-can-be-missing) and your
-provider page. If a newer export includes the file, re-import with Rebuild.
+provider page. If a newer export includes the file, re-import with **Rebuild** —
+which [regenerates the whole note](importing.md#updates-and-rebuilds), so manual
+edits to it are lost.
+
+## A conversation shows as "Failed" in the report
+
+One conversation failing does not stop the import — the rest still run. The
+[report](reports.md) lists the failed conversation and the reason, and more
+detail is printed to the developer console (below). Common causes are a write
+that Obsidian rejected (permissions, no disk space, an invalid path) or a
+malformed conversation in the export. Fix the underlying cause and re-import; a
+previously failed conversation is retried on the next run.
 
 ## Large archives
 
