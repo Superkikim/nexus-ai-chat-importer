@@ -234,7 +234,7 @@
             "section_title": "📅 Format de date des messages",
             "custom_format": {
                 "name": "Format d'horodatage personnalisé des messages",
-                "desc": "Remplacer le format d'horodatage par défaut basé sur la locale dans les en-têtes de messages. Lorsque désactivé, les horodatages suivent le paramètre de langue d'Obsidian. Si Obsidian est en anglais, le format américain (YYYY/DD/MM) est appliqué."
+                "desc": "Remplacer le format d'horodatage par défaut basé sur la locale dans les en-têtes de messages. Lorsque désactivé, les horodatages suivent le paramètre de langue d'Obsidian."
             },
             "timestamp_format": {
                 "name": "Format d'horodatage",

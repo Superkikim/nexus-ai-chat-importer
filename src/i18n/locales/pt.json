@@ -234,7 +234,7 @@
             "section_title": "📅 Formato de data das mensagens",
             "custom_format": {
                 "name": "Formato de data e hora personalizado nas mensagens",
-                "desc": "Substituir o formato de data e hora predefinido baseado nas definições de idioma nos cabeçalhos das mensagens. Quando desativado, os carimbos de data e hora seguem as definições de idioma do Obsidian. Se o Obsidian estiver em inglês, o formato norte-americano (YYYY/DD/MM) é aplicado."
+                "desc": "Substituir o formato de data e hora predefinido baseado nas definições de idioma nos cabeçalhos das mensagens. Quando desativado, os carimbos de data e hora seguem as definições de idioma do Obsidian."
             },
             "timestamp_format": {
                 "name": "Formato de data e hora",

@@ -234,7 +234,7 @@
             "section_title": "📅 Formato data messaggi",
             "custom_format": {
                 "name": "Formato timestamp personalizzato per i messaggi",
-                "desc": "Sostituisce il formato timestamp predefinito basato sulla lingua nelle intestazioni dei messaggi. Quando disabilitato, i timestamp seguono l'impostazione della lingua di Obsidian. Se Obsidian è impostato in inglese, viene applicato il formato americano (YYYY/DD/MM)."
+                "desc": "Sostituisce il formato timestamp predefinito basato sulla lingua nelle intestazioni dei messaggi. Quando disabilitato, i timestamp seguono l'impostazione della lingua di Obsidian."
             },
             "timestamp_format": {
                 "name": "Formato timestamp",

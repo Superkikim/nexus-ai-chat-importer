@@ -234,7 +234,7 @@
             "section_title": "📅 Message Date Format",
             "custom_format": {
                 "name": "Custom message timestamp format",
-                "desc": "Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced."
+                "desc": "Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting."
             },
             "timestamp_format": {
                 "name": "Timestamp format",

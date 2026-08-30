@@ -234,7 +234,7 @@
             "section_title": "📅 Formato de fecha de mensajes",
             "custom_format": {
                 "name": "Formato de marca de tiempo personalizado para mensajes",
-                "desc": "Reemplazar el formato de marca de tiempo predeterminado basado en la configuración regional en los encabezados de mensajes. Cuando está desactivado, las marcas de tiempo siguen la configuración de idioma de Obsidian. Si Obsidian está en inglés, se aplica el formato estadounidense (YYYY/DD/MM)."
+                "desc": "Reemplazar el formato de marca de tiempo predeterminado basado en la configuración regional en los encabezados de mensajes. Cuando está desactivado, las marcas de tiempo siguen la configuración de idioma de Obsidian."
             },
             "timestamp_format": {
                 "name": "Formato de marca de tiempo",

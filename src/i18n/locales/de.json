@@ -234,7 +234,7 @@
             "section_title": "📅 Nachrichtendatumsformat",
             "custom_format": {
                 "name": "Benutzerdefiniertes Zeitstempelformat für Nachrichten",
-                "desc": "Das standardmäßige gebietsschemabasierte Zeitstempelformat in Nachrichtenkopfzeilen überschreiben. Wenn deaktiviert, folgen Zeitstempel der Spracheinstellung von Obsidian. Wenn Obsidian auf Englisch eingestellt ist, wird das US-Format (YYYY/DD/MM) erzwungen."
+                "desc": "Das standardmäßige gebietsschemabasierte Zeitstempelformat in Nachrichtenkopfzeilen überschreiben. Wenn deaktiviert, folgen Zeitstempel der Spracheinstellung von Obsidian."
             },
             "timestamp_format": {
                 "name": "Zeitstempelformat",

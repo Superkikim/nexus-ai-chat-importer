@@ -234,7 +234,7 @@
             "section_title": "📅 消息日期格式",
             "custom_format": {
                 "name": "自定义消息时间戳格式",
-                "desc": "覆盖消息标题中默认的基于区域设置的时间戳格式。禁用时，时间戳遵循 Obsidian 的语言设置。若 Obsidian 设置为英语，则强制使用美国格式（YYYY/DD/MM）。"
+                "desc": "覆盖消息标题中默认的基于区域设置的时间戳格式。禁用时，时间戳遵循 Obsidian 的语言设置。"
             },
             "timestamp_format": {
                 "name": "时间戳格式",
