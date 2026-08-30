@@ -3,7 +3,7 @@
 ## Requirements
 
 - **Obsidian 1.6.6 or newer** (the plugin's declared minimum).
-- **Desktop or mobile.** Nexus runs on both. On mobile, some steps are more
+- **Desktop or mobile.** The plugin runs on both. On mobile, some steps are more
   limited — see [desktop vs mobile](importing.md#desktop-vs-mobile).
 - A data export (`.zip`) from ChatGPT, Claude, Mistral Vibe, or Perplexity. Each
   [provider page](README.md#supported-providers) explains how to request one.
@@ -48,7 +48,7 @@ change any of these locations later — see [Settings](settings.md).
 
 - [Importing conversations](importing.md) — selective imports, updates after new
   exports, and rebuilding notes.
-- [What Nexus creates](output.md) — how the notes and folders are structured.
+- [What gets created](output.md) — how the notes and folders are structured.
 - [Settings](settings.md) — folders, filename date prefix, timestamp format.
 - [Command-line import](cli.md) — the optional desktop CLI (ChatGPT, Claude,
   Mistral Vibe).

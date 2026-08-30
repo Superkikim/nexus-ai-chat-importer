@@ -42,14 +42,14 @@ Full documentation lives in [`docs/`](docs/README.md):
 
 | Location | For | Contents |
 |---|---|---|
-| [`docs/user/`](docs/user/README.md) | Everyone | Canonical user guide: [getting started](docs/user/getting-started.md), [importing](docs/user/importing.md), [settings](docs/user/settings.md), [what Nexus creates](docs/user/output.md), [attachments](docs/user/attachments.md), [reports](docs/user/reports.md), [CLI](docs/user/cli.md), [privacy](docs/user/privacy.md), [troubleshooting](docs/user/troubleshooting.md), and a page per provider. |
+| [`docs/user/`](docs/user/README.md) | Everyone | Canonical user guide: [getting started](docs/user/getting-started.md), [importing](docs/user/importing.md), [settings](docs/user/settings.md), [what gets created](docs/user/output.md), [attachments](docs/user/attachments.md), [reports](docs/user/reports.md), [CLI](docs/user/cli.md), [privacy](docs/user/privacy.md), [troubleshooting](docs/user/troubleshooting.md), and a page per provider. |
 | [`docs/development/`](docs/development/README.md) | Contributors | Adding a provider, issue workflow, release workflow. |
 | [`docs/architecture/`](docs/architecture/README.md) | Contributors | Import pipeline, archive pipeline, attachment handling, link updates, ChatGPT export format. |
 | [`RELEASE_NOTES.md`](RELEASE_NOTES.md) | Everyone | The changelog. |
 
 ## Support
 
-I maintain Nexus in my own time, and testing new providers means paying for their
+I maintain Nexus AI Chat Importer in my own time, and testing new providers means paying for their
 subscriptions. If it is useful to you, please consider a one-time or monthly
 donation — thank you to everyone already supporting the project.
 

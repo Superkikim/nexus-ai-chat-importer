@@ -1,5 +1,8 @@
 # Troubleshooting
 
+Common failures when importing with Nexus AI Chat Importer, and how to diagnose
+them safely.
+
 ## Import won't start / archive rejected
 
 The exact message wording can change between versions; match on the gist.
@@ -11,7 +14,7 @@ The exact message wording can change between versions; match on the gist.
 | *"This ZIP is a &lt;X&gt; export, not a &lt;Y&gt; one. Pick the matching provider to import it."* | The selection locked onto a different provider. Import one provider at a time. |
 | *"The ZIP file contains no files…"* | The `.zip` has no data. Re-download the export. |
 | *"The file appears to be corrupted or is not a valid ZIP file. Please try downloading the export again…"* | The download is damaged. Download it again. |
-| *"This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."* | A zip inside a zip. Extract the outer one and import the inner conversation zip(s). The one case Nexus unwraps by itself is an OpenAI privacy-portal container — see [importing](importing.md#openai-privacy-portal-container-archives). |
+| *"This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."* | A zip inside a zip. Extract the outer one and import the inner conversation zip(s). The one case the plugin unwraps by itself is an OpenAI privacy-portal container — see [importing](importing.md#openai-privacy-portal-container-archives). |
 | *"No supported &lt;provider&gt; archives were found…"* | None of the selected files matched. Check the export type. |
 | *"The mobile webview could no longer access this file. Please reselect this ZIP and retry."* | Mobile dropped the file reference. Re-select the file and try again. |
 | *"On mobile, only one ZIP can be imported at a time…"* | Expected on mobile — select a single `.zip`. |
@@ -42,7 +45,7 @@ previously failed conversation is retried on the next run.
 
 ## Large archives
 
-Nexus streams large archives rather than loading them whole, and switches to a
+The plugin streams large archives rather than loading them whole, and switches to a
 heavier-duty path when an archive is roughly 100 MB or more, or its conversation
 JSON is very large. These are internal strategy switches, **not** a hard maximum —
 there is no advertised size limit. A very large import can simply take a while,

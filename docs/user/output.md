@@ -1,4 +1,7 @@
-# What Nexus creates
+# What gets created
+
+What Nexus AI Chat Importer writes into your vault during an import: the folder
+tree, file names, note structure, and the parts of a conversation it leaves out.
 
 ## Folder tree
 
@@ -26,7 +29,7 @@ The note name is built from the conversation title:
 - An untitled conversation becomes `Untitled`.
 - The whole `.md` name is capped at 120 bytes (UTF-8). If two notes would collide,
   a counter is added: ` (1)`, ` (2)`, …
-- If the operating system still rejects the name as too long, Nexus retries with
+- If the operating system still rejects the name as too long, the plugin retries with
   `conversation-<id>.md`.
 - With the [date prefix](settings.md#date-prefix) enabled, the name is prefixed
   with the creation date.
@@ -54,7 +57,7 @@ Added only when the export provides them:
 - `mode:` — the provider's conversation mode, when it has one.
 - `models:` — a list of the model(s) used in the conversation.
 
-Timestamps in frontmatter are **always ISO 8601 UTC**. Nexus never rewrites an
+Timestamps in frontmatter are **always ISO 8601 UTC**. The plugin never rewrites an
 existing frontmatter field on a later import — it only adds new ones — so it is
 safe to build Dataview queries on these.
 
@@ -86,7 +89,7 @@ Obsidian's `$ … $` / `$$ … $$` syntax (code blocks are left alone).
 
 ## What is left out of a note
 
-Nexus imports the human and assistant turns as they appear in the export. It
+The plugin imports the human and assistant turns as they appear in the export. It
 deliberately does **not** include:
 
 - system, tool, and internal/hidden messages — every provider converter filters

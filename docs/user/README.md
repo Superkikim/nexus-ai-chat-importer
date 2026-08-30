@@ -25,7 +25,7 @@ The plugin imports exports from exactly four providers:
 | Page | Answers |
 |---|---|
 | [Settings](settings.md) | What can I configure — folders, filename date prefix, timestamp format. |
-| [What Nexus creates](output.md) | The folder tree, file names, note structure, frontmatter, and what is left out of a note. |
+| [What gets created](output.md) | The folder tree, file names, note structure, frontmatter, and what is left out of a note. |
 | [Attachments](attachments.md) | How exported files are saved, embedded, or shown as missing. |
 | [Import reports](reports.md) | The report files, what each section means, and the completion dialog. |
 | [Command-line import](cli.md) | The optional desktop CLI (ChatGPT, Claude, Mistral Vibe). |

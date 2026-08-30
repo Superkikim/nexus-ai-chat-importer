@@ -2,11 +2,12 @@
 
 ## The import itself is local
 
-Importing reads the `.zip` files you select and writes Markdown and attachment
-files into your vault through Obsidian's normal file API. During an import the
-plugin does **not** upload your conversations anywhere, contact your AI provider,
-or send any telemetry or analytics. Provider chat and media URLs that appear in
-your notes are ordinary links — nothing is fetched from them at import time.
+When Nexus AI Chat Importer runs an import, it reads the `.zip` files you select
+and writes Markdown and attachment files into your vault through Obsidian's normal
+file API. During an import the plugin does **not** upload your conversations
+anywhere, contact your AI provider, or send any telemetry or analytics. Provider
+chat and media URLs that appear in your notes are ordinary links — nothing is
+fetched from them at import time.
 
 ## When the plugin does use the network
 
@@ -38,7 +39,7 @@ that the import creates — not in the plugin data file.
 
 ## Deduplication does not require tracking
 
-Nexus decides whether a conversation already exists by reading the
+The plugin decides whether a conversation already exists by reading the
 `conversation_id` in the frontmatter of your existing notes. It does not need, and
 does not keep, a separate index of your conversations.
 
@@ -49,16 +50,16 @@ links to your notes, outcome counts, and error details. "Stored locally" does no
 mean "contains nothing sensitive" — treat reports like any other vault note when
 you share or sync your vault.
 
-## Folder moves read more than Nexus's own files
+## Folder moves read more than the plugin's own files
 
-When you move a configured folder and let Nexus update links, it reads **every**
-Markdown file under the *other* Nexus roots to fix links that pointed at the moved
+When you move a configured folder and let the plugin update links, it reads **every**
+Markdown file under the *other* configured roots to fix links that pointed at the moved
 location — moving the attachment folder scans your conversation notes; moving the
 conversation folder scans your reports and the `claude/artifacts` area of the
 attachment folder. It cannot tell which of those files it originally created, so
-keep unrelated notes out of the Nexus folders if that matters to you.
+keep unrelated notes out of the plugin's folders if that matters to you.
 
 ## Related
 
 - [Import reports](reports.md) · [Settings](settings.md) ·
-  [What Nexus creates](output.md)
+  [What gets created](output.md)

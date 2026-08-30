@@ -1,7 +1,8 @@
 # Mistral Vibe
 
-Covers what is specific to Mistral Vibe (formerly Le Chat). The shared workflow is
-in [Importing conversations](../importing.md).
+How Nexus AI Chat Importer handles Mistral Vibe (formerly Le Chat) exports, and
+what is specific to this provider. The shared import workflow is in
+[Importing conversations](../importing.md).
 
 ## Get your export
 
@@ -24,7 +25,7 @@ repacking can break the link between a message and its uploaded files.
   that converts to nothing is labelled *(Empty message)*.
 - **Canvas** content is rendered inline in a collapsible callout; slide decks keep
   their `---` separators in a code block.
-- **Reference markers** in the text are kept as footnote markers only. Nexus does
+- **Reference markers** in the text are kept as footnote markers only. The plugin does
   **not** build a bibliography or use the export's `quotes` field — so "references
   and citations are preserved" is not accurate for Vibe.
 - An empty chat array cannot be detected as a conversation and is not imported.
@@ -35,7 +36,7 @@ repacking can break the link between a message and its uploaded files.
   is in the same archive, under `chat-<id>-files/`. Missing uploads are marked as
   not included in the export.
 - **Assistant-generated images and files** are referenced by a link to Mistral's
-  servers and are **not** included in the export. Nexus inserts a placeholder
+  servers and are **not** included in the export. The plugin inserts a placeholder
   linked to the original conversation; it does not download the remote file. There
   is no generation-prompt reconstruction for these placeholders.
 
@@ -50,5 +51,5 @@ repacking can break the link between a message and its uploaded files.
 
 - [Importing conversations](../importing.md) — the shared workflow, modes,
   updates, and rebuilds
-- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+- [Attachments](../attachments.md) · [What gets created](../output.md) ·
   [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

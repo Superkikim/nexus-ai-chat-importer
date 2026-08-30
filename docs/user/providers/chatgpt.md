@@ -1,13 +1,14 @@
 # ChatGPT
 
-Covers what is specific to ChatGPT (OpenAI). The shared workflow — running the
-import, choosing conversations, updates and rebuilds — is in
+How Nexus AI Chat Importer handles ChatGPT (OpenAI) exports, and what is specific
+to this provider. The shared import workflow — running the import, choosing
+conversations, updates and rebuilds — is in
 [Importing conversations](../importing.md).
 
 ## Get your export
 
 There are two ways to get a ChatGPT export, and they produce **different archive
-shapes**. Nexus handles both — see OpenAI's help article
+shapes**. The plugin handles both — see OpenAI's help article
 *"Exporting your ChatGPT history and data"* for the current click-paths.
 
 - **From ChatGPT settings** (data controls). The quicker route. OpenAI emails a
@@ -16,8 +17,8 @@ shapes**. Nexus handles both — see OpenAI's help article
 - **From the OpenAI account privacy portal.** An account-level data request. It
   can take noticeably longer to be delivered, and the download is a **container**:
   an outer `.zip` with the conversation `.zip` nested inside it (alongside a
-  separate `Files__…` archive that Nexus ignores). Select the **outer** `.zip` as
-  downloaded — Nexus unwraps it automatically.
+  separate `Files__…` archive that the plugin ignores). Select the **outer** `.zip` as
+  downloaded — the plugin unwraps it automatically.
 
 Either way, import the `.zip` as downloaded — do not unzip it.
 
@@ -50,7 +51,7 @@ stripped from the text; there is no reference section for ChatGPT.
 - **DALL-E / generated images:** recoverable only when the export actually carries
   the image data (either the older `dalle-generations/…` files, or the newer file
   library with a matching payload). When the export references image generation but
-  includes no file, Nexus inserts an explicit "not in export" placeholder.
+  includes no file, the plugin inserts an explicit "not in export" placeholder.
 - **Generated documents** (Canvas "reports", e.g. `.docx`) are imported when the
   file library includes them.
 - **Voice recordings are never imported** — the audio is intentionally skipped.
@@ -72,5 +73,5 @@ More detail on the 2026 export internals:
 
 - [Importing conversations](../importing.md) — the shared workflow, modes,
   updates, and rebuilds
-- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+- [Attachments](../attachments.md) · [What gets created](../output.md) ·
   [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

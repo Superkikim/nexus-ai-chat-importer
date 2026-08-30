@@ -1,12 +1,13 @@
 # Perplexity
 
-Covers what is specific to Perplexity. The shared workflow is in
+How Nexus AI Chat Importer handles Perplexity exports, and what is specific to
+this provider. The shared import workflow is in
 [Importing conversations](../importing.md).
 
 ## Getting a compatible export
 
 Perplexity does not offer a first-party bulk export that this plugin can read.
-The archives Nexus recognises are produced by a **third-party browser extension**,
+The archives the plugin recognises are produced by a **third-party browser extension**,
 the *"Perplexity Thread Exporter"*.
 
 > This project does **not** bundle, endorse, review, or support that extension.
@@ -55,5 +56,5 @@ imported.
 
 - [Importing conversations](../importing.md) — the shared workflow, modes,
   updates, and rebuilds
-- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+- [Attachments](../attachments.md) · [What gets created](../output.md) ·
   [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

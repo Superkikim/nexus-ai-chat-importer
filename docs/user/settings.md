@@ -45,7 +45,7 @@ other sync tool) so large files are not uploaded.
 
 ### Moving a folder
 
-If you change a folder that already contains files, Nexus asks whether to move the
+If you change a folder that already contains files, the plugin asks whether to move the
 existing files:
 
 - **Yes, move files** — the files are moved to the new location. The destination
@@ -56,7 +56,7 @@ existing files:
   not touched by future imports.
 - Report moves are a plain move (nothing links into reports).
 
-The new path may not be located **inside** one of the other two Nexus folders.
+The new path may not be located **inside** one of the other two configured folders.
 
 ## Settings you might have read about elsewhere
 
@@ -67,4 +67,4 @@ exists in the code but has no UI and cannot be enabled.
 
 ## Related
 
-- [What Nexus creates](output.md) · [Importing conversations](importing.md)
+- [What gets created](output.md) · [Importing conversations](importing.md)

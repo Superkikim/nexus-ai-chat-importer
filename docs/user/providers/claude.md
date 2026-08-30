@@ -1,6 +1,7 @@
 # Claude
 
-Covers what is specific to Claude (Anthropic). The shared workflow is in
+How Nexus AI Chat Importer handles Claude (Anthropic) exports, and what is
+specific to this provider. The shared import workflow is in
 [Importing conversations](../importing.md).
 
 ## Get your export
@@ -12,8 +13,8 @@ article, *"How can I export my Claude data?"*.
 
 Claude's export lets you pick a **time range** — All, last 30 days, last 90 days,
 or a custom range. Exporting a recent window keeps each archive small, so it
-downloads and imports faster. You can safely take overlapping windows over time:
-Nexus matches conversations by ID, so re-importing a range you already have
+downloads and imports faster. You can safely take overlapping windows over time. The plugin matches
+conversations by ID, so re-importing a range you already have
 [updates rather than duplicates](../importing.md#updates-and-rebuilds).
 
 ### You may receive a JSON index, not a ZIP
@@ -21,7 +22,7 @@ Nexus matches conversations by ID, so re-importing a range you already have
 Recent Claude exports are delivered as a small **JSON file** containing four
 download links (conversations plus other account data) rather than a single
 archive. Open that JSON, follow the **conversations** link, and download that
-`.zip` yourself — that is the file you give to Nexus. The other links are not
+`.zip` yourself — that is the file you give to the plugin. The other links are not
 conversation imports.
 
 Import the conversations `.zip` as downloaded.
@@ -47,7 +48,7 @@ conversation imports and are rejected. Import the conversation part.
 
 ## Web citations and references
 
-When a Claude reply drew on web search, Nexus collects the cited source URLs from
+When a Claude reply drew on web search, the plugin collects the cited source URLs from
 that message and appends a **`### References`** list to the end of the message —
 one numbered list per message.
 
@@ -65,7 +66,7 @@ one numbered list per message.
   extracted content directly in the export. It is shown in a collapsible
   attachment callout, formatted according to its type. Very long extracts are
   moved to a linked file to keep the note readable.
-- **Named files:** Nexus looks for the file's bytes in the archive. If present,
+- **Named files:** the plugin looks for the file's bytes in the archive. If present,
   images, text, and documents are extracted; if absent, you get a placeholder and
   a link to the conversation. (It is not true that Claude exports never contain
   binary files — it depends on the export.)
@@ -89,5 +90,5 @@ More detail on the export delivery and structure:
 
 - [Importing conversations](../importing.md) — the shared workflow, modes,
   updates, and rebuilds
-- [Attachments](../attachments.md) · [What Nexus creates](../output.md) ·
+- [Attachments](../attachments.md) · [What gets created](../output.md) ·
   [Import reports](../reports.md) · [Troubleshooting](../troubleshooting.md)

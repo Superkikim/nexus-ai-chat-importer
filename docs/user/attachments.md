@@ -1,6 +1,6 @@
 # Attachments
 
-Nexus handles attachments on a **best-effort** basis: whatever is present in the
+Nexus AI Chat Importer handles attachments on a **best-effort** basis: whatever is present in the
 export is saved and linked; whatever is missing is shown as an explicit
 placeholder rather than silently dropped. Every outcome is counted in the
 [import report](reports.md). This behaviour is not configurable (see
@@ -56,5 +56,5 @@ lost.
 
 ## Related
 
-- [What Nexus creates](output.md) · [Import reports](reports.md) ·
+- [What gets created](output.md) · [Import reports](reports.md) ·
   [Importing conversations](importing.md) · [Troubleshooting](troubleshooting.md)

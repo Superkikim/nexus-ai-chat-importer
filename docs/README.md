@@ -18,7 +18,7 @@ Task-oriented help, organised for navigation and search rather than mirroring th
 code. [`user/README.md`](user/README.md) is the entry point and the full
 navigation.
 
-- **Common workflow:** getting started, importing, settings, what Nexus creates,
+- **Common workflow:** getting started, importing, settings, what gets created,
   attachments, reports, CLI, privacy, troubleshooting.
 - **Per provider:** [ChatGPT](user/providers/chatgpt.md),
   [Claude](user/providers/claude.md),

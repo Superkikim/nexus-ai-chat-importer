@@ -1,8 +1,9 @@
 # Command-line import
 
-Nexus ships an optional command-line importer for **desktop** use — for scripting
-and batch runs. It is a separate package in the repository's `cli/` folder and is
-**not** part of the Obsidian plugin you install from the community browser.
+Nexus AI Chat Importer ships an optional command-line importer for **desktop**
+use, for scripting and batch runs. It is a separate package in the repository's
+`cli/` folder and is **not** part of the Obsidian plugin you install from the
+community browser.
 
 ## Scope
 

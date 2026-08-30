@@ -1,6 +1,7 @@
 # Import reports
 
-Every import writes a report so you can see exactly what happened.
+Nexus AI Chat Importer writes a report after every import so you can see exactly
+what happened.
 
 ## The completion dialog
 
@@ -8,7 +9,7 @@ When an import finishes, a dialog summarises it: only the outcome counts that ar
 non-zero (or "Nothing in your vault changed"), the archive context, the attachment
 counts, and a **View Report** button that opens the full summary.
 
-If Nexus cannot create the report folder or write the reports, it shows a failure
+If the plugin cannot create the report folder or write the reports, it shows a failure
 notice and a short "import completed" notice instead — with no completion dialog
 and no report link.
 
@@ -57,5 +58,5 @@ tables with a link to each note, its message count, and a provider-specific colu
 
 ## Related
 
-- [Importing conversations](importing.md) · [What Nexus creates](output.md) ·
+- [Importing conversations](importing.md) · [What gets created](output.md) ·
   [Troubleshooting](troubleshooting.md)

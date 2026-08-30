@@ -1,7 +1,8 @@
 # Importing conversations
 
-This page covers the shared import workflow for every provider. Provider-specific
-export steps and behaviour are on the [provider pages](README.md#provider-pages).
+This page covers the import workflow Nexus AI Chat Importer uses for every
+provider. Provider-specific export steps and behaviour are on the
+[provider pages](README.md#provider-pages).
 
 ## Running an import
 
@@ -25,7 +26,7 @@ means the others are ignored.
 
 If you request a ChatGPT export through OpenAI's privacy portal, the download is
 sometimes an outer `.zip` that contains the real conversation `.zip` inside it.
-Nexus recognises this specific case and unwraps it automatically. For any other
+The plugin recognises this specific case and unwraps it automatically. For any other
 "a zip inside a zip" archive, extract the outer file yourself and import the inner
 one — the plugin will tell you when this is needed.
 
@@ -56,7 +57,7 @@ Analyses the archive and lets you choose conversations before importing.
 
 ## Updates and rebuilds
 
-Nexus identifies an existing note by the `conversation_id` in its frontmatter, not
+The plugin identifies an existing note by the `conversation_id` in its frontmatter, not
 by its file path or title. Re-importing is how you keep notes current.
 
 | You want to… | Do this | Result |
@@ -85,7 +86,7 @@ Notes on update behaviour:
 ## "Nothing new" is not an error
 
 If an archive contains no new or updated conversations — or you import Select
-Specific and choose nothing — that is a normal outcome. Nexus shows a notice and
+Specific and choose nothing — that is a normal outcome. The plugin shows a notice and
 still writes the [import report](reports.md).
 
 ## Desktop vs mobile
@@ -101,5 +102,5 @@ For very large archives, see
 
 ## Related
 
-- [What Nexus creates](output.md) · [Attachments](attachments.md) ·
+- [What gets created](output.md) · [Attachments](attachments.md) ·
   [Import reports](reports.md) · [Troubleshooting](troubleshooting.md)

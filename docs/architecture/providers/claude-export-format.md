@@ -19,7 +19,7 @@ has changed:
   open the JSON, follow the **conversations** link, and download that `.zip`
   themselves before importing it.
 
-Nexus does not read the JSON index and has no knowledge of it; document it only so
+The plugin does not read the JSON index and has no knowledge of it; document it only so
 users know which file to hand the plugin.
 
 The export UI also offers a **time range** (All / 30 days / 90 days / custom).
