@@ -44,8 +44,20 @@ conversation imports and are rejected. Import the conversation part.
 - Human and assistant messages, including text blocks, useful artifact and
   file operations, inline extracted attachments, and named file references.
 - Empty messages and internal tool-only messages are dropped.
-- **Web citations** are kept only when a text block carries citation details with
-  a URL; duplicate URLs are merged. Quoted snippets are not reproduced.
+
+## Web citations and references
+
+When a Claude reply drew on web search, Nexus collects the cited source URLs from
+that message and appends a **`### References`** list to the end of the message —
+one numbered list per message.
+
+- Only sources that carry a **URL** in the export are listed. Duplicate URLs
+  within the same message are merged.
+- The link text is the source **title** when the export provides one, otherwise
+  the URL itself.
+- The in-text citation position markers are dropped — the list only shows *which*
+  sources the answer used, not where each was cited.
+- The quoted passage / snippet from the source is **not** reproduced.
 
 ## Attachments and artifacts
 

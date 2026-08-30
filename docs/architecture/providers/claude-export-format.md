@@ -80,5 +80,8 @@ Adapter detection requires `uuid`, a `name` field, a `chat_messages` array, and
   Both produce versioned Markdown artifacts. Blocks that only exist to generate a
   binary output referenced by a `computer:///` link are intentionally **not**
   turned into artifacts; those outputs stay placeholders.
-- **Citations** — kept only when a `text` block's `citations[]` carry a URL; URLs
-  are de-duplicated within a message. Snippets are not reproduced.
+- **Citations** — `buildReferencesSection()` scans a message's `text` blocks for
+  `citations[].details.url`, de-duplicates by URL **within that message**, and
+  appends a `### References` numbered list (`[title || url](url)`). The citation
+  `start_index` / `end_index` offsets are intentionally ignored; snippets are not
+  reproduced. A citation with no URL is skipped.
