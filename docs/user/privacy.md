@@ -30,8 +30,7 @@ In the vault's plugin data file
 
 - your settings;
 - lightweight metadata about archives you have imported (filename, size,
-  modification time, import date) — this is not a content hash and is not
-  currently used to skip re-imports;
+  modification time, import date);
 - upgrade history.
 
 Your conversation content lives only in the vault notes, attachments, and reports
@@ -52,12 +51,12 @@ you share or sync your vault.
 
 ## Folder moves read more than the plugin's own files
 
-When you move a configured folder and let the plugin update links, it reads **every**
-Markdown file under the *other* configured roots to fix links that pointed at the moved
-location — moving the attachment folder scans your conversation notes; moving the
-conversation folder scans your reports and the `claude/artifacts` area of the
-attachment folder. It cannot tell which of those files it originally created, so
-keep unrelated notes out of the plugin's folders if that matters to you.
+When you move a configured folder and let the plugin update links, it reads
+**every** Markdown file under the *other* configured folders to fix links that
+pointed at the moved location — moving the attachment folder scans your
+conversation notes; moving the conversation folder scans your reports and artifact
+notes. It cannot tell which of those files it originally created, so keep
+unrelated notes out of the plugin's folders if that matters to you.
 
 ## Related
 

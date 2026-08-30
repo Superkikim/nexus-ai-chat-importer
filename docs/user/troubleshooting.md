@@ -45,11 +45,10 @@ previously failed conversation is retried on the next run.
 
 ## Large archives
 
-The plugin streams large archives rather than loading them whole, and switches to a
-heavier-duty path when an archive is roughly 100 MB or more, or its conversation
-JSON is very large. These are internal strategy switches, **not** a hard maximum —
-there is no advertised size limit. A very large import can simply take a while,
-especially on mobile, where you can import only one archive at a time.
+There is **no** advertised size limit. The plugin streams large archives instead
+of loading them whole, so a big import just takes longer — especially on mobile,
+where you can only import one archive at a time. Roughly 100 MB and up is where it
+gets noticeably slower.
 
 ## Getting more detail
 

@@ -57,9 +57,7 @@ Added only when the export provides them:
 - `mode:` — the provider's conversation mode, when it has one.
 - `models:` — a list of the model(s) used in the conversation.
 
-Timestamps in frontmatter are **always ISO 8601 UTC**. The plugin never rewrites an
-existing frontmatter field on a later import — it only adds new ones — so it is
-safe to build Dataview queries on these.
+Timestamps in frontmatter are **always ISO 8601 UTC**.
 
 ### Body
 
@@ -82,18 +80,16 @@ Each message is an Obsidian callout:
 | `nexus_prompt` | A system prompt |
 | `nexus_canvas` | A ChatGPT Canvas / Mistral canvas document |
 
-Each message carries a hidden `<!-- UID: … -->` marker; this is how a later import
-knows which messages are already in the note. Assistant messages are followed by a
-horizontal rule. Math written with `\( … \)` or `\[ … \]` is converted to
-Obsidian's `$ … $` / `$$ … $$` syntax (code blocks are left alone).
+Assistant messages are followed by a horizontal rule. Math written with
+`\( … \)` or `\[ … \]` is converted to Obsidian's `$ … $` / `$$ … $$` syntax
+(code blocks are left alone).
 
 ## What is left out of a note
 
 The plugin imports the human and assistant turns as they appear in the export. It
 deliberately does **not** include:
 
-- system, tool, and internal/hidden messages — every provider converter filters
-  these out;
+- system, tool, and hidden messages;
 - content the provider did not put in the export (see [Attachments](attachments.md)
   and each provider page for what that means for that provider).
 
@@ -102,16 +98,11 @@ complete history visible in your provider account.
 
 ## Long content
 
-To keep a note readable, very long blocks are moved to a file instead of being
-inlined:
-
-- any single message line longer than 10,000 characters;
-- an extracted attachment text block longer than 20,000 characters.
-
-These go to `<Attachment folder>/<provider>/documents/<note name>/` with a stable
-name like `attachment-1a2b3c4d.txt` (the extension — `txt`, `md`, `html`, or
-`json` — is picked from the content), and are linked from the message. If the file
-cannot be written, the content stays in the note.
+To keep a note readable, a very long block — a single message line of roughly
+10,000+ characters, or a large extracted text attachment — is moved to a file
+under `<Attachment folder>/<provider>/documents/<note name>/` and linked from the
+message instead of inlined. If the file cannot be written, the content stays in
+the note.
 
 ## Related
 

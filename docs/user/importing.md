@@ -12,12 +12,10 @@ file, and never an archive you have unzipped yourself.
 
 ### Provider is detected, then locked
 
-You do not choose the provider. The plugin reads the selected archives, sorts them
-(by a `YYYY-MM-DD-HH-MM-SS` timestamp in the filename when one is present,
-otherwise by last-modified date, then by name), and **locks the import to the
-first supported archive**. Any later archive that belongs to a different provider, or is not a
-recognised export, is skipped and listed in the report rather than imported under
-the wrong provider.
+You do not choose the provider. The plugin orders the selected archives by date
+and **locks the import to the first supported one**. Any later archive that
+belongs to a different provider, or is not a recognised export, is skipped and
+listed in the report rather than imported under the wrong provider.
 
 **Import one provider at a time.** Mixing providers in a single selection just
 means the others are ignored.
@@ -93,7 +91,7 @@ still writes the [import report](reports.md).
 
 | | Desktop | Mobile |
 |---|---|---|
-| Files per import | Multiple `.zip`, drag-and-drop supported | **One `.zip`** (the file input is single-select, and later steps keep only the first) |
+| Files per import | Multiple `.zip`, drag-and-drop supported | **One `.zip`** only |
 | Import All | Cross-archive analysis and deduplication | The single archive is imported directly, without the separate analysis phase |
 | Select Specific, Reprocess, rebuild | Available | Available |
 
