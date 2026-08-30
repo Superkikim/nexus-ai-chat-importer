@@ -1,10 +1,14 @@
-# Issue Management Workflow
+# Issue workflow
 
-This document defines the conventions for triaging, labeling, and tracking issues in this repository.
+Conventions for triaging, labeling, and tracking issues in this repository.
+
+> The label and lifecycle names below are the **intended** set. If the GitHub
+> repository's actual labels have drifted, reconcile them with this page (or update
+> this page) rather than inventing new ones ad hoc.
 
 ---
 
-## Title Convention
+## Title convention
 
 ```
 [TYPE] Scope: short description — symptom if bug
@@ -12,9 +16,9 @@ This document defines the conventions for triaging, labeling, and tracking issue
 
 **Examples:**
 - `[BUG] ChatGPT: export now packages attachments as .dat files — import fails`
-- `[FEAT] New Provider: Mistral Le Chat`
+- `[FEAT] New provider: Mistral Vibe`
 - `[CHORE] CI: upgrade actions to Node.js 24`
-- `[DOC] README: add screenshots to "See It In Action" section`
+- `[DOC] README: add screenshots to "See it in action" section`
 
 | Prefix | When to use |
 |---|---|
@@ -26,7 +30,7 @@ This document defines the conventions for triaging, labeling, and tracking issue
 
 ---
 
-## Labels — Reference Table
+## Labels — reference
 
 ### Type
 
@@ -37,10 +41,10 @@ This document defines the conventions for triaging, labeling, and tracking issue
 | `chore` | Maintenance / refactor |
 | `documentation` | Documentation only |
 | `css` | CSS / styles related |
-| `provider` | Related to an AI provider (ChatGPT, Claude, …) |
+| `provider` | Related to an AI provider (ChatGPT, Claude, Mistral Vibe, Perplexity) |
 | `locale` | Translation / i18n |
 | `duplicate` | Duplicate of an existing issue |
-| `wontfix` | Bug or problem acknowledged but will not be corrected |
+| `wontfix` | Bug acknowledged but will not be corrected |
 | `wontimplement` | Feature request evaluated and deliberately rejected |
 | `good first issue` | Suitable for new contributors |
 | `help wanted` | External contributions welcome |
@@ -68,33 +72,35 @@ This document defines the conventions for triaging, labeling, and tracking issue
 
 ---
 
-## Workflow by Issue Type
+## Workflow by issue type
 
 ### Bug
 
-1. **Triage** → apply `bug` + `status: evaluation in progress`
-2. **Information missing** → switch status to `status: pending user insight`, post a comment tagging the reporter with specific questions
-3. **Information received** → switch to `status: in progress`, assign to a branch, add `target: X.Y.Z`
+1. **Triage** → `bug` + `status: evaluation in progress`
+2. **Information missing** → `status: pending user insight`, comment tagging the reporter with specific questions
+3. **Information received** → `status: in progress`, assign to a branch, add `target: X.Y.Z`
 4. **Fix merged to dev branch** → add `fixed-in-dev`, keep `target: X.Y.Z`
-5. **Released** → switch to `status: released` + `fixed`, close the issue
+5. **Released** → `status: released` + `fixed`, close
 
-### Feature / Enhancement
+### Feature / enhancement
 
-1. **Triage** → apply `enhancement` + `status: evaluation in progress`
-2. **Accepted** → switch to `status: in progress` + `target: X.Y.Z`
-3. **Shipped** → switch to `status: released`, close the issue
-4. **Rejected** → apply `wontimplement`, close with a short explanation
+1. **Triage** → `enhancement` + `status: evaluation in progress`
+2. **Accepted** → `status: in progress` + `target: X.Y.Z`
+3. **Shipped** → `status: released`, close
+4. **Rejected** → `wontimplement`, close with a short explanation
 
-### Chore / Arch / Doc
+### Chore / arch / doc
 
-1. Apply `chore` (or `documentation`) + `status: evaluation in progress`
+1. `chore` (or `documentation`) + `status: evaluation in progress`
 2. When started → `status: in progress`
-3. When done → `status: released`, close the issue
+3. When done → `status: released`, close
 
 ---
 
 ## Notes
 
-- Always remove the previous status label before applying a new one — an issue should have exactly one `status:` label at any time.
-- Use `target: X.Y.Z` as soon as a version is decided. Update it if the target changes.
-- When blocking on a reporter's response, tag them directly in the comment (`@username`) so they receive a notification.
+- An issue should have exactly one `status:` label at any time — remove the
+  previous one before applying a new one.
+- Set `target: X.Y.Z` as soon as a version is decided; update it if the target
+  changes.
+- When blocking on a reporter's response, tag them directly (`@username`).
