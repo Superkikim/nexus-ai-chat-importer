@@ -602,11 +602,17 @@
 }
 
 /* Timestamp preview styling */
-/* The preview belongs to the format it previews, so it sits under the
-   dropdown rather than in a panel of its own competing with it. */
+/* The preview belongs to the format it previews: it lives inside the setting
+   item, wrapping onto its own full-width line under the name and dropdown. */
+.nexus-timestamp-setting {
+    flex-wrap: wrap;
+}
+
 .nexus-timestamp-preview {
-    padding: 0 0 0.4em;
-    margin-top: -0.4em;
+    flex: 1 1 100%;
+    margin-top: 0.75em;
+    padding-top: 0.6em;
+    border-top: 1px solid var(--background-modifier-border);
 }
 
 .nexus-preview-line {
