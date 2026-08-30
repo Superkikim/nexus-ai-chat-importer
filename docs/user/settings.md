@@ -55,6 +55,16 @@ existing files:
 
 The new path may not be located **inside** one of the other two configured folders.
 
+> **If you change a folder path but do not move the existing files, those files
+> leave the plugin's scope.** The plugin only ever looks inside the *configured*
+> folders. Notes and attachments left behind at the old path are no longer
+> tracked: they will not be found for incremental updates, deduplication, or
+> rebuilds, their links are not maintained, and re-importing the same
+> conversation later creates a fresh note in the new location instead of updating
+> the old one. There is no guarantee about their state going forward. To bring
+> them back under management, move them into the configured folder (via this
+> dialog, or manually).
+
 ## Settings you might have read about elsewhere
 
 Older documentation mentions toggles for disabling attachments, skipping missing
