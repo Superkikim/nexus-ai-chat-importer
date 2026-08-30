@@ -14,6 +14,7 @@ Where a page and the code disagree, the code wins — please fix the page.
 | [Attachment handling](attachment-handling.md) | How attachment payloads are located across one or more archives, written to the vault, and reconciled with generated content. |
 | [Link updates](link-updates.md) | How conversation and report links are rewritten when a configured folder is moved. |
 | [Providers / ChatGPT export format](providers/chatgpt-export-format.md) | Observed structure of the 2026 ChatGPT export (undocumented by OpenAI) that the importer relies on. |
+| [Providers / Claude export format](providers/claude-export-format.md) | Observed Claude export delivery and archive structure, and the data shape the adapter relies on. |
 
 ## The provider adapter model
 

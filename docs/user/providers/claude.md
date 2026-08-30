@@ -16,7 +16,15 @@ downloads and imports faster. You can safely take overlapping windows over time:
 Nexus matches conversations by ID, so re-importing a range you already have
 [updates rather than duplicates](../importing.md#updates-and-rebuilds).
 
-Import the `.zip` as downloaded.
+### You may receive a JSON index, not a ZIP
+
+Recent Claude exports are delivered as a small **JSON file** containing four
+download links (conversations plus other account data) rather than a single
+archive. Open that JSON, follow the **conversations** link, and download that
+`.zip` yourself — that is the file you give to Nexus. The other links are not
+conversation imports.
+
+Import the conversations `.zip` as downloaded.
 
 ## Recognised archive layouts
 
@@ -54,6 +62,9 @@ conversation imports and are rejected. Import the conversation part.
   artifact text — do not expect "all artifacts" or a full version history.
 - Generated binary outputs referenced through Claude's `computer:///` links are
   **not** downloaded; they become placeholders.
+
+More detail on the export delivery and structure:
+[architecture / Claude export format](../../architecture/providers/claude-export-format.md).
 
 ## Provider-specific troubleshooting
 
