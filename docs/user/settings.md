@@ -20,17 +20,11 @@ timezone.
 Controls how the timestamp on each message is displayed in a note. It does **not**
 affect frontmatter, which is always stored in ISO 8601 UTC.
 
-- **Off (default):** timestamps follow Obsidian's language setting (a localised
-  date + time).
+- **Off (default):** timestamps follow Obsidian's language setting — a localised
+  short date and time.
 - **On:** choose a fixed format — a universal sortable format, US, European,
-  German/Swiss, or Japanese style. A live preview is shown.
-
-> **Known copy bug.** The plugin's own help text for this setting — in every
-> language — claims that with Obsidian set to English it "enforces" a
-> "US format (YYYY/DD/MM)". That is wrong: no code path forces this, and
-> `YYYY/DD/MM` isn't a real format. When the setting is off, timestamps simply
-> follow your Obsidian locale. Turn the custom format on if you want a layout
-> that does not depend on the locale.
+  German/Swiss, or Japanese style. A live preview is shown. Use this if you want
+  a layout that does not depend on the Obsidian language.
 
 ## 📁 Folder Structure
 
