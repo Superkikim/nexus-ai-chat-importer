@@ -66,10 +66,10 @@ one numbered list per message.
   extracted content directly in the export. It is shown in a collapsible
   attachment callout, formatted according to its type. Very long extracts are
   moved to a linked file to keep the note readable.
-- **Named files:** the plugin looks for the file's bytes in the archive. If present,
-  images, text, and documents are extracted; if absent, you get a placeholder and
-  a link to the conversation. (It is not true that Claude exports never contain
-  binary files — it depends on the export.)
+- **Named files:** the plugin looks for the file's bytes in the archive. If
+  present, images, text, and documents are extracted; if absent, you get a
+  placeholder and a link to the conversation. Whether the bytes are included
+  varies by export.
 - **Artifacts:** recognised textual artifact operations (create / update) produce
   versioned Markdown artifacts. This requires the export to actually contain the
   artifact text — do not expect "all artifacts" or a full version history.

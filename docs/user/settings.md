@@ -61,13 +61,6 @@ The new path may not be located **inside** one of the other two configured folde
 > re-import creates a new note instead of updating the old one. Move them into
 > the configured folder to restore that.
 
-## Settings you might have read about elsewhere
-
-Older documentation mentions toggles for disabling attachments, skipping missing
-attachments, showing attachment details, or a default import mode. **These are not
-part of the current plugin.** A leftover "auto-select all conversations" flag also
-exists in the code but has no UI and cannot be enabled.
-
 ## Related
 
 - [What gets created](output.md) · [Importing conversations](importing.md)

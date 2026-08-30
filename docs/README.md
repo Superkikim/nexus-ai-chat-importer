@@ -50,5 +50,6 @@ updates](architecture/link-updates.md), and the observed export formats for
 - Each fact has one canonical home. Provider-specific behaviour lives on that
   provider's page; shared behaviour is explained once in the common pages and
   linked, not copied.
-- Treat older documentation and release notes as material to verify. For any
-  user-facing claim, current code and tests win.
+- Current code and tests are the source of truth for every user-facing claim.
+  `RELEASE_NOTES.md` is a historical changelog — verify anything it implies
+  against the code before repeating it here.

@@ -11,8 +11,8 @@ fetched from them at import time.
 
 ## When the plugin does use the network
 
-It is not accurate to say the plugin never makes a network request. Two cases,
-both for its own UI and both with a local fallback if offline:
+The plugin makes a small number of network requests, all for its own UI and all
+with a local fallback when offline:
 
 - **Welcome and "what's new" dialogs** fetch the project's README / release-note
   content from GitHub so the dialog shows current text. If the request fails, a

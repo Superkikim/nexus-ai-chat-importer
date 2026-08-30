@@ -25,9 +25,8 @@ repacking can break the link between a message and its uploaded files.
   that converts to nothing is labelled *(Empty message)*.
 - **Canvas** content is rendered inline in a collapsible callout; slide decks keep
   their `---` separators in a code block.
-- **Reference markers** in the text are kept as footnote markers only. The plugin does
-  **not** build a bibliography or use the export's `quotes` field — so "references
-  and citations are preserved" is not accurate for Vibe.
+- **Reference markers** in the text are kept as footnote markers only. The plugin
+  does **not** build a bibliography and does not use the export's `quotes` field.
 - An empty chat array cannot be detected as a conversation and is not imported.
 
 ## Attachments
