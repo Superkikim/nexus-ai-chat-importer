@@ -17,12 +17,9 @@ shapes**. Nexus handles both — see OpenAI's help article
   can take noticeably longer to be delivered, and the download is a **container**:
   an outer `.zip` with the conversation `.zip` nested inside it (alongside a
   separate `Files__…` archive that Nexus ignores). Select the **outer** `.zip` as
-  downloaded — Nexus unwraps it automatically. Only an uncompressed (stored) inner
-  archive is unwrapped; if you hit a "nested ZIP" error, extract the outer archive
-  yourself and import the inner conversation `.zip`.
+  downloaded — Nexus unwraps it automatically.
 
-Either way, import the `.zip` as downloaded — do not unzip it (except the manual
-fallback noted above).
+Either way, import the `.zip` as downloaded — do not unzip it.
 
 ## Recognised archive layouts
 
@@ -31,7 +28,7 @@ fallback noted above).
   (`conversations-001.json`, …) — they are sorted and merged automatically.
 - An **account privacy-portal container** — an outer `.zip` with the conversation
   `.zip` (`…-chatgpt-<digits>…`) nested inside. Handled automatically; see
-  [Get your export](#get-your-export) above for the details and the fallback.
+  [Get your export](#get-your-export) above.
 
 ## What is imported
 
@@ -68,8 +65,6 @@ More detail on the 2026 export internals:
 
 ## Provider-specific troubleshooting
 
-- "Nested ZIP" error on a privacy-portal download whose inner zip is compressed:
-  extract the outer archive and import the inner conversation `.zip`.
 - Generated image still a placeholder after re-importing: that export still didn't
   contain the file. Request a fresh export and rebuild the conversation.
 
