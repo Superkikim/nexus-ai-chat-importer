@@ -10,6 +10,12 @@ download link; the link typically expires within about 24 hours. Availability
 depends on your account/plan. For the current click-path, see Anthropic's help
 article, *"How can I export my Claude data?"*.
 
+Claude's export lets you pick a **time range** — All, last 30 days, last 90 days,
+or a custom range. Exporting a recent window keeps each archive small, so it
+downloads and imports faster. You can safely take overlapping windows over time:
+Nexus matches conversations by ID, so re-importing a range you already have
+[updates rather than duplicates](../importing.md#updates-and-rebuilds).
+
 Import the `.zip` as downloaded.
 
 ## Recognised archive layouts
