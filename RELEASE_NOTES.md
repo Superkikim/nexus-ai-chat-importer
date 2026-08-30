@@ -31,6 +31,7 @@ ChatGPT ships generated images and documents in its export library again, and Ne
 - **A refused archive says what it is** — *"this ZIP is a Mistral Vibe export, not a Claude one"* instead of a generic refusal repeated for every case.
 - **An archive that contributed nothing says why** — superseded by a newer archive, already up to date, or holding nothing importable.
 - Report filenames are sortable (`20260829-161009`).
+- **Reordered and decluttered the settings pane.** Date settings — which shape every filename — now come before the folder pickers, section headings that were rendering blank now show, and the timestamp preview lives inside its own setting instead of floating below it.
 
 ### 🐛 Fixed
 

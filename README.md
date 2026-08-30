@@ -92,6 +92,7 @@ ChatGPT exports ship generated images and documents again, and Nexus finds them.
 - The completion dialog shows only what happened, with a separate row for files: extracted, in the note, artifacts, absent
 - Import summaries reconcile: what the archive held, then what became of your notes
 - A refused archive says what it is — *"a Mistral Vibe export, not a Claude one"*
+- Reordered and decluttered the settings pane: date settings before folders, section headings visible, timestamp preview inside its setting
 
 🐛 **Fixed**
 - Attachment counts were wrong: ChatGPT and Vibe totals were doubled, and Claude artifacts were hidden inside them
