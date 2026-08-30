@@ -11,7 +11,7 @@ This file is the legacy technical orientation for Claude Code. `AGENTS.md` is th
 - **Current Version**: 1.7.0
 - **License**: GPL-3.0-or-later
 - **Author**: Akim Sissaoui (Superkikim)
-- **Minimum Obsidian**: 1.4.0
+- **Minimum Obsidian**: 1.6.6 (from `manifest.json` / `versions.json`)
 
 ## Development Commands
 
@@ -40,7 +40,7 @@ npm run test:coverage      # Run tests with coverage report
 npm run test               # Interactive test UI
 ```
 
-**434 tests** across 50 test files. Tests live alongside source files as `*.test.ts`.
+Tests live alongside source files as `*.test.ts`. Run `npm run test:run` for the current count.
 
 ## Pre-Commit Checklist
 
@@ -48,7 +48,7 @@ npm run test               # Interactive test UI
 
 ```bash
 npm run type-check         # Must be clean — vitest does NOT type-check
-npm run test:run           # All 434 tests must pass
+npm run test:run           # All tests must pass
 npx eslint src/            # Zero errors on modified files
 npm run build              # Build must succeed
 ```
@@ -87,11 +87,13 @@ Provider-Specific Format → ProviderAdapter → StandardConversation → Format
 
 ### Dialog-Driven User Flow
 
-1. **ProviderSelectionDialog** - Choose provider (ChatGPT / Claude / Mistral Vibe / Perplexity)
-2. **EnhancedFileSelectionDialog** - Select ZIP file(s) + import mode (all/selective)
-3. **ConversationSelectionDialog** - Choose specific conversations (selective mode only)
-4. **ImportProgressModal** - Real-time import feedback
-5. **Completion Notice** - Summary with report link
+The provider is auto-detected from the selected archive, not chosen by the user
+(despite the legacy `showProviderSelectionDialog` method name).
+
+1. **EnhancedFileSelectionDialog** - Select ZIP file(s) + import mode (all/selective); provider is detected and locked from the first supported archive
+2. **ConversationSelectionDialog** - Choose specific conversations (selective mode only)
+3. **ImportProgressModal** - Real-time import feedback
+4. **ImportCompletionDialog** - Summary with report link
 
 ### Upgrade System
 
@@ -198,13 +200,13 @@ Claude exports store attachment content in `conversations.json`, not as files in
 
 ## Configuration and Settings
 
-All settings defined in [src/types/plugin.ts](src/types/plugin.ts). Defaults in [src/config/default-settings.ts](src/config/default-settings.ts).
+All settings defined in [src/types/plugin.ts](src/types/plugin.ts). Defaults (`DEFAULT_SETTINGS`) in [src/config/constants.ts](src/config/constants.ts).
 
 **File Organization Pattern**:
 ```
 <conversationFolder>/<provider>/<YYYY>/<MM>/<filename>.md
 <attachmentFolder>/<provider>/images|documents|artifacts/...
-<reportFolder>/<provider>/<YYYYMMDD-HHMMSS> - import report.md
+<reportFolder>/<provider>/<YYYYMMDD-HHMMSS> - import summary.md   (+ "index heavy" / "index mobile")
 ```
 
 ## Build System
