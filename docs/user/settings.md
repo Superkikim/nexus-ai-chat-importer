@@ -25,9 +25,12 @@ affect frontmatter, which is always stored in ISO 8601 UTC.
 - **On:** choose a fixed format — a universal sortable format, US, European,
   German/Swiss, or Japanese style. A live preview is shown.
 
-> The setting's description text mentions a "US format (YYYY/DD/MM)" being forced
-> for English. That wording is inaccurate; the actual default follows your
-> Obsidian locale. Turn the custom format on if you want a guaranteed layout.
+> **Known copy bug.** The plugin's own help text for this setting — in every
+> language — claims that with Obsidian set to English it "enforces" a
+> "US format (YYYY/DD/MM)". That is wrong: no code path forces this, and
+> `YYYY/DD/MM` isn't a real format. When the setting is off, timestamps simply
+> follow your Obsidian locale. Turn the custom format on if you want a layout
+> that does not depend on the locale.
 
 ## 📁 Folder Structure
 
