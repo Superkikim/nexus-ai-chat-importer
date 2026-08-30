@@ -6,23 +6,32 @@ import, choosing conversations, updates and rebuilds — is in
 
 ## Get your export
 
-Request a data export from ChatGPT's settings (data controls / privacy). OpenAI
-emails you a download link; the link typically expires within about 24 hours, and
-the download is a `.zip`. For the current click-path, see OpenAI's own help
-article, *"Exporting your ChatGPT history and data"* — it stays current when the UI
-changes.
+There are two ways to get a ChatGPT export, and they produce **different archive
+shapes**. Nexus handles both — see OpenAI's help article
+*"Exporting your ChatGPT history and data"* for the current click-paths.
 
-Import the `.zip` as downloaded — do not unzip it.
+- **From ChatGPT settings** (data controls). The quicker route. OpenAI emails a
+  download link, usually valid for about 24 hours; the download is a single `.zip`
+  with `conversations.json` (or numbered `conversations-NNN.json`) at its root.
+- **From the OpenAI account privacy portal.** An account-level data request. It
+  can take noticeably longer to be delivered, and the download is a **container**:
+  an outer `.zip` with the conversation `.zip` nested inside it (alongside a
+  separate `Files__…` archive that Nexus ignores). Select the **outer** `.zip` as
+  downloaded — Nexus unwraps it automatically. Only an uncompressed (stored) inner
+  archive is unwrapped; if you hit a "nested ZIP" error, extract the outer archive
+  yourself and import the inner conversation `.zip`.
+
+Either way, import the `.zip` as downloaded — do not unzip it (except the manual
+fallback noted above).
 
 ## Recognised archive layouts
 
 - A `.zip` containing `conversations.json` at the root.
 - A `.zip` where the conversations are split into numbered files
   (`conversations-001.json`, …) — they are sorted and merged automatically.
-- An **OpenAI privacy-portal container**: an outer `.zip` whose inner
-  conversation `.zip` matches `…-chatgpt-<digits>…`. Select the outer file as-is;
-  Nexus unwraps it. (A *compressed* inner zip is not unwrapped — extract it
-  yourself in that case.)
+- An **account privacy-portal container** — an outer `.zip` with the conversation
+  `.zip` (`…-chatgpt-<digits>…`) nested inside. Handled automatically; see
+  [Get your export](#get-your-export) above for the details and the fallback.
 
 ## What is imported
 
