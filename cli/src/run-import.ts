@@ -27,7 +27,6 @@ export interface ImportOptions {
     provider?: string;
     conversationFolder?: string;
     attachmentFolder?: string;
-    reportFolder?: string;
     datePrefix?: boolean;
     dateFormat?: "YYYY-MM-DD" | "YYYYMMDD";
     timestampFormat?: string;
@@ -121,8 +120,6 @@ function createMockPlugin(opts: ImportOptions): any {
         settings.conversationFolder = opts.conversationFolder;
     if (opts.attachmentFolder !== undefined)
         settings.attachmentFolder = opts.attachmentFolder;
-    if (opts.reportFolder !== undefined)
-        settings.reportFolder = opts.reportFolder;
     if (opts.datePrefix !== undefined) settings.addDatePrefix = opts.datePrefix;
     if (opts.dateFormat !== undefined) settings.dateFormat = opts.dateFormat;
     if (opts.timestampFormat !== undefined) {
@@ -247,6 +244,7 @@ export async function runImport(opts: ImportOptions): Promise<void> {
     const files = opts.input.map((p) => new NodeFile(path.resolve(p)));
 
     // Process each file
+    let sawError = false;
     for (const file of files) {
         if (opts.verbose) {
             console.error(`\nProcessing: ${file.name}`);
@@ -261,19 +259,27 @@ export async function runImport(opts: ImportOptions): Promise<void> {
         } catch (error: unknown) {
             const msg = error instanceof Error ? error.message : String(error);
             console.error(`Error processing ${file.name}: ${msg}`);
+            sawError = true;
         }
     }
 
     // Print summary
     const stats = report.getCompletionStats();
     console.log("\n--- Import Summary ---");
-    console.log(`Created:  ${stats.created}`);
-    console.log(`Updated:  ${stats.updated}`);
-    console.log(`Skipped:  ${stats.skipped}`);
-    console.log(`Failed:   ${stats.failed}`);
+    console.log(`Created:    ${stats.created}`);
+    console.log(`Updated:    ${stats.updated}`);
+    console.log(`Recreated:  ${stats.recreated}`);
+    console.log(`Unchanged:  ${stats.unchanged}`);
+    console.log(`Failed:     ${stats.failed}`);
     if (stats.attachmentsTotal > 0) {
         console.log(
             `Attachments: ${stats.attachmentsFound}/${stats.attachmentsTotal}`
         );
+    }
+
+    // Non-zero exit when anything went wrong, so scripts can detect it.
+    if (sawError || stats.failed > 0 || report.getGlobalErrorCount() > 0) {
+        console.error("\nImport finished with errors.");
+        process.exitCode = 1;
     }
 }

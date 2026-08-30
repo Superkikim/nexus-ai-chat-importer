@@ -38,7 +38,6 @@ nexus-cli import --vault <path> --input <files...> --provider <provider> [option
 | `--provider <provider>` | Required. `chatgpt`, `claude`, or `vibe`. |
 | `--conversation-folder <dir>` | Override the conversation folder. |
 | `--attachment-folder <dir>` | Override the attachment folder. |
-| `--report-folder <dir>` | Accepted, but see limitations below. |
 | `--date-prefix` | Add the creation-date prefix to filenames. |
 | `--date-format <fmt>` | `YYYY-MM-DD` or `YYYYMMDD`. |
 | `--timestamp-format <fmt>` | `locale`, `iso`, `us`, `eu`, `de`, or `jp`. |
@@ -61,21 +60,19 @@ The CLI layers its configuration as: built-in defaults → any existing
 
 These are current behaviours of the CLI — plan around them:
 
+- **No report files.** The CLI prints a summary to the terminal; it does not
+  write the Markdown [import reports](reports.md) that the plugin produces.
 - **`--dry-run` checks paths only.** It does not open the archive or predict which
   notes or outcomes you would get.
 - **Flag overrides are persisted.** A real import writes the effective settings
   (including your `--*-folder` and format flags) back into the vault's
   `data.json`. They are not one-shot.
-- **`--report-folder` produces no report.** The CLI never writes report files; the
-  flag only changes the stored setting.
-- **Exit code is not a reliable success signal.** Archive/import errors are
-  reported in the printed summary, but the process can still exit `0`. Read the
-  summary.
-- The terminal summary currently prints `Skipped: undefined` for the unchanged
-  count — a cosmetic bug.
-- The CLI does not expand OpenAI container archives and does not build the
-  cross-archive ChatGPT attachment map that the plugin uses for multi-ZIP
-  Import All.
+- **OpenAI "Privacy Portal" container archives are not unwrapped.** Extract the
+  outer `.zip` yourself and pass the inner conversation `.zip`. Multi-archive
+  ChatGPT imports also do not share attachments across archives the way the
+  plugin's Import All does.
+
+The process exits non-zero when an import hits an error or a conversation fails.
 
 For anything interactive — choosing conversations, Perplexity, mobile — use the
 plugin. See [Importing conversations](importing.md).

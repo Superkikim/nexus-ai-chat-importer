@@ -34,7 +34,6 @@ Options:
   --provider <provider>        Provider: chatgpt, claude, or vibe (required)
   --conversation-folder <dir>  Override conversation folder
   --attachment-folder <dir>    Override attachment folder
-  --report-folder <dir>        Override report folder
   --date-prefix                Add date prefix to filenames
   --date-format <format>       YYYY-MM-DD or YYYYMMDD
   --timestamp-format <format>  locale, iso, us, eu, de, jp
@@ -110,11 +109,6 @@ function parseImportArgs(args: string[]): ImportOptions {
                     i,
                     "--attachment-folder"
                 );
-                i += 2;
-                break;
-            }
-            case "--report-folder": {
-                options.reportFolder = requireValue(args, i, "--report-folder");
                 i += 2;
                 break;
             }

@@ -1253,6 +1253,15 @@ export class ImportReport {
     }
 
     /**
+     * Number of archive-level errors recorded during the run (bad ZIP,
+     * unreadable archive, etc.). Per-conversation failures are counted
+     * separately via `getCompletionStats().failed`.
+     */
+    getGlobalErrorCount(): number {
+        return this.globalErrors.length;
+    }
+
+    /**
      * Get list of processed file names
      */
     getProcessedFileNames(): string[] {
