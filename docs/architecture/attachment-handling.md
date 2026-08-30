@@ -74,9 +74,10 @@ explains the file must be viewed in the original conversation instead.
 
 Independent of attachments, `LongContentExtractor` externalises oversized inline
 content: any message line over 10,000 characters, and extracted attachment blocks
-over 20 KiB, are written to
+over 20,000 characters (a `String.length` count, not a byte size), are written to
 `<attachment folder>/<provider>/documents/<conversation filename>/` under stable
-content-derived `attachment-<8 hex>.<ext>` names. If the write fails, the original
+content-derived `attachment-<8 hex>.<ext>` names, where `<ext>` is `json`, `html`,
+`md`, or `txt` chosen by sniffing the content. If the write fails, the original
 content stays in the note.
 
 ## Generated-content reconciliation

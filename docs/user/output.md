@@ -103,8 +103,9 @@ To keep a note readable, very long blocks are moved to a file instead of being
 inlined:
 
 - any single message line longer than 10,000 characters;
-- an extracted attachment text block larger than 20 KB.
+- an extracted attachment text block longer than 20,000 characters.
 
 These go to `<Attachment folder>/<provider>/documents/<note name>/` with a stable
-name like `attachment-1a2b3c4d.md`, and are linked from the message. If the file
+name like `attachment-1a2b3c4d.txt` (the extension — `txt`, `md`, `html`, or
+`json` — is picked from the content), and are linked from the message. If the file
 cannot be written, the content stays in the note.

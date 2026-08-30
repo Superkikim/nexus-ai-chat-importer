@@ -12,9 +12,9 @@ file, and never an archive you have unzipped yourself.
 ### Provider is detected, then locked
 
 You do not choose the provider. The plugin reads the selected archives, sorts them
-(by a timestamp embedded in the filename when present, otherwise by
-last-modified date, then by name), and **locks the import to the first supported
-archive**. Any later archive that belongs to a different provider, or is not a
+(by a `YYYY-MM-DD-HH-MM-SS` timestamp in the filename when one is present,
+otherwise by last-modified date, then by name), and **locks the import to the
+first supported archive**. Any later archive that belongs to a different provider, or is not a
 recognised export, is skipped and listed in the report rather than imported under
 the wrong provider.
 

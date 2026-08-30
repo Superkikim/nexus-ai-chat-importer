@@ -15,7 +15,7 @@ Primary sources:
 
 | Folder changed | Dialog | Link updates |
 |---|---|---|
-| Conversation folder | enhanced migration dialog | updates references in reports and attachment notes that point at the moved conversations |
+| Conversation folder | enhanced migration dialog | updates references in reports and in `<attachment folder>/claude/artifacts` that point at the moved conversations |
 | Attachment folder | enhanced migration dialog | updates references in every conversation note that embeds/links the moved attachments |
 | Reports folder | standard migration dialog | none needed (nothing links **into** reports) |
 
@@ -25,10 +25,18 @@ are not affected by future updates.
 
 ## What gets rewritten
 
-The service reads every Markdown file whose path falls under the affected
-configured root and rewrites matching links only. It does not, and cannot,
-distinguish notes it created from notes the user placed in the same folder — any
-Markdown under the configured root is in scope for a matching-link rewrite.
+The service rewrites links in the files that **reference** the moved location, not
+in the moved folder itself:
+
+| Folder moved | Files scanned for matching links |
+|---|---|
+| Attachment folder | every Markdown file under the **conversation** folder |
+| Conversation folder | every Markdown file under the **reports** folder, plus `<attachment folder>/claude/artifacts` |
+
+Within those scanned roots it reads every Markdown file and rewrites matching
+links only. It does not, and cannot, distinguish notes it created from notes the
+user placed in the same folder — any Markdown under a scanned root is in scope for
+a matching-link rewrite.
 
 Recognised link shapes:
 
@@ -40,8 +48,8 @@ Old paths are regex-escaped before substitution to prevent pattern injection.
 
 ## Processing
 
-- Conversation and artifact files are processed in batches of **10**; report files
-  in batches of **5**.
+- Conversation files are processed in batches of **10**; report files and Claude
+  artifact files in batches of **5**.
 - A **10 ms** yield separates batches to keep the UI responsive.
 - A per-file error is recorded and skipped; it does not stop the run.
 - Progress callbacks report percentage and current file to the progress modal.

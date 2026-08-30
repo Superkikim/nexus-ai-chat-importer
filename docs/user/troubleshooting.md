@@ -2,15 +2,19 @@
 
 ## Import won't start / archive rejected
 
-| Message | Cause and fix |
+The exact message wording can change between versions; match on the gist.
+
+| Message you see | Cause and fix |
 |---|---|
-| Invalid or unsupported extension | The file is not a `.zip`. Import the archive as downloaded; don't unzip it. **Firefox on macOS** sometimes saves a Claude export as `.dat` — rename the extension to `.zip` (do not extract and re-compress). |
-| Unsupported archive / wrong provider | The archive isn't a recognised export, or it belongs to a different provider than the one locked for this import. Import one provider at a time; check you downloaded the conversation export, not a companion archive. |
-| Empty archive | The `.zip` has no conversation data. Re-download the export. |
-| Corrupt archive / invalid central directory | The download is damaged. Download it again. |
-| Nested ZIP / "extract the outer archive" | The file is a zip containing another zip. Extract the outer one and import the inner conversation zip. (The one exception Nexus unwraps automatically is an OpenAI privacy-portal container — see [importing](importing.md#openai-privacy-portal-container-archives).) |
-| Missing expected conversation file | The archive is a `.zip` but doesn't contain the JSON the provider is expected to include. Re-download; check it's the right export type. |
-| Mobile: "file handle lost" | Mobile can drop the reference to a picked file. Re-select the file and try again. |
+| *"Only ZIP files are supported. The file must have a .zip extension."* | The file is not a `.zip`. Import the archive as downloaded; don't unzip it. The same dialog notes: downloading a Claude export with **Firefox on Mac** can produce a `.dat` file — just rename it to `.zip` (do **not** extract and re-compress). |
+| *"This ZIP file does not match any supported export format."* / *"…does not look like a supported export or is not a valid ZIP archive."* | The archive isn't a recognised export. Check you downloaded the conversation export, not a companion archive (Claude project/memory parts, ChatGPT `Files__…` parts). |
+| *"This ZIP is a &lt;X&gt; export, not a &lt;Y&gt; one. Pick the matching provider to import it."* | The selection locked onto a different provider. Import one provider at a time. |
+| *"The ZIP file contains no files…"* | The `.zip` has no data. Re-download the export. |
+| *"The file appears to be corrupted or is not a valid ZIP file. Please try downloading the export again…"* | The download is damaged. Download it again. |
+| *"This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly."* | A zip inside a zip. Extract the outer one and import the inner conversation zip(s). The one case Nexus unwraps by itself is an OpenAI privacy-portal container — see [importing](importing.md#openai-privacy-portal-container-archives). |
+| *"No supported &lt;provider&gt; archives were found…"* | None of the selected files matched. Check the export type. |
+| *"The mobile webview could no longer access this file. Please reselect this ZIP and retry."* | Mobile dropped the file reference. Re-select the file and try again. |
+| *"On mobile, only one ZIP can be imported at a time…"* | Expected on mobile — select a single `.zip`. |
 
 ## Nothing was imported
 

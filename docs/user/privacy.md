@@ -52,6 +52,8 @@ you share or sync your vault.
 ## Folder moves read more than Nexus's own files
 
 When you move a configured folder and let Nexus update links, it reads **every**
-Markdown file under that folder and rewrites matching links. It cannot tell which
-of those files it originally created, so keep unrelated notes out of the Nexus
-folders if that matters to you.
+Markdown file under the *other* Nexus roots to fix links that pointed at the moved
+location — moving the attachment folder scans your conversation notes; moving the
+conversation folder scans your reports and the `claude/artifacts` area of the
+attachment folder. It cannot tell which of those files it originally created, so
+keep unrelated notes out of the Nexus folders if that matters to you.
