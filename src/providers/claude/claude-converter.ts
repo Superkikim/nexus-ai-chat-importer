@@ -441,10 +441,16 @@ export class ClaudeConverter {
     private static shouldIncludeMessage(message: ClaudeMessage): boolean {
         // Include all human and assistant messages
         if (message.sender === "human" || message.sender === "assistant") {
-            // Skip empty messages
+            // Skip messages that carry nothing at all. A message with no text
+            // and no content blocks can still be meaningful: uploading a file
+            // with no caption produces an empty text plus an `attachments` or
+            // `files` entry, and dropping it silently loses the whole
+            // conversation when every message looks like that.
             if (
                 !message.text &&
-                (!message.content || message.content.length === 0)
+                (!message.content || message.content.length === 0) &&
+                (!message.attachments || message.attachments.length === 0) &&
+                (!message.files || message.files.length === 0)
             ) {
                 return false;
             }

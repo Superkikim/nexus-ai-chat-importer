@@ -410,6 +410,13 @@ export class ImportReport {
             } |`
         );
         lines.push(`| Failed | ${stats.failed} |`);
+        // Conversations that carried no content are dropped without a note.
+        // Without this row they vanish from the summary entirely, so a run
+        // that imported a fraction of the archive still reads as a clean run.
+        const ignoredCount = this.getIgnoredCount();
+        if (ignoredCount > 0) {
+            lines.push(`| 🚫 Empty (ignored) | ${ignoredCount} |`);
+        }
         if (analysisInfo) {
             lines.push(
                 `| Found (raw) | ${analysisInfo.totalConversationsFound || 0} |`
