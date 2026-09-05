@@ -36,7 +36,9 @@
 2. In Obsidian, run **Import AI conversations** — from the command palette, or the
    ribbon icon in the left sidebar.
 3. Select the `.zip` file. The plugin detects the provider from the archive.
-4. Leave the mode on **Import All** for the first run and click **Continue**.
+4. Pick a mode — **Import All** brings in everything, **Select Specific** lets you
+   choose — then click **Continue**. See [Importing conversations](importing.md)
+   for the difference.
 5. When it finishes, the completion dialog summarises what changed. Click
    **View Report** for the full breakdown.
 
