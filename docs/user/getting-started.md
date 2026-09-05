@@ -27,6 +27,11 @@
 
 ## Your first import
 
+Before importing, open **[Settings](settings.md)** and set the folder locations,
+filename date prefix, and timestamp format the way you want them. Changing folders
+afterwards means moving files and updating links, so it is easier to decide up
+front.
+
 1. Get your export from your provider and note where the `.zip` was saved — see
    [ChatGPT](providers/chatgpt.md#get-your-export),
    [Claude](providers/claude.md#get-your-export),
@@ -43,8 +48,8 @@
    **View Report** for the full breakdown.
 
 Your conversations are now under `Nexus/Conversations/<provider>/<year>/<month>/`,
-attachments under `Nexus/Attachments/`, and reports under `Nexus/Reports/`. You can
-change any of these locations later — see [Settings](settings.md).
+attachments under `Nexus/Attachments/`, and reports under `Nexus/Reports/` — or
+wherever you pointed those folders in Settings.
 
 ## Next steps
 
