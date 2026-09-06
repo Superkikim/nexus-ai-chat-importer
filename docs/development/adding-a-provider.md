@@ -76,9 +76,10 @@ All ZIP access goes through
 4. **Localise**: add `archive_messages.provider_names.<name>` and any new notice
    keys to every file in [`src/i18n/locales/`](../../src/i18n/locales/); the
    locale-parity tests enforce coverage.
-5. **CLI** (optional): add the id to `VALID_PROVIDERS` in
-   [`cli/src/index.ts`](../../cli/src/index.ts) if the provider works without
-   UI-only steps.
+5. **CLI** (optional): if the provider works without UI-only steps, add its id
+   to `VALID_PROVIDERS` in the separate
+   [nexus-ai-chat-importer-cli](https://github.com/Superkikim/nexus-ai-chat-importer-cli)
+   repository (`src/index.ts`).
 
 ## Validation
 

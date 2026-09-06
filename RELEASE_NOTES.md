@@ -55,6 +55,7 @@ ChatGPT ships generated images and documents in its export library again, and Ne
 - To enrich notes imported from an older export, re-import with the rebuild option — placeholders are replaced by the real files, without duplicate messages.
 - **Claude reminder** — recent exports arrive as several ZIPs; import the one holding `conversations.json`. Since 1.6.9 it is recognised by its contents.
 - **Documentation reorganised.** `docs/` is now split into `docs/user/` (the canonical user guide), `docs/development/`, and `docs/architecture/`; the repository README is a short overview. This is a docs-only change — nothing in the plugin behaves differently because of it.
+- **The command-line importer moved to its own repository**, [nexus-ai-chat-importer-cli](https://github.com/Superkikim/nexus-ai-chat-importer-cli). Setup is unchanged — clone, `npm install`, `npm run build`; the build now fetches the plugin's import engine automatically. The plugin itself is unaffected.
 
 ## Version 1.6.9 — Claude Split Export Detection
 

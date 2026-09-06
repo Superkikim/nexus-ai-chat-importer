@@ -1,9 +1,11 @@
 # Command-line import
 
-Nexus AI Chat Importer ships an optional command-line importer for **desktop**
-use, for scripting and batch runs. It is a separate package in the repository's
-`cli/` folder and is **not** part of the Obsidian plugin you install from the
-community browser.
+Nexus AI Chat Importer has an optional command-line importer for **desktop**
+use, for scripting and batch runs. It lives in its own repository,
+[nexus-ai-chat-importer-cli](https://github.com/Superkikim/nexus-ai-chat-importer-cli),
+and is **not** part of the Obsidian plugin you install from the community
+browser. It reuses the plugin's import engine, which its build step fetches
+automatically.
 
 ## Scope
 
@@ -15,15 +17,18 @@ community browser.
 
 ## Build and run
 
-From the repository, in `cli/`:
+Clone the CLI repository, then build it. The setup is otherwise unchanged —
+`npm run build` pulls the plugin's import engine in for you.
 
 ```bash
+git clone https://github.com/Superkikim/nexus-ai-chat-importer-cli.git
+cd nexus-ai-chat-importer-cli
 npm install
-npm run build          # produces cli/dist/nexus-cli.js
+npm run build          # produces dist/nexus-cli.js
 node dist/nexus-cli.js --help
 ```
 
-It targets Node 18+.
+It targets Node 18+ and needs Git available for the build.
 
 ## Usage
 
