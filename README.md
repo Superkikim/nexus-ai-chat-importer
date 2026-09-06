@@ -27,6 +27,22 @@ import report. Everything runs locally in your vault.
   folders, and a detailed import report.
 - **Localised UI** in 10 languages, with an optional desktop [CLI](docs/user/cli.md).
 
+## What's new in 1.7.0
+
+- **ChatGPT generated images and documents are imported again** when the export
+  includes them.
+- **Privacy Portal archives import as-is** — no need to extract the account-level
+  ZIP first.
+- **Rebuild existing notes** so older imports pick up current features. Manual
+  edits to a rebuilt note are lost.
+- **Filter the conversation list by status** — New / Updated / Unchanged.
+- **Large Claude attachments become linked files** instead of bloating the note.
+- **Reports and the completion dialog were rebuilt** around what actually happened
+  to your notes; several counters were wrong.
+- Plus fixes to filenames, deduplication and attachment counts.
+
+[Full release notes →](RELEASE_NOTES.md)
+
 ## Install
 
 **From Obsidian:** Settings → Community plugins → Browse → search *Nexus AI Chat

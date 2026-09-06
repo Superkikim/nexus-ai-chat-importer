@@ -75,10 +75,13 @@ Release body.
 
 ### `README.md`
 
-Keep the README concise (see [`docs/README.md`](../README.md) for its role). Update
-only the one-line "latest version" pointer if the README carries one; do **not**
-grow a per-release "What's New" section in the README — `RELEASE_NOTES.md` is the
-canonical changelog and the README links to the GitHub releases page.
+Keep the README concise (see [`docs/README.md`](../README.md) for its role).
+
+Replace the **What's new in X.Y.Z** section with a pared-down version of the new
+release: 6–8 one-line bullets, headlines only, no mechanism or justification, then
+the `[Full release notes →](RELEASE_NOTES.md)` link. It covers the current version
+only — it is replaced each release, never appended to. `RELEASE_NOTES.md` stays the
+canonical changelog.
 
 ### Locale fallback (all 10 files)
 
@@ -163,4 +166,4 @@ manual action.
 | `package.json`, `manifest.json` | `version` |
 | `versions.json` | New version → `minAppVersion` row |
 | `CLAUDE.md` | Current Version line |
-| `README.md` | Only if it carries a "latest version" pointer |
+| `README.md` | Replace the **What's new in X.Y.Z** section |
