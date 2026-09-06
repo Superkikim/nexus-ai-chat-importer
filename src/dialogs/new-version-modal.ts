@@ -20,7 +20,7 @@ import { App, Component, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
 import { createResourceLinks } from "../ui/components/resource-links";
-import { fetchReleaseNotesSection } from "../utils/release-notes";
+import { fetchWhatsNewSection } from "../utils/release-notes";
 import { t } from "../i18n";
 
 /**
@@ -68,11 +68,10 @@ export class NewVersionModal extends Modal {
         // Add support section FIRST (at the top) - using reusable component
         createSupportBox(this.contentEl);
 
-        // Pull the current version's section from the published RELEASE_NOTES;
+        // Pull the README's "What's new" section for this version;
         // fall back to the bundled message when it is unavailable.
         const message =
-            (await fetchReleaseNotesSection(this.version)) ??
-            this.fallbackMessage;
+            (await fetchWhatsNewSection(this.version)) ?? this.fallbackMessage;
 
         // Render markdown content
         const contentDiv = this.contentEl.createDiv({

@@ -20,7 +20,7 @@ import { App, Component, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
 import { createResourceLinks } from "../ui/components/resource-links";
-import { fetchReleaseNotesSection } from "../utils/release-notes";
+import { fetchWhatsNewSection } from "../utils/release-notes";
 import { t } from "../i18n";
 
 /**
@@ -73,9 +73,9 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Localized fallback, shown when the RELEASE_NOTES fetch is unavailable
+        // Localized fallback, shown when the README fetch is unavailable
         // (offline, tag not yet published).
-        const fetched = await fetchReleaseNotesSection(this.version);
+        const fetched = await fetchWhatsNewSection(this.version);
         const content =
             fetched ??
             t("upgrade.complete_modal.fallback_content", {

@@ -41,7 +41,7 @@ import report. Everything runs locally in your vault.
   to your notes; several counters were wrong.
 - Plus fixes to filenames, deduplication and attachment counts.
 
-[Full release notes →](RELEASE_NOTES.md)
+[Full release notes →](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
 
 ## Install
 

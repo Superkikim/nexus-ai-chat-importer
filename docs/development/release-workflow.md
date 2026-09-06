@@ -79,9 +79,16 @@ Keep the README concise (see [`docs/README.md`](../README.md) for its role).
 
 Replace the **What's new in X.Y.Z** section with a pared-down version of the new
 release: 6–8 one-line bullets, headlines only, no mechanism or justification, then
-the `[Full release notes →](RELEASE_NOTES.md)` link. It covers the current version
-only — it is replaced each release, never appended to. `RELEASE_NOTES.md` stays the
-canonical changelog.
+the "Full release notes" link. It covers the current version only — it is replaced
+each release, never appended to. `RELEASE_NOTES.md` stays the canonical changelog.
+
+> **The upgrade and new-version dialogs render this section.** They fetch
+> `README.md` at the version tag and take everything under the first
+> `## What's new …` heading
+> ([`src/utils/release-notes.ts`](../../src/utils/release-notes.ts)). Keep the
+> heading wording, keep links absolute so they resolve inside the modal, and do
+> not forget it at release time — otherwise the dialog silently falls back to the
+> bundled `upgrade.complete_modal.fallback_content` string.
 
 ### Locale fallback (all 10 files)
 

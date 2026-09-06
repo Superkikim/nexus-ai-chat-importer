@@ -2,51 +2,54 @@ import { requestUrl } from "obsidian";
 import { GITHUB } from "../config/constants";
 
 /**
- * Pull the body of the `## Version X.Y.Z …` section out of a RELEASE_NOTES.md
- * text, without its heading and without the leading shields.io badge line(s).
- * Returns `null` when the section is not present.
- *
- * This is the same section shape `release.yml` extracts for the GitHub Release
- * body, so the dialogs and the release show the same text.
+ * Matches the README's "What's new" heading, with or without a trailing version
+ * and with either apostrophe. The section is fetched at the version's own tag,
+ * so whichever "What's new" it carries is the right one for that release.
  */
-export function extractReleaseNotesSection(
-    text: string,
-    version: string
-): string | null {
-    const norm = text.replace(/\r\n/g, "\n");
-    const escaped = version.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const WHATS_NEW_HEADING = /^##\s+What['‘’`]s new\b[^\n]*\n/im;
 
-    const start = new RegExp(`^## Version ${escaped}\\b[^\\n]*\\n`, "m").exec(
-        norm
-    );
+/**
+ * Pull the body of the README's `## What's new …` section — the short,
+ * headline-only summary of the release. Returns `null` when the section is
+ * absent.
+ *
+ * The upgrade and new-version dialogs render this. `RELEASE_NOTES.md` stays the
+ * full changelog and is linked from the section rather than shown in the modal.
+ */
+export function extractWhatsNewSection(readmeText: string): string | null {
+    const norm = readmeText.replace(/\r\n/g, "\n");
+
+    const start = WHATS_NEW_HEADING.exec(norm);
     if (!start) return null;
 
     const rest = norm.slice(start.index + start[0].length);
-    const next = rest.search(/^## Version /m);
-    const body = next === -1 ? rest : rest.slice(0, next);
+    const next = rest.search(/^##\s/m);
+    const body = (next === -1 ? rest : rest.slice(0, next)).trim();
 
-    const cleaned = stripBadgeIntro(body).trim();
-    return cleaned.length > 0 ? cleaned : null;
+    return body.length > 0 ? body : null;
 }
 
 /**
- * Fetch the current version's RELEASE_NOTES section from GitHub. Tries the
- * version tag first, then `master`. Returns `null` on any failure (offline,
- * tag not yet published, section missing) so callers can fall back to the
- * bundled localized string.
+ * Fetch the README's "What's new" section from GitHub. Tries the version tag
+ * first, then `master`. Returns `null` on any failure (offline, tag not yet
+ * published, section missing) so callers fall back to the bundled localized
+ * string.
+ *
+ * The release checklist requires replacing this README section every release —
+ * see docs/development/release-workflow.md.
  */
-export async function fetchReleaseNotesSection(
+export async function fetchWhatsNewSection(
     version: string
 ): Promise<string | null> {
     for (const ref of [version, "master"]) {
         try {
             const response = await requestUrl({
-                url: `${GITHUB.RAW_BASE}/${ref}/RELEASE_NOTES.md`,
+                url: `${GITHUB.RAW_BASE}/${ref}/README.md`,
                 method: "GET",
             });
             if (response.status < 200 || response.status >= 300) continue;
 
-            const section = extractReleaseNotesSection(response.text, version);
+            const section = extractWhatsNewSection(response.text);
             if (section) return section;
         } catch {
             // try the next ref
@@ -54,18 +57,4 @@ export async function fetchReleaseNotesSection(
     }
 
     return null;
-}
-
-/** Drop leading blank lines and markdown image-badge line(s) from a section. */
-function stripBadgeIntro(section: string): string {
-    const lines = section.split(/\r?\n/);
-    const badgeLine = /^\s*(?:!\[[^\]]*\]\([^)]*\)\s*)+$/;
-    let i = 0;
-    while (
-        i < lines.length &&
-        (lines[i].trim() === "" || badgeLine.test(lines[i]))
-    ) {
-        i++;
-    }
-    return lines.slice(i).join("\n");
 }

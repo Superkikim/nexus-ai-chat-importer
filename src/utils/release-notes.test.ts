@@ -1,58 +1,76 @@
 import { describe, expect, it } from "vitest";
-import { extractReleaseNotesSection } from "./release-notes";
+import { extractWhatsNewSection } from "./release-notes";
 
-const NOTES = `# Release Notes for Nexus AI Chat Importer
+const README = `# Nexus AI Chat Importer
 
-## Version 1.7.0 — ChatGPT images, selective import rebuilt
+[![Obsidian](https://img.shields.io/badge/Obsidian-1.6.6+-purple)](https://obsidian.md/)
 
-![Version](https://img.shields.io/badge/version-1.7.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
+Import your AI chat exports into your Obsidian vault as plain Markdown.
 
-### ✨ New
+## Features
 
-- A thing.
+- Something.
 
-### 🐛 Fixed
+## What's new in 1.7.0
 
-- Another thing.
+- **A headline.**
+- **Another headline** with a bit of detail.
 
-## Version 1.6.9 — Claude Split Export Detection
+[Full release notes →](https://example.invalid/RELEASE_NOTES.md)
 
-![Version](https://img.shields.io/badge/version-1.6.9-blue)
+## Install
 
-### 🐛 Fixed
-
-- Old thing.
+From Obsidian: …
 `;
 
-describe("extractReleaseNotesSection", () => {
-    it("returns the section body without heading or badge line", () => {
-        const out = extractReleaseNotesSection(NOTES, "1.7.0");
+describe("extractWhatsNewSection", () => {
+    it("returns the section body without its heading", () => {
+        const out = extractWhatsNewSection(README);
         expect(out).not.toBeNull();
-        expect(out).toMatch(/^### ✨ New/);
-        expect(out).toContain("- A thing.");
-        expect(out).toContain("- Another thing.");
-        expect(out).not.toContain("shields.io");
-        expect(out).not.toContain("## Version 1.7.0");
+        expect(out).toMatch(/^- \*\*A headline\.\*\*/);
+        expect(out).toContain("Another headline");
+        expect(out).not.toContain("## What's new");
     });
 
-    it("stops at the next version heading", () => {
-        const out = extractReleaseNotesSection(NOTES, "1.7.0");
-        expect(out).not.toContain("Old thing.");
-        expect(out).not.toContain("1.6.9");
+    it("keeps the full-release-notes link", () => {
+        expect(extractWhatsNewSection(README)).toContain(
+            "[Full release notes →]"
+        );
     });
 
-    it("resolves an earlier version too", () => {
-        const out = extractReleaseNotesSection(NOTES, "1.6.9");
-        expect(out).toContain("- Old thing.");
-        expect(out).not.toContain("- A thing.");
+    it("stops at the next heading", () => {
+        const out = extractWhatsNewSection(README);
+        expect(out).not.toContain("From Obsidian");
+        expect(out).not.toContain("## Install");
     });
 
-    it("returns null for a version that is not in the notes", () => {
-        expect(extractReleaseNotesSection(NOTES, "9.9.9")).toBeNull();
+    it("does not pick up an earlier section", () => {
+        expect(extractWhatsNewSection(README)).not.toContain("- Something.");
     });
 
-    it("does not treat a dot as a wildcard", () => {
-        // "1x7x0" must not match "1.7.0"
-        expect(extractReleaseNotesSection(NOTES, "1x7x0")).toBeNull();
+    it("matches a heading with no version suffix", () => {
+        const out = extractWhatsNewSection(
+            "# T\n\n## What's new\n\n- Item.\n\n## Next\n"
+        );
+        expect(out).toBe("- Item.");
+    });
+
+    it("matches a typographic apostrophe", () => {
+        const out = extractWhatsNewSection(
+            "# T\n\n## What’s new in 2.0.0\n\n- Item.\n\n## Next\n"
+        );
+        expect(out).toBe("- Item.");
+    });
+
+    it("returns null when the section is absent", () => {
+        expect(
+            extractWhatsNewSection("# T\n\n## Features\n\n- Only this.\n")
+        ).toBeNull();
+    });
+
+    it("returns null for an empty section", () => {
+        expect(
+            extractWhatsNewSection("# T\n\n## What's new\n\n## Install\n")
+        ).toBeNull();
     });
 });

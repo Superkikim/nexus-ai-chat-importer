@@ -8,54 +8,42 @@ ChatGPT ships generated images and documents in its export library again, and Ne
 
 ### ✨ New
 
-- **ChatGPT — Privacy Portal archives import directly**
-  The account-level ZIP from OpenAI wraps the conversation export alongside billing and profile data. Import it as-is; the inner archive is read in place, so a 200 MB export costs no extra memory. It is recognised by its contents, since OpenAI has delivered it under several filenames.
-
-- **ChatGPT — Generated images and documents imported again**
-  Recent exports (August 2026+) carry them in the file library. Each file is extracted under its real name and embedded in the message that produced it, with the generation prompt when it can be identified. When the export omits the message that presented a file, the file is placed at its real creation time in a minimal message — no invented text, and repeated imports never duplicate it.
-
-- **Rebuild existing notes**
-  A conversation already current in your vault is skipped, which is the right default — but it also meant plugin improvements could never reach older notes. Two controls now rebuild them: a checkbox in the file dialog for *Import All*, and one in the conversation list for *Select Specific*. Notes are rewritten in place, so backlinks survive. Manual edits are lost.
-
-- **Filter conversations by status**
-  New, Updated and Unchanged chips replace the old dropdown. Unchanged conversations appear in the list for the first time — off by default, since they have nothing to import unless you ask for a rebuild.
-
-- **Large Claude attachments become files**
-  Claude ships attached text inside the export rather than as files, and Nexus inlined all of it. A pasted log or web page could put 138 000 characters on a single line and make a 3.5 MB note. Past 20 KB the content is written next to the conversation and linked instead. One note in this state dropped to 2 KB.
+- **ChatGPT — Privacy Portal archives import directly.** Import the account-level ZIP from OpenAI as-is; no need to extract it first.
+- **ChatGPT — Generated images and documents imported again.** Recent exports (August 2026+) carry them in the file library; each file is restored to the message that produced it, with its prompt when identifiable.
+- **Rebuild existing notes.** Two checkboxes bring notes already in your vault up to date with current features: one in the file dialog for *Import All*, one in the conversation list for *Select Specific*. Backlinks survive; manual edits are lost.
+- **Filter conversations by status.** New, Updated and Unchanged chips replace the dropdown. Unchanged conversations are listed for the first time, off by default.
+- **Large Claude attachments become files.** Attached text over 20 KB is written beside the conversation and linked instead of inlined, keeping notes small.
 
 ### 🔧 Improved
 
-- **Recreated is its own outcome.** A rebuilt note is regenerated from scratch, not updated with new messages. Reports and the completion dialog now say which.
-- **The completion dialog shows only what happened** — no more grid of zeros. A second row covers files: extracted, kept in the note, artifacts, absent from the export. Archive numbers moved to a single line underneath.
-- **Import summaries reconcile.** An Archive block ending on *Selected*, then a Notes block that adds up to it.
-- **A refused archive says what it is** — *"this ZIP is a Mistral Vibe export, not a Claude one"* instead of a generic refusal repeated for every case.
-- **An archive that contributed nothing says why** — superseded by a newer archive, already up to date, or holding nothing importable.
+- **Recreated is its own outcome** — a rebuilt note is regenerated, not updated with new messages, and reports say which.
+- **The completion dialog shows only what happened** — no grid of zeros. A second row covers files: extracted, kept in the note, artifacts, absent from the export.
+- **Import summaries reconcile** — an Archive block ending on *Selected*, then a Notes block that adds up to it.
+- **A refused archive says what it is** — *"this ZIP is a Mistral Vibe export, not a Claude one"*.
+- **An archive that contributed nothing says why** — superseded, already up to date, or nothing importable.
+- **The settings pane was reordered** — date settings before the folder pickers, blank section headings fixed, timestamp preview moved into its own setting.
 - Report filenames are sortable (`20260829-161009`).
-- **Reordered and decluttered the settings pane.** Date settings — which shape every filename — now come before the folder pickers, section headings that were rendering blank now show, and the timestamp preview lives inside its own setting instead of floating below it.
 
 ### 🐛 Fixed
 
-- **Attachment counts were wrong.** ChatGPT and Vibe totals were doubled, Claude artifacts were hidden inside them, and a Claude import showed a red *0/10 extracted* although nothing had failed — Claude exports simply carry no files. Artifacts now have their own counter.
-- **A rebuild duplicated attachments.** Re-extracting wrote a second identical copy beside the first and re-linked the note to it. Files already in your vault are reused; Claude and Vibe attachment names are stable across imports.
-- **A conversation could be lost to a filename collision.** Two titles differing only in case share one file on macOS and Windows; the second was reported as failed and never imported.
-- **A conversation could be offered as *Updated* forever.** Providers move the update date for things that produce no message; the note kept the old date and was proposed again at every import, with nothing to add.
-- **A selected conversation the import left alone vanished from the report**, and the numbers no longer added up.
-- **Conversations silently dropped are imported again.** The analysis treated any message as content, so a conversation Claude had re-exported with its messages emptied still counted as valid — that emptied copy won as the most recent version, and the conversation was then quietly discarded at write time with nothing to show. Content decides now, so the complete version of the conversation wins.
-- **Attachment-only messages are imported** rather than treated as empty, and no longer show *[No content found]*.
+- Attachment counts were wrong — doubled for ChatGPT and Vibe, a false *0/10 extracted* for Claude. Artifacts now have their own counter.
+- A rebuild duplicated attachments instead of reusing the files already in your vault.
+- A conversation could be lost to a filename collision between two titles differing only in case.
+- A conversation could be offered as *Updated* forever, with nothing to add.
+- A selected conversation the import left alone vanished from the report.
+- Conversations that Claude re-exported with emptied messages were silently skipped; they import correctly now.
+- Attachment-only messages are imported rather than treated as empty.
 - Generation prompts are kept for image requests without an explicit "generate" verb.
 - Filenames keep leading non-ASCII letters — Cyrillic, Chinese and other scripts are no longer trimmed.
-- **The message-timestamp setting had a false description** — it claimed that with Obsidian in English a "US format (YYYY/DD/MM)" is enforced. No such rule exists; the setting follows your Obsidian language. Corrected in all ten languages.
-- **The upgrade and "what's new" dialogs** read the changelog from `RELEASE_NOTES.md` again. They had been parsing a "What's New" section of the README that the documentation reorganisation removed, and were falling back to bundled text.
-- **CLI** — imports no longer fail with `moment2 is not a function`. The process now exits non-zero when an import errors or a conversation fails, and the summary reports the *Unchanged* count instead of `Skipped: undefined`. The `--report-folder` flag was removed — the CLI writes no report files, so it only changed a stored setting. This affected the optional command-line tool only.
+- The message-timestamp setting no longer claims that English forces a "US format"; it follows your Obsidian language. Corrected in all ten languages.
+- The upgrade dialogs show the release summary again.
 
 ### ℹ️ Notes
 
 - Whether an export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the placeholder stays.
-- Rebuilding is opt-in per import rather than a saved preference: it overwrites manual edits, so it should be a decision you make each time.
-- To enrich notes imported from an older export, re-import with the rebuild option — placeholders are replaced by the real files, without duplicate messages.
-- **Claude reminder** — recent exports arrive as several ZIPs; import the one holding `conversations.json`. Since 1.6.9 it is recognised by its contents.
-- **Documentation reorganised.** `docs/` is now split into `docs/user/` (the canonical user guide), `docs/development/`, and `docs/architecture/`; the repository README is a short overview. This is a docs-only change — nothing in the plugin behaves differently because of it.
-- **The command-line importer moved to its own repository**, [nexus-ai-chat-importer-cli](https://github.com/Superkikim/nexus-ai-chat-importer-cli). Setup is unchanged — clone, `npm install`, `npm run build`; the build now fetches the plugin's import engine automatically. The plugin itself is unaffected.
+- Rebuilding overwrites manual edits, so it is opt-in per import rather than a saved preference.
+- **Claude** — recent exports arrive as several ZIPs; import the one holding `conversations.json`.
+- The command-line importer now lives in [its own repository](https://github.com/Superkikim/nexus-ai-chat-importer-cli). The plugin is unaffected.
 
 ## Version 1.6.9 — Claude Split Export Detection
 
