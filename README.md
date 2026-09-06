@@ -6,6 +6,10 @@ Import your AI chat exports into your Obsidian vault as plain Markdown — organ
 by provider and date, with attachments, frontmatter metadata, and a reviewable
 import report. Everything runs locally in your vault.
 
+> **Note:** the optional command-line importer has moved to its own repository,
+> [nexus-ai-chat-importer-cli](https://github.com/Superkikim/nexus-ai-chat-importer-cli).
+> The Obsidian plugin is unaffected.
+
 ## Supported providers
 
 **ChatGPT** · **Claude** · **Mistral Vibe** (formerly Le Chat) · **Perplexity**
