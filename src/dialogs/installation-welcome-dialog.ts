@@ -109,7 +109,8 @@ export class InstallationWelcomeDialog extends Modal {
 
         // The README leads with a plain intro paragraph between the H1 and the
         // first `##` (there is no `## Overview` heading). Take that block,
-        // dropping the H1 and the shields.io badge line(s).
+        // dropping the H1, the shields.io badge line(s), and any blockquote
+        // admonitions (`> **Note:** …`) that are not overview prose.
         const head = readmeText.split(/\r?\n##\s/)[0] ?? "";
         const intro = head
             .split(/\r?\n/)
@@ -117,6 +118,7 @@ export class InstallationWelcomeDialog extends Modal {
                 (line) =>
                     line.trim() !== "" &&
                     !line.startsWith("#") &&
+                    !line.trim().startsWith(">") &&
                     !/^\[?!\[/.test(line.trim())
             )
             .join("\n")
