@@ -44,7 +44,9 @@ ChatGPT ships generated images and documents in its export library again, and Ne
 - **Attachment-only messages are imported** rather than treated as empty, and no longer show *[No content found]*.
 - Generation prompts are kept for image requests without an explicit "generate" verb.
 - Filenames keep leading non-ASCII letters — Cyrillic, Chinese and other scripts are no longer trimmed.
-- **CLI** — imports no longer fail with `moment2 is not a function`. This affected the optional command-line tool only.
+- **The message-timestamp setting had a false description** — it claimed that with Obsidian in English a "US format (YYYY/DD/MM)" is enforced. No such rule exists; the setting follows your Obsidian language. Corrected in all ten languages.
+- **The upgrade and "what's new" dialogs** read the changelog from `RELEASE_NOTES.md` again. They had been parsing a "What's New" section of the README that the documentation reorganisation removed, and were falling back to bundled text.
+- **CLI** — imports no longer fail with `moment2 is not a function`. The process now exits non-zero when an import errors or a conversation fails, and the summary reports the *Unchanged* count instead of `Skipped: undefined`. The `--report-folder` flag was removed — the CLI writes no report files, so it only changed a stored setting. This affected the optional command-line tool only.
 
 ### ℹ️ Notes
 
@@ -52,6 +54,7 @@ ChatGPT ships generated images and documents in its export library again, and Ne
 - Rebuilding is opt-in per import rather than a saved preference: it overwrites manual edits, so it should be a decision you make each time.
 - To enrich notes imported from an older export, re-import with the rebuild option — placeholders are replaced by the real files, without duplicate messages.
 - **Claude reminder** — recent exports arrive as several ZIPs; import the one holding `conversations.json`. Since 1.6.9 it is recognised by its contents.
+- **Documentation reorganised.** `docs/` is now split into `docs/user/` (the canonical user guide), `docs/development/`, and `docs/architecture/`; the repository README is a short overview. This is a docs-only change — nothing in the plugin behaves differently because of it.
 
 ## Version 1.6.9 — Claude Split Export Detection
 

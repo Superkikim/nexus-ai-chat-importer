@@ -107,16 +107,27 @@ export class InstallationWelcomeDialog extends Modal {
         const readmeText = await this.fetchReadme();
         if (!readmeText) return;
 
-        const overviewMatch = readmeText.match(
-            /## Overview\s+([\s\S]*?)(?=\n## |\n# |$)/
-        );
-        if (!overviewMatch?.[1]) return;
+        // The README leads with a plain intro paragraph between the H1 and the
+        // first `##` (there is no `## Overview` heading). Take that block,
+        // dropping the H1 and the shields.io badge line(s).
+        const head = readmeText.split(/\r?\n##\s/)[0] ?? "";
+        const intro = head
+            .split(/\r?\n/)
+            .filter(
+                (line) =>
+                    line.trim() !== "" &&
+                    !line.startsWith("#") &&
+                    !/^\[?!\[/.test(line.trim())
+            )
+            .join("\n")
+            .trim();
+        if (!intro) return;
 
         const renderComponent = new Component();
         renderComponent.load();
         await MarkdownRenderer.render(
             this.app,
-            overviewMatch[1].trim(),
+            intro,
             container,
             "",
             renderComponent

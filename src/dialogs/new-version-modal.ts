@@ -16,11 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { App, Component, Modal, MarkdownRenderer, requestUrl } from "obsidian";
+import { App, Component, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
 import { createResourceLinks } from "../ui/components/resource-links";
-import { GITHUB } from "../config/constants";
+import { fetchReleaseNotesSection } from "../utils/release-notes";
 import { t } from "../i18n";
 
 /**
@@ -68,23 +68,11 @@ export class NewVersionModal extends Modal {
         // Add support section FIRST (at the top) - using reusable component
         createSupportBox(this.contentEl);
 
-        let message = this.fallbackMessage;
-
-        try {
-            // Try to fetch What's New section from README
-            const response = await requestUrl({
-                url: `${GITHUB.RAW_BASE}/${this.version}/README.md`,
-                method: "GET",
-            });
-            if (response.status >= 200 && response.status < 300) {
-                const whatsNew = this.extractWhatsNewFromReadme(response.text);
-                if (whatsNew) {
-                    message = whatsNew;
-                }
-            }
-        } catch {
-            // Use fallback message if GitHub fetch fails
-        }
+        // Pull the current version's section from the published RELEASE_NOTES;
+        // fall back to the bundled message when it is unavailable.
+        const message =
+            (await fetchReleaseNotesSection(this.version)) ??
+            this.fallbackMessage;
 
         // Render markdown content
         const contentDiv = this.contentEl.createDiv({
@@ -103,16 +91,6 @@ export class NewVersionModal extends Modal {
 
         // Resource links grid
         createResourceLinks(this.contentEl);
-    }
-
-    /**
-     * Extract the "## Overview" section from README content.
-     * Returns only the body under the heading (excluding the heading line itself).
-     */
-    private extractWhatsNewFromReadme(readmeText: string): string | null {
-        const whatsNewRegex = /## ✨ What's New\s+([\s\S]*?)(?=^##\s|$)/m;
-        const match = readmeText.match(whatsNewRegex);
-        return match ? match[1].trim() : null;
     }
 
     private addCloseButton() {
