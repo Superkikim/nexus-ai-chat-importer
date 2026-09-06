@@ -49,7 +49,7 @@ function message(overrides: Partial<ClaudeMessage>): ClaudeMessage {
         attachments: [],
         files: [],
         ...overrides,
-    } as ClaudeMessage;
+    };
 }
 
 function conversation(

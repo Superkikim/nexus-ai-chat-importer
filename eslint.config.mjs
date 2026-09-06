@@ -87,7 +87,10 @@ export default defineConfig([
             "obsidianmd/rule-custom-message": "off",
             // Tests may import Node.js built-ins directly.
             "import/no-nodejs-modules": "off",
+            "obsidianmd/no-nodejs-modules": "off",
             "depend/ban-dependencies": "off",
+            // Mocks and fixtures use `any` for partial stand-ins of plugin types.
+            "@typescript-eslint/no-explicit-any": "off",
         },
     },
 
