@@ -12,7 +12,7 @@ ChatGPT ships generated images and documents in its export library again, and Ne
 - **ChatGPT — Generated images and documents imported again.** Recent exports (August 2026+) carry them in the file library; each file is restored to the message that produced it, with its prompt when identifiable.
 - **Rebuild existing notes.** Two checkboxes bring notes already in your vault up to date with current features: one in the file dialog for *Import All*, one in the conversation list for *Select Specific*. Backlinks survive; manual edits are lost.
 - **Filter conversations by status.** New, Updated and Unchanged chips replace the dropdown. Unchanged conversations are listed for the first time, off by default.
-- **Large Claude inline content (pasted) is extracted into linked files.** Text over 20 KB is written beside the conversation and linked instead of inlined, keeping notes small.
+- **Claude — Large inline content (pasted) is extracted into linked files.** Text over 20 KB is written beside the conversation and linked instead of inlined, keeping notes small.
 
 ### 🔧 Improved
 

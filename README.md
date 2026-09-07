@@ -31,8 +31,8 @@ import report. Everything runs locally in your vault.
 
 - **ChatGPT generated images and documents are imported again** when the export
   includes them.
-- **Privacy Portal archives import as-is** — no need to extract the account-level
-  ZIP first.
+- **ChatGPT Privacy Portal archives import as-is** — no need to extract the
+  account-level ZIP first.
 - **Rebuild existing notes** so older imports pick up current features. Manual
   edits to a rebuilt note are lost.
 - **Filter the conversation list by status** — New / Updated / Unchanged.
