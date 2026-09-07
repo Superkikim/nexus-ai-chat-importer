@@ -94,8 +94,14 @@ each release, never appended to. `RELEASE_NOTES.md` stays the canonical changelo
 
 Update `upgrade.complete_modal.fallback_content` in every
 [`src/i18n/locales/*.json`](../../src/i18n/locales/). This text is shown in the
-upgrade dialog when the GitHub README cannot be fetched. `{{version}}` is filled at
-runtime.
+upgrade dialog when the GitHub README cannot be fetched (offline, or the tag not
+yet published). `{{version}}` is filled at runtime.
+
+Keep it a translated mirror of the **What's new in X.Y.Z** README section — same
+bullets, same order — so a reader sees the same summary whether or not the fetch
+succeeds. It is a hand-maintained changelog in 10 languages: if it is ever left
+stale again, replace it with a short version-agnostic pointer to
+`RELEASE_NOTES.md` instead of carrying the drift.
 
 ---
 
