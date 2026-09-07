@@ -36,7 +36,8 @@ import report. Everything runs locally in your vault.
 - **Rebuild existing notes** so older imports pick up current features. Manual
   edits to a rebuilt note are lost.
 - **Filter the conversation list by status** — New / Updated / Unchanged.
-- **Large Claude attachments become linked files** instead of bloating the note.
+- **Large Claude inline content (pasted) is extracted into linked files** instead
+  of bloating the note.
 - **Reports and the completion dialog were rebuilt** around what actually happened
   to your notes; several counters were wrong.
 - Plus fixes to filenames, deduplication and attachment counts.
