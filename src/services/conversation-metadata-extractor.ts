@@ -23,6 +23,7 @@ import {
     ClaudeConversation,
     ClaudeMessage,
 } from "../providers/claude/claude-types";
+import { isExportableClaudeMessage } from "../providers/claude/claude-message-filter";
 import { MistralVibeConversation } from "../providers/vibe/vibe-types";
 import { PerplexityRawConversationFile } from "../providers/perplexity/perplexity-types";
 import { ConversationCatalogEntry } from "../types/plugin";
@@ -32,7 +33,6 @@ import { createZipArchiveReader, ZipArchiveReader } from "../utils/zip-loader";
 import {
     resolveArchiveClassification,
     extractConversationsStream,
-    getArchiveProviderMismatchMessage,
     getArchiveUnsupportedFormatMessage,
     SupportedArchiveProvider,
 } from "../utils/zip-content-reader";
@@ -40,6 +40,13 @@ import { decideArchiveMode } from "./archive-mode-decider";
 import { Logger, ScopedLogger } from "../logger";
 import { normalizePerplexityConversationFile } from "../providers/perplexity/perplexity-normalizer";
 import { deriveMistralVibeConversationTitle } from "../providers/vibe/vibe-title";
+
+/**
+ * What to do with a conversation the vault already has, current: drop it from
+ * the selection, offer it so the user can decide, or pull it in to rebuild.
+ * "offer" and "rebuild" both keep it; only "rebuild" is a stated intent.
+ */
+export type UnchangedPolicy = "drop" | "offer" | "rebuild";
 
 export type ConversationExistenceStatus =
     | "new"
@@ -54,7 +61,17 @@ export interface AnalysisInfo {
     hasMultipleFiles: boolean;
     conversationsNew: number;
     conversationsUpdated: number;
-    conversationsIgnored: number;
+    /**
+     * Every conversation already up to date in the vault, whether or not a
+     * rebuild pulled it back in. This is a state, not an outcome: it stays
+     * accurate when `reprocess` is on, which is what the selection dialog
+     * needs to stop contradicting the "Unchanged" badges in its own list.
+     */
+    conversationsUnchanged: number;
+    /** The subset of the above that was dropped instead of imported. */
+    conversationsDroppedUnchanged: number;
+    /** The subset of the above pulled back in because a rebuild was requested. */
+    conversationsReprocessed: number;
 }
 
 export interface ConversationMetadata {
@@ -81,7 +98,7 @@ export interface FileAnalysisStats {
     selectedForImport: number;
     newConversations: number;
     updatedConversations: number;
-    skippedConversations: number;
+    unchangedConversations: number;
 }
 
 export interface IgnoredArchiveInfo {
@@ -225,7 +242,13 @@ export class ConversationMetadataExtractor {
     async extractMetadataFromMultipleZips(
         files: File[],
         forcedProvider?: string,
-        existingConversations?: Map<string, ConversationCatalogEntry>
+        existingConversations?: Map<string, ConversationCatalogEntry>,
+        /**
+         * Selective import always offers them: the selection dialog decides.
+         * A full import drops them unless a rebuild was requested, since it
+         * has no later step where the user could choose.
+         */
+        unchangedPolicy: UnchangedPolicy = "drop"
     ): Promise<MetadataExtractionResult> {
         const batchStartedAt = Date.now();
         this.metadataLogger.debug(`Begin metadata extraction batch`, {
@@ -382,15 +405,14 @@ export class ConversationMetadataExtractor {
                     selectedForImport: 0,
                     newConversations: 0,
                     updatedConversations: 0,
-                    skippedConversations: 0,
+                    unchangedConversations: 0,
                 });
             } catch (error) {
                 const message =
                     error instanceof Error ? error.message : String(error);
                 const ignoredArchive = this.classifyReadFailure(
                     file.name,
-                    message,
-                    forcedProvider
+                    message
                 );
                 ignoredArchives.push(ignoredArchive);
 
@@ -418,7 +440,8 @@ export class ConversationMetadataExtractor {
 
         const filterResult = this.filterConversationsForSelection(
             Array.from(conversationMap.values()),
-            existingConversations
+            existingConversations,
+            unchangedPolicy
         );
 
         for (const conversation of filterResult.conversations) {
@@ -433,6 +456,11 @@ export class ConversationMetadataExtractor {
                 stats.newConversations++;
             } else if (conversation.existenceStatus === "updated") {
                 stats.updatedConversations++;
+            } else if (conversation.existenceStatus === "unchanged") {
+                // Counted here as well as in the ignored loop below: an
+                // unchanged conversation lands in one bucket or the other
+                // depending on the policy, but it is unchanged either way.
+                stats.unchangedConversations++;
             }
         }
 
@@ -442,7 +470,7 @@ export class ConversationMetadataExtractor {
 
             const stats = fileStatsMap.get(fileName);
             if (stats) {
-                stats.skippedConversations++;
+                stats.unchangedConversations++;
             }
         }
 
@@ -456,7 +484,10 @@ export class ConversationMetadataExtractor {
                 hasMultipleFiles: files.length > 1,
                 conversationsNew: filterResult.newCount,
                 conversationsUpdated: filterResult.updatedCount,
-                conversationsIgnored: filterResult.ignoredCount,
+                conversationsUnchanged: filterResult.unchangedCount,
+                conversationsDroppedUnchanged:
+                    filterResult.droppedUnchangedCount,
+                conversationsReprocessed: filterResult.reprocessedCount,
             },
             fileStats: fileStatsMap,
             supportedFiles,
@@ -477,8 +508,7 @@ export class ConversationMetadataExtractor {
 
     private classifyReadFailure(
         fileName: string,
-        message: string,
-        forcedProvider?: string
+        message: string
     ): IgnoredArchiveInfo {
         const normalized = message.toLowerCase();
         const looksUnsupportedArchive =
@@ -492,7 +522,10 @@ export class ConversationMetadataExtractor {
             return {
                 fileName,
                 reason: "unsupported-format",
-                message: this.getUnsupportedArchiveMessage(forcedProvider),
+                // The ZIP itself could not be read, so no provider would
+                // have helped: naming one sends the user to a setting that
+                // cannot fix a corrupt archive.
+                message: getArchiveUnsupportedFormatMessage(),
             };
         }
 
@@ -501,23 +534,6 @@ export class ConversationMetadataExtractor {
             reason: "read-error",
             message,
         };
-    }
-
-    private getUnsupportedArchiveMessage(forcedProvider?: string): string {
-        if (forcedProvider === "chatgpt") {
-            return getArchiveProviderMismatchMessage("chatgpt");
-        }
-        if (forcedProvider === "claude") {
-            return getArchiveProviderMismatchMessage("claude");
-        }
-        if (forcedProvider === "vibe") {
-            return getArchiveProviderMismatchMessage("vibe");
-        }
-        if (forcedProvider === "perplexity") {
-            return getArchiveProviderMismatchMessage("perplexity");
-        }
-
-        return getArchiveUnsupportedFormatMessage();
     }
 
     private extractSingleMetadataByProvider(
@@ -813,28 +829,29 @@ export class ConversationMetadataExtractor {
     }
 
     private shouldIncludeClaudeMessage(message: ClaudeMessage): boolean {
-        if (!message || !message.uuid || !message.sender) {
-            return false;
-        }
-
-        return message.sender === "human" || message.sender === "assistant";
+        return isExportableClaudeMessage(message);
     }
 
     private filterConversationsForSelection(
         bestVersions: ConversationMetadata[],
-        existingConversations?: Map<string, ConversationCatalogEntry>
+        existingConversations?: Map<string, ConversationCatalogEntry>,
+        unchangedPolicy: UnchangedPolicy = "drop"
     ): {
         conversations: ConversationMetadata[];
         ignoredConversations: ConversationMetadata[];
         newCount: number;
         updatedCount: number;
-        ignoredCount: number;
+        unchangedCount: number;
+        droppedUnchangedCount: number;
+        reprocessedCount: number;
     } {
         const conversationsForSelection: ConversationMetadata[] = [];
         const ignoredConversations: ConversationMetadata[] = [];
         let newCount = 0;
         let updatedCount = 0;
-        let ignoredCount = 0;
+        let unchangedCount = 0;
+        let droppedUnchangedCount = 0;
+        let reprocessedCount = 0;
 
         for (const conversation of bestVersions) {
             if (!existingConversations) {
@@ -870,18 +887,31 @@ export class ConversationMetadataExtractor {
                 conversationsForSelection.push(conversation);
                 updatedCount++;
             } else {
+                // Status stays "unchanged" either way, so the selection dialog
+                // keeps telling the truth about what is already in the vault.
                 conversation.existenceStatus = "unchanged";
-                ignoredConversations.push(conversation);
-                ignoredCount++;
+                unchangedCount++;
+                if (unchangedPolicy === "drop") {
+                    ignoredConversations.push(conversation);
+                    droppedUnchangedCount++;
+                } else {
+                    conversation.hasNewerContent = false;
+                    conversationsForSelection.push(conversation);
+                    // Only a stated rebuild counts as one. Offering a
+                    // conversation for selection is not asking for anything.
+                    if (unchangedPolicy === "rebuild") reprocessedCount++;
+                }
             }
         }
 
         return {
+            reprocessedCount,
             conversations: conversationsForSelection,
             ignoredConversations,
             newCount,
             updatedCount,
-            ignoredCount,
+            unchangedCount,
+            droppedUnchangedCount,
         };
     }
 }

@@ -13,7 +13,7 @@ interface CentralDirectoryInfo {
     centralDirectorySize: number;
 }
 
-interface MobileZipEntryRecord extends ZipEntryMeta {
+export interface MobileZipEntryRecord extends ZipEntryMeta {
     compressionMethod: number;
     compressedSize: number;
     localHeaderOffset: number;
@@ -337,7 +337,7 @@ async function readCompressedFileData(
     return new Uint8Array(await readSlice(file, dataStart, compressedSize));
 }
 
-async function getLocalFileDataRange(
+export async function getLocalFileDataRange(
     file: File,
     entry: MobileZipEntryRecord
 ): Promise<LocalFileDataRange> {

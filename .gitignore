@@ -17,8 +17,13 @@ data.json
 # Windows system files
 Thumbs.db
 
-# Claude Code local settings
-.claude/
+# Agent-local working state (never publish)
+.agent-work/
+
+# Claude Code: keep local settings private, allow shared workflow adapters
+.claude/*
+!.claude/skills/
+!.claude/skills/**
 
 # Editor configuration files
 .vscode/

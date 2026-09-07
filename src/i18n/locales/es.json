@@ -70,6 +70,12 @@
             "selective_label": "Selección específica",
             "selective_description": "Vista previa y selección de conversaciones"
         },
+        "reprocess": {
+            "label": "Reprocesar las notas existentes",
+            "description": "Reconstruye las notas que ya están en tu bóveda en lugar de omitirlas. Úsalo tras actualizar el plugin para aprovechar las novedades.",
+            "selective_hint": "Para recrear notas existentes, selecciónalas en el paso siguiente y marca «Recrear las notas seleccionadas».",
+            "warning": "Se perderán las modificaciones manuales de esas notas."
+        },
         "file_area": {
             "section_title": "Seleccionar archivos",
             "drop_text_default": "Suelte archivos ZIP aquí o haga clic para explorar",
@@ -94,8 +100,8 @@
             "search_placeholder": "Buscar conversaciones...",
             "status_label": "Estado:",
             "show_label": "Mostrar:",
-            "existing_only_label": "Mostrar solo conversaciones existentes",
-            "existing_only_help": "Seleccionar una conversación existente sobrescribirá y reprocesará la nota correspondiente."
+            "rebuild_existing_label": "Recrear las notas seleccionadas si ya existen",
+            "rebuild_help": "Desactivado, una nota existente solo recibe sus mensajes nuevos. Activado, cada nota seleccionada que ya está en tu bóveda se reescribe desde cero y se pierden las ediciones manuales."
         },
         "status_filter_options": {
             "all": "Todos",
@@ -130,6 +136,7 @@
             "new": "Nuevo",
             "updated": "Actualizado",
             "unchanged": "Sin cambios",
+            "scope_note": "En todo el archivo",
             "selected_of": "{{selected}} de {{total}} seleccionadas"
         },
         "buttons": {
@@ -161,18 +168,28 @@
         "title": "Importación completada",
         "success_message": "✅ Conversaciones importadas con éxito",
         "stats": {
-            "zip_files_processed": "Archivos ZIP procesados",
-            "unique_conversations": "Conversaciones únicas",
-            "duplicates": "Duplicados",
             "new": "Nuevo",
             "updated": "Actualizado",
-            "skipped": "Omitidos",
+            "recreated": "Recreadas",
+            "unchanged": "Sin cambios",
             "failed": "Fallidos"
         },
+        "archive": {
+            "conversations": "{{count}} conversaciones",
+            "zips": "{{count}} archivos ZIP",
+            "duplicates": "{{count}} duplicados eliminados",
+            "not_selected": "{{count}} sin seleccionar",
+            "empty": "{{count}} sin contenido exportable"
+        },
+        "nothing_changed": "No ha cambiado nada en tu bóveda.",
         "attachments": {
-            "label": "Adjuntos:",
-            "summary": "{{found}}/{{total}} extraídos ({{percentage}}%)",
-            "missing_failed": "{{missing}} faltantes, {{failed}} fallidos"
+            "label": "Archivos",
+            "extracted": "Extraídas",
+            "inline": "En la nota",
+            "not_provided": "No están en la exportación",
+            "missing": "Ausentes",
+            "failed": "Con error",
+            "artifacts": "Artefactos"
         },
         "report": {
             "label": "📄 Informe detallado:"
@@ -217,7 +234,7 @@
             "section_title": "📅 Formato de fecha de mensajes",
             "custom_format": {
                 "name": "Formato de marca de tiempo personalizado para mensajes",
-                "desc": "Reemplazar el formato de marca de tiempo predeterminado basado en la configuración regional en los encabezados de mensajes. Cuando está desactivado, las marcas de tiempo siguen la configuración de idioma de Obsidian. Si Obsidian está en inglés, se aplica el formato estadounidense (YYYY/DD/MM)."
+                "desc": "Reemplazar el formato de marca de tiempo predeterminado basado en la configuración regional en los encabezados de mensajes. Cuando está desactivado, las marcas de tiempo siguen la configuración de idioma de Obsidian."
             },
             "timestamp_format": {
                 "name": "Formato de marca de tiempo",
@@ -322,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ Actualización completada - v{{version}}",
-            "fallback_content": "## ✨ Novedades de la v{{version}}\n\n### 🐛 Corregido\n- **Claude** — Ahora se detecta la nueva exportación dividida: Anthropic entrega un manifiesto con varios ZIP y `users.json` ya no acompaña a `conversations.json`, por lo que `conversations-000.zip` se interpretaba como una exportación de ChatGPT y no importaba nada\n- Importa `conversations-000.zip` directamente — los archivos de proyectos, memorias y metadatos no contienen nada que el plugin utilice\n- La detección de todos los formatos de exportación anteriores no cambia\n- **Obsidian 1.13+** — colores de los callouts restaurados: Obsidian 1.13.0 exige un color CSS real en `--callout-color`, lo que dejaba los callouts de Nexus sin color ni borde",
+            "fallback_content": "## ✨ Novedades en v{{version}}\n\n### ✨ Nuevo\n- **ChatGPT** — Las imágenes y documentos generados se importan de nuevo cuando la exportación los incluye\n- **ChatGPT** — Los archivos de Privacy Portal se importan tal cual; no hace falta extraer primero el ZIP de la cuenta\n- **Reconstruir las notas existentes** para que las importaciones antiguas incorporen las funciones actuales — los cambios manuales en una nota reconstruida se pierden\n- **Filtrar la lista de conversaciones por estado** — Nuevas, Actualizadas, Sin cambios\n- **El contenido extenso pegado de Claude** se extrae a archivos enlazados en lugar de recargar la nota\n\n### 🔧 Mejorado\n- **Los informes y el diálogo de finalización** se rehicieron en torno a lo que realmente pasó con tus notas; varios contadores estaban mal\n- Nombres de archivo, deduplicación y recuentos de adjuntos\n\n### 🐛 Corregido\n- **Las importaciones de Claude vuelven a funcionar** (1.6.9) — la nueva exportación dividida de Anthropic se leía como una de ChatGPT y no importaba nada\n- **Colores de los avisos restaurados en Obsidian 1.13+** (1.6.9)\n\n[Notas de versión completas](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "¡Entendido!"
             }
@@ -343,6 +360,17 @@
             "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
             "buttons": {
                 "proceed": "Proceed"
+            }
+        },
+        "repair_notes": {
+            "title": "Reparar las notas que ralentizan Obsidian",
+            "intro": "{{count}} conversación(es) contienen contenido pegado en una sola línea enorme. Obsidian lee cada línea entera, así que ralentizan la indexación de toda tu bóveda.",
+            "and_more": "… y {{count}} más",
+            "what_happens": "Nexus puede mover ese contenido a archivos junto a cada conversación y dejar un enlace plegado en su lugar, igual que hace ahora al importar.",
+            "backup_note": "Cada nota se copia a su lado antes de tocarla, no se pierde nada. Podrás borrar las copias cuando quieras.",
+            "buttons": {
+                "repair": "Repararlas",
+                "ignore": "Dejarlas como están"
             }
         }
     },
@@ -480,17 +508,11 @@
             "get_started": "Comenzar"
         }
     },
-    "mobile_archive_processed_dialog": {
-        "title": "Archivo ya procesado",
-        "description": "El archivo {{filename}} ya se importó en este dispositivo.",
-        "choice_help": "Elige cómo continuar en móvil:",
-        "button_reprocess": "Reprocesar y recrear todas las notas",
-        "button_incremental": "Añadir/actualizar notas faltantes o actualizadas"
-    },
     "notices": {
         "import_analyzing": "Analizando conversaciones de {{count}} archivo(s)...",
         "import_no_new": "No se encontraron conversaciones nuevas o actualizadas. Todas las conversaciones ya están al día.",
         "import_starting": "Importando {{count}} conversaciones ({{new}} nuevas, {{updated}} actualizadas)...",
+        "import_starting_reprocess": "Importando {{count}} conversaciones ({{rebuilt}} reconstruidas)…",
         "import_starting_selected": "Importando {{count}} conversaciones seleccionadas de {{files}} archivo(s)...",
         "import_completed_fallback": "Importación completada. {{created}} creadas, {{updated}} actualizadas.",
         "import_error": "Error durante la importación: {{error}}",
@@ -506,7 +528,23 @@
         "report_failed": "No se pudo crear el archivo de registro. Consulte la consola para más detalles.",
         "attachment_map_failed": "No se pudo construir el mapa de adjuntos. Consulte la consola para más detalles.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Importar nuevo archivo",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "No se pudieron leer {{count}} archivo(s) ({{provider}}). Consulta la consola para más detalles."
+    },
+    "archive_messages": {
+        "empty": "El archivo ZIP no contiene ningún archivo. Comprueba que has seleccionado el archivo de exportación correcto.",
+        "unsupported_format": "Este archivo ZIP no coincide con ningún formato de exportación compatible.",
+        "nested_zip": {
+            "generic": "Este ZIP contiene otros archivos ZIP. Extrae el ZIP exterior e importa directamente los ZIP interiores.",
+            "perplexity": "Este ZIP contiene otros archivos ZIP. Extrae el ZIP exterior e importa directamente los archivos part*.zip de Perplexity que contiene."
+        },
+        "wrong_provider": "Este ZIP es una exportación de {{detected}}, no de {{expected}}. Elige el proveedor correspondiente para importarlo.",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
+        }
     },
     "commands": {
         "import_conversations": {
@@ -525,9 +563,8 @@
     "support_box": {
         "header": "Apoyar este plugin",
         "header_highlight": "Apoyar este plugin",
-        "default_message_emphasis": "Nexus ha superado las 15.000 descargas. Ahora mismo, solo unas 5 personas al mes donan para apoyar el desarrollo.",
-        "default_message": "Mantengo este plugin en mi tiempo libre, y mantener en marcha mi entorno de desarrollo tiene costes continuos. Añadir nuevos proveedores también requiere suscripciones de pago para poder probar y ofrecer soporte fiable.",
-        "reality_check": "Si Nexus te resulta valioso, considera hacer una donación puntual o mensual. Gracias a todas las personas que ya apoyan el proyecto.",
+        "default_message_emphasis": "Nexus ha superado las 15 000 descargas. Tu apoyo mantiene el desarrollo en marcha y cubre mis costes de herramientas y suscripciones.",
+        "default_message": "Actualmente estoy sin empleo, así que cada aportación cuenta de verdad.",
         "button_alt": "Apoyar mi trabajo"
     }
 }

@@ -3,6 +3,7 @@ export {
     enumerateZipEntries,
     buildAttachmentLookupIndex,
     writeZipEntryToVault,
+    sliceStoredZipEntry,
 } from "./zip";
 
 export type {

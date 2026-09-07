@@ -30,11 +30,17 @@ export interface ImportCompletionStats {
     duplicates: number;
     created: number;
     updated: number;
-    skipped: number;
+    recreated: number;
+    unchanged: number;
+    /** Offered in the selection dialog and left unchecked; null on a full import. */
+    notSelected: number | null;
     emptyConversations: number;
     failed: number;
     attachmentsFound: number;
+    attachmentsInline: number;
+    attachmentsNotProvided: number;
     attachmentsTotal: number;
+    artifacts: number;
     attachmentsMissing: number;
     attachmentsFailed: number;
 }
@@ -76,7 +82,7 @@ export class ImportCompletionDialog extends Modal {
         this.createStatsSection(contentEl);
 
         // Attachments summary (if any)
-        if (this.stats.attachmentsTotal > 0) {
+        if (this.stats.attachmentsTotal > 0 || this.stats.artifacts > 0) {
             this.createAttachmentsSection(contentEl);
         }
 
@@ -90,79 +96,111 @@ export class ImportCompletionDialog extends Modal {
         this.createActionButtons(contentEl);
     }
 
+    /**
+     * Two tiers, because the numbers answer two questions. What happened to
+     * the notes gets cards, and only the outcomes that actually occurred: a
+     * grid where four of seven cards read zero says nothing. What the archive
+     * held is context for those cards, so it goes underneath as one line.
+     */
     private createStatsSection(container: HTMLElement) {
-        const section = container.createDiv(
-            "stats-section nexus-stats-grid nexus-dialog-section"
-        );
+        const outcomes: Array<{
+            icon: string;
+            value: number;
+            label: string;
+            color: string;
+        }> = [
+            {
+                icon: "✨",
+                value: this.stats.created,
+                label: t("import_completion.stats.new"),
+                color: "var(--color-green)",
+            },
+            {
+                icon: "🔄",
+                value: this.stats.updated,
+                label: t("import_completion.stats.updated"),
+                color: "var(--color-orange)",
+            },
+            {
+                icon: "♻️",
+                value: this.stats.recreated,
+                label: t("import_completion.stats.recreated"),
+                color: "var(--color-purple)",
+            },
+            {
+                icon: "⏭️",
+                value: this.stats.unchanged,
+                label: t("import_completion.stats.unchanged"),
+                color: "var(--text-muted)",
+            },
+            {
+                icon: "❌",
+                value: this.stats.failed,
+                label: t("import_completion.stats.failed"),
+                color: "var(--color-red)",
+            },
+        ].filter((outcome) => outcome.value > 0);
 
-        // Files cartouche
-        this.createStatCartouche(
-            section,
-            "📁",
-            this.stats.totalFiles.toString(),
-            t("import_completion.stats.zip_files_processed")
-        );
+        if (outcomes.length === 0) {
+            const nothing = container.createDiv(
+                "nexus-dialog-section nexus-completion-panel nexus-completion-panel-center"
+            );
+            nothing.textContent = t("import_completion.nothing_changed");
+        } else {
+            const section = container.createDiv(
+                "stats-section nexus-stats-grid nexus-dialog-section"
+            );
+            outcomes.forEach((outcome) => {
+                this.createStatCartouche(
+                    section,
+                    outcome.icon,
+                    outcome.value.toString(),
+                    outcome.label,
+                    outcome.color
+                );
+            });
+        }
 
-        // Total conversations cartouche (unique UUIDs in ZIPs)
-        this.createStatCartouche(
-            section,
-            "💬",
-            this.stats.totalConversations.toString(),
-            t("import_completion.stats.unique_conversations")
-        );
+        this.createArchiveLine(container);
+    }
 
-        // Duplicates cartouche (always shown to explain difference between total and created)
-        this.createStatCartouche(
-            section,
-            "🔁",
-            this.stats.duplicates.toString(),
-            t("import_completion.stats.duplicates"),
-            "var(--text-muted)"
-        );
+    /** Where those notes came from, as a sentence rather than more cards. */
+    private createArchiveLine(container: HTMLElement) {
+        const parts: string[] = [
+            t("import_completion.archive.conversations", {
+                count: String(this.stats.totalConversations),
+            }),
+            t("import_completion.archive.zips", {
+                count: String(this.stats.totalFiles),
+            }),
+        ];
 
-        // Created cartouche
-        this.createStatCartouche(
-            section,
-            "✨",
-            this.stats.created.toString(),
-            t("import_completion.stats.new"),
-            "var(--color-green)"
-        );
-
-        // Updated cartouche
-        this.createStatCartouche(
-            section,
-            "🔄",
-            this.stats.updated.toString(),
-            t("import_completion.stats.updated"),
-            "var(--color-orange)"
-        );
-
-        // Skipped cartouche
-        const skippedLabel =
-            this.stats.emptyConversations > 0
-                ? `${t("import_completion.stats.skipped")} (${
-                      this.stats.emptyConversations
-                  } with no exportable content)`
-                : t("import_completion.stats.skipped");
-        this.createStatCartouche(
-            section,
-            "⏭️",
-            this.stats.skipped.toString(),
-            skippedLabel,
-            "var(--text-muted)"
-        );
-
-        // Failed cartouche (only if > 0)
-        if (this.stats.failed > 0) {
-            this.createStatCartouche(
-                section,
-                "❌",
-                this.stats.failed.toString(),
-                t("import_completion.stats.failed"),
-                "var(--color-red)"
+        if (this.stats.duplicates > 0) {
+            parts.push(
+                t("import_completion.archive.duplicates", {
+                    count: String(this.stats.duplicates),
+                })
             );
         }
+
+        if (this.stats.notSelected !== null && this.stats.notSelected > 0) {
+            parts.push(
+                t("import_completion.archive.not_selected", {
+                    count: String(this.stats.notSelected),
+                })
+            );
+        }
+
+        if (this.stats.emptyConversations > 0) {
+            parts.push(
+                t("import_completion.archive.empty", {
+                    count: String(this.stats.emptyConversations),
+                })
+            );
+        }
+
+        const line = container.createDiv("nexus-completion-archive-line");
+        line.textContent = parts.join(" · ");
     }
 
     private createStatCartouche(
@@ -186,51 +224,76 @@ export class ImportCompletionDialog extends Modal {
         labelEl.textContent = label;
     }
 
+    /**
+     * What became of the files, in the same cards as the notes above.
+     *
+     * This used to be a sentence reading "found / total extracted (%)", red
+     * below half — which made every Claude import look failed, since Claude
+     * ships no files and nothing can be extracted. Cards say what happened to
+     * each population instead, and only a real loss is coloured.
+     */
     private createAttachmentsSection(container: HTMLElement) {
+        const outcomes: Array<{
+            icon: string;
+            value: number;
+            label: string;
+            color: string;
+        }> = [
+            {
+                icon: "📎",
+                value: this.stats.attachmentsFound,
+                label: t("import_completion.attachments.extracted"),
+                color: "var(--color-green)",
+            },
+            {
+                icon: "📄",
+                value: this.stats.attachmentsInline,
+                label: t("import_completion.attachments.inline"),
+                color: "var(--text-normal)",
+            },
+            {
+                icon: "🎨",
+                value: this.stats.artifacts,
+                label: t("import_completion.attachments.artifacts"),
+                color: "var(--color-purple)",
+            },
+            {
+                icon: "ℹ️",
+                value: this.stats.attachmentsNotProvided,
+                label: t("import_completion.attachments.not_provided"),
+                color: "var(--text-muted)",
+            },
+            {
+                icon: "⚠️",
+                value: this.stats.attachmentsMissing,
+                label: t("import_completion.attachments.missing"),
+                color: "var(--color-orange)",
+            },
+            {
+                icon: "❌",
+                value: this.stats.attachmentsFailed,
+                label: t("import_completion.attachments.failed"),
+                color: "var(--color-red)",
+            },
+        ].filter((outcome) => outcome.value > 0);
+
+        if (outcomes.length === 0) return;
+
+        const heading = container.createDiv("nexus-completion-group-label");
+        heading.textContent = t("import_completion.attachments.label");
+
         const section = container.createDiv(
-            "attachments-section nexus-dialog-section nexus-completion-panel nexus-completion-panel-center"
+            "attachments-section nexus-stats-grid nexus-dialog-section"
         );
-
-        const percentage = Math.round(
-            (this.stats.attachmentsFound / this.stats.attachmentsTotal) * 100
-        );
-
-        const icon = percentage === 100 ? "✅" : percentage > 50 ? "⚠️" : "❌";
-        const color =
-            percentage === 100
-                ? "var(--color-green)"
-                : percentage > 50
-                ? "var(--color-orange)"
-                : "var(--color-red)";
-
-        const attachmentText = section.createDiv();
-        attachmentText.appendText(`${icon} `);
-        attachmentText.createEl("strong", {
-            text: t("import_completion.attachments.label"),
-        });
-        attachmentText.appendText(
-            ` ${t("import_completion.attachments.summary", {
-                found: String(this.stats.attachmentsFound),
-                total: String(this.stats.attachmentsTotal),
-                percentage: String(percentage),
-            })}`
-        );
-        attachmentText.style.color = color;
-
-        if (
-            this.stats.attachmentsMissing > 0 ||
-            this.stats.attachmentsFailed > 0
-        ) {
-            const details = section.createDiv();
-            details.addClass("nexus-completion-panel-detail");
-            details.textContent = t(
-                "import_completion.attachments.missing_failed",
-                {
-                    missing: String(this.stats.attachmentsMissing),
-                    failed: String(this.stats.attachmentsFailed),
-                }
+        outcomes.forEach((outcome) => {
+            this.createStatCartouche(
+                section,
+                outcome.icon,
+                outcome.value.toString(),
+                outcome.label,
+                outcome.color
             );
-        }
+        });
     }
 
     private createReportSection(container: HTMLElement) {

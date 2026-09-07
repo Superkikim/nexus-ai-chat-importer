@@ -11,6 +11,7 @@ import { ZipArchiveReader, ZipEntryMeta } from "./types";
 export * from "./types";
 export { buildAttachmentLookupIndex } from "./attachment-lookup-index";
 export { writeZipEntryToVault } from "./write-zip-entry-to-vault";
+export { sliceStoredZipEntry } from "./nested-zip-slice";
 
 export async function createZipArchiveReader(
     file: File,

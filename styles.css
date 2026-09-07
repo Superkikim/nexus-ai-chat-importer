@@ -602,16 +602,23 @@
 }
 
 /* Timestamp preview styling */
+/* The preview belongs to the format it previews: it lives inside the setting
+   item, wrapping onto its own full-width line under the name and dropdown. */
+.nexus-timestamp-setting {
+    flex-wrap: wrap;
+}
+
 .nexus-timestamp-preview {
-    background: var(--background-secondary);
-    border-radius: 6px;
-    padding: 1em;
-    margin-top: 1em;
-    border-left: 3px solid var(--interactive-accent);
+    flex: 1 1 100%;
+    margin-top: 0.75em;
+    padding-top: 0.6em;
+    border-top: 1px solid var(--background-modifier-border);
 }
 
 .nexus-preview-line {
-    margin-bottom: 0.5em;
+    margin-bottom: 0.2em;
+    color: var(--text-muted);
+    font-size: 0.9em;
 }
 
 .nexus-preview-code {
@@ -625,10 +632,9 @@
 }
 
 .nexus-format-description {
-    font-size: 0.9em;
-    color: var(--text-muted);
+    font-size: 0.85em;
+    color: var(--text-faint);
     line-height: 1.4;
-    margin-top: 0.5em;
 }
 
 /* Folder path input styling - force consistent layout with column structure */
@@ -928,6 +934,63 @@
     line-height: 1.4;
 }
 
+/* Reprocess opt-in — full width beneath the two import-mode boxes */
+.nexus-reprocess-option {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 12px;
+    padding: 14px 16px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 8px;
+    background-color: var(--background-primary);
+    cursor: pointer;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    min-width: 0;
+}
+
+.nexus-reprocess-option:hover {
+    border-color: var(--interactive-accent);
+}
+
+.nexus-reprocess-option.is-selected {
+    border-color: var(--interactive-accent);
+    border-width: 2px;
+    /* Compensate the thicker border so the box does not shift on toggle. */
+    padding: 13px 15px;
+    box-shadow: 0 0 0 1px
+        color-mix(in srgb, var(--interactive-accent) 20%, transparent);
+}
+
+.nexus-reprocess-checkbox {
+    flex: 0 0 auto;
+    margin: 2px 0 0;
+    cursor: pointer;
+}
+
+/* "Select Specific" turns the box into a statement rather than a control:
+   the checkbox goes, everything else stays where it was so the dialog keeps
+   its height when the mode changes. */
+.nexus-reprocess-option.is-informational {
+    cursor: default;
+}
+
+.nexus-reprocess-option.is-informational .nexus-reprocess-checkbox {
+    display: none;
+}
+
+.nexus-reprocess-option.is-informational .nexus-option-box-label {
+    cursor: default;
+}
+
+.nexus-reprocess-warning {
+    margin-top: 6px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: var(--text-warning, var(--text-muted));
+    font-weight: 500;
+}
+
 .nexus-drop-zone {
     border: 2px dashed var(--background-modifier-border);
     border-radius: 10px;
@@ -1084,6 +1147,10 @@
 }
 
 @media (max-width: 600px) {
+    .nexus-import-options-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
     .modal.nexus-installation-welcome-dialog,
     .modal.nexus-upgrade-complete-modal,
     .modal.nexus-provider-selection-dialog,
@@ -1626,13 +1693,18 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     padding: 20px 24px 24px 24px;
 }
 
+/* The dialog shows only the outcomes that happened, so the count varies from
+   one to five: a fixed three-column grid would strand a lone card in a corner.
+   They centre and wrap instead. */
 .nexus-import-completion-dialog .nexus-stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: 12px;
 }
 
 .nexus-import-completion-dialog .nexus-stat-card {
+    flex: 0 1 140px;
     text-align: center;
     padding: 12px;
     background-color: var(--background-primary);
@@ -1652,6 +1724,27 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 }
 
 .nexus-import-completion-dialog .nexus-stat-card-label {
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+/* Names the row of cards under it, quietly: the cards carry the numbers. */
+.nexus-import-completion-dialog .nexus-completion-group-label {
+    margin-top: 16px;
+    margin-bottom: 8px;
+    text-align: center;
+    font-size: 0.8em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* Where the notes came from: context for the cards above, not a result of
+   its own, so it reads as a sentence rather than competing with them. */
+.nexus-import-completion-dialog .nexus-completion-archive-line {
+    margin-top: 12px;
+    text-align: center;
     font-size: 0.85em;
     color: var(--text-muted);
 }
@@ -1709,14 +1802,14 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
         padding: 14px 14px 18px 14px;
     }
 
-    .nexus-import-completion-dialog .nexus-stats-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+    .nexus-import-completion-dialog .nexus-stat-card {
+        flex: 1 1 120px;
     }
 }
 
 @media (max-width: 480px) {
-    .nexus-import-completion-dialog .nexus-stats-grid {
-        grid-template-columns: 1fr;
+    .nexus-import-completion-dialog .nexus-stat-card {
+        flex: 1 1 100%;
     }
 }
 
@@ -1820,6 +1913,16 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     font-size: 0.85em;
 }
 
+/* Caption under the summary cards. It spans every column so it stays a single
+   row whatever the responsive column count, instead of being dealt a cell. */
+.nexus-conversation-selection-dialog .nexus-summary-scope {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.78em;
+    opacity: 0.75;
+}
+
 .nexus-conversation-selection-dialog .nexus-controls-row {
     background-color: var(--background-primary);
     padding: 12px;
@@ -1852,22 +1955,71 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     min-width: 0;
 }
 
-.nexus-conversation-selection-dialog .nexus-existing-only-control {
+.nexus-conversation-selection-dialog .nexus-status-chips {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+/* One treatment for every chip: muted outline when off, accent fill when on.
+   The colours come from the Obsidian theme, so the control follows whatever
+   the user runs. Status colours stay on the badges in the list, where they
+   identify a row rather than a toggle state. */
+.nexus-conversation-selection-dialog .nexus-status-chip {
+    padding: 4px 12px;
+    border: 1px solid var(--background-modifier-border);
+    border-radius: 12px;
+    background-color: transparent;
+    box-shadow: none;
+    color: var(--text-muted);
+    font-size: 0.85em;
+    font-weight: 500;
+    line-height: 1.4;
+    height: auto;
+    cursor: pointer;
+}
+
+.nexus-conversation-selection-dialog .nexus-status-chip:hover {
+    background-color: var(--background-modifier-hover);
+    border-color: var(--background-modifier-border-hover);
+    color: var(--text-normal);
+}
+
+.nexus-conversation-selection-dialog .nexus-status-chip.is-active {
+    background-color: var(--interactive-accent);
+    border-color: var(--interactive-accent);
+    color: var(--text-on-accent);
+}
+
+.nexus-conversation-selection-dialog .nexus-status-chip.is-active:hover {
+    background-color: var(--interactive-accent-hover);
+    border-color: var(--interactive-accent-hover);
+    color: var(--text-on-accent);
+}
+
+.nexus-conversation-selection-dialog .nexus-status-chip:focus-visible {
+    outline: 2px solid var(--interactive-accent);
+    outline-offset: 2px;
+}
+
+.nexus-conversation-selection-dialog .nexus-rebuild-control {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     white-space: nowrap;
 }
 
-.nexus-conversation-selection-dialog .nexus-existing-only-checkbox {
+.nexus-conversation-selection-dialog .nexus-rebuild-checkbox {
     margin: 0;
 }
 
-.nexus-conversation-selection-dialog .nexus-existing-only-label {
+.nexus-conversation-selection-dialog .nexus-rebuild-label {
+    font-size: 14px;
     cursor: pointer;
 }
 
-.nexus-conversation-selection-dialog .nexus-existing-only-help {
+.nexus-conversation-selection-dialog .nexus-controls-help {
     flex: 1 1 100%;
     font-size: 0.85em;
     color: var(--text-muted);
@@ -2129,7 +2281,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
         order: -1;
     }
 
-    .nexus-conversation-selection-dialog .nexus-existing-only-control {
+    .nexus-conversation-selection-dialog .nexus-status-chips,
+    .nexus-conversation-selection-dialog .nexus-rebuild-control {
         flex: 1 1 100%;
     }
 

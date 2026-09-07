@@ -70,6 +70,12 @@
             "selective_label": "选择性导入",
             "selective_description": "预览并选择要导入的对话"
         },
+        "reprocess": {
+            "label": "重新处理已有笔记",
+            "description": "重建库中已存在的笔记，而不是跳过它们。在插件更新后使用，以应用新功能。",
+            "selective_hint": "要重新生成已有笔记，请在下一步中选择它们并勾选「重新生成所选笔记」。",
+            "warning": "这些笔记中的手动修改将会丢失。"
+        },
         "file_area": {
             "section_title": "选择文件",
             "drop_text_default": "将 ZIP 文件拖放至此处，或点击浏览",
@@ -94,8 +100,8 @@
             "search_placeholder": "搜索对话...",
             "status_label": "状态：",
             "show_label": "显示：",
-            "existing_only_label": "仅显示已存在的会话",
-            "existing_only_help": "选择已存在的会话会覆盖并重新处理对应笔记。"
+            "rebuild_existing_label": "若所选笔记已存在，则重新生成",
+            "rebuild_help": "关闭时，已有笔记只会补上新消息。开启时，保险库中每个被选中的笔记都会从头重写，手动修改将丢失。"
         },
         "status_filter_options": {
             "all": "全部",
@@ -130,6 +136,7 @@
             "new": "新建",
             "updated": "已更新",
             "unchanged": "未变更",
+            "scope_note": "基于整个存档",
             "selected_of": "已选 {{selected}} / {{total}}"
         },
         "buttons": {
@@ -161,18 +168,28 @@
         "title": "导入完成",
         "success_message": "✅ 对话已成功导入",
         "stats": {
-            "zip_files_processed": "已处理 ZIP 文件",
-            "unique_conversations": "唯一对话",
-            "duplicates": "重复",
             "new": "新建",
             "updated": "已更新",
-            "skipped": "已跳过",
+            "recreated": "已重新生成",
+            "unchanged": "无变化",
             "failed": "失败"
         },
+        "archive": {
+            "conversations": "{{count}} 个会话",
+            "zips": "{{count}} 个 ZIP 文件",
+            "duplicates": "移除 {{count}} 个重复",
+            "not_selected": "{{count}} 个未选择",
+            "empty": "{{count}} 个无可导出内容"
+        },
+        "nothing_changed": "保险库没有任何变化。",
         "attachments": {
-            "label": "附件：",
-            "summary": "{{found}}/{{total}} 已提取（{{percentage}}%）",
-            "missing_failed": "{{missing}} 缺失，{{failed}} 失败"
+            "label": "文件",
+            "extracted": "已保存",
+            "inline": "笔记内",
+            "not_provided": "导出中没有",
+            "missing": "缺失",
+            "failed": "失败",
+            "artifacts": "工件"
         },
         "report": {
             "label": "📄 详细报告："
@@ -217,7 +234,7 @@
             "section_title": "📅 消息日期格式",
             "custom_format": {
                 "name": "自定义消息时间戳格式",
-                "desc": "覆盖消息标题中默认的基于区域设置的时间戳格式。禁用时，时间戳遵循 Obsidian 的语言设置。若 Obsidian 设置为英语，则强制使用美国格式（YYYY/DD/MM）。"
+                "desc": "覆盖消息标题中默认的基于区域设置的时间戳格式。禁用时，时间戳遵循 Obsidian 的语言设置。"
             },
             "timestamp_format": {
                 "name": "时间戳格式",
@@ -322,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 新增内容\n\n### 🐛 修复\n- **Claude** — 现已识别新的拆分导出格式：Anthropic 提供列出多个 ZIP 的清单文件，`users.json` 不再与 `conversations.json` 放在一起，导致 `conversations-000.zip` 被误判为 ChatGPT 导出且未导入任何内容\n- 直接导入 `conversations-000.zip` 即可 — 项目、记忆和元数据压缩包不含插件需要的内容\n- 此前支持的所有导出格式的识别方式保持不变\n- **Obsidian 1.13+** — 恢复标注颜色：Obsidian 1.13.0 要求 `--callout-color` 使用真实的 CSS 颜色，导致 Nexus 标注既无颜色也无边框",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### ✨ 新功能\n- **ChatGPT** — 只要导出中包含，生成的图片和文档会再次被导入\n- **ChatGPT** — Privacy Portal 存档可直接导入；无需先解压账户级 ZIP\n- **重建现有笔记**，让旧的导入也能用上当前功能 — 对重建笔记的手动修改会丢失\n- **按状态筛选对话列表** — 新增、已更新、无变化\n- **粘贴的大段 Claude 内容** 会被提取到链接文件中，而不会让笔记变得臃肿\n\n### 🔧 改进\n- **报告和完成对话框** 已围绕笔记的实际处理结果重做；此前多个计数有误\n- 文件名、去重和附件计数\n\n### 🐛 修复\n- **Claude 导入恢复正常**（1.6.9）— Anthropic 新的分卷导出曾被当作 ChatGPT 导出读取，导致什么都没导入\n- **在 Obsidian 1.13+ 上恢复标注颜色**（1.6.9）\n\n[完整发布说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "知道了！"
             }
@@ -343,6 +360,17 @@
             "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
             "buttons": {
                 "proceed": "Proceed"
+            }
+        },
+        "repair_notes": {
+            "title": "修复拖慢 Obsidian 的笔记",
+            "intro": "{{count}} 个会话把粘贴的内容放在了一行里。Obsidian 会整行读取，因此整个保险库的索引都被拖慢。",
+            "and_more": "… 还有 {{count}} 个",
+            "what_happens": "Nexus 可以把这些内容移到会话旁边的文件中，并在原处留下一个折叠链接——和现在导入时的做法一样。",
+            "backup_note": "修改前会在原处复制一份笔记，不会丢失任何内容。确认无误后可以删除这些副本。",
+            "buttons": {
+                "repair": "修复",
+                "ignore": "保持不变"
             }
         }
     },
@@ -480,17 +508,11 @@
             "get_started": "开始使用"
         }
     },
-    "mobile_archive_processed_dialog": {
-        "title": "归档已处理",
-        "description": "文件 {{filename}} 已在此设备上导入过。",
-        "choice_help": "请选择在移动端继续的方式：",
-        "button_reprocess": "重新处理并重建所有笔记",
-        "button_incremental": "仅添加/更新缺失或已更新的笔记"
-    },
     "notices": {
         "import_analyzing": "正在分析来自 {{count}} 个文件的对话...",
         "import_no_new": "未发现新的或已更新的对话，所有对话均已是最新状态。",
         "import_starting": "正在导入 {{count}} 条对话（{{new}} 条新建，{{updated}} 条已更新）...",
+        "import_starting_reprocess": "正在导入 {{count}} 个对话（重建 {{rebuilt}} 个）…",
         "import_starting_selected": "正在从 {{files}} 个文件中导入 {{count}} 条已选对话...",
         "import_completed_fallback": "导入完成。已创建 {{created}} 条，已更新 {{updated}} 条。",
         "import_error": "导入时发生错误：{{error}}",
@@ -506,7 +528,23 @@
         "report_failed": "创建日志文件失败，请查看控制台获取详细信息。",
         "attachment_map_failed": "构建附件映射失败，请查看控制台获取详细信息。",
         "ribbon_tooltip": "Nexus AI Chat Importer - 导入新文件",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "有 {{count}} 个压缩包无法读取（{{provider}}）。详情请查看控制台。"
+    },
+    "archive_messages": {
+        "empty": "此 ZIP 文件不包含任何文件。请确认您选择的是正确的导出文件。",
+        "unsupported_format": "此 ZIP 文件与任何受支持的导出格式都不匹配。",
+        "nested_zip": {
+            "generic": "此 ZIP 中包含其他 ZIP 文件。请解压外层 ZIP，然后直接导入内层的 ZIP 文件。",
+            "perplexity": "此 ZIP 中包含其他 ZIP 文件。请解压外层 ZIP，然后直接导入其中 Perplexity 的 part*.zip 文件。"
+        },
+        "wrong_provider": "这个 ZIP 是 {{detected}} 的导出文件，不是 {{expected}} 的。请选择对应的提供方后再导入。",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
+        }
     },
     "commands": {
         "import_conversations": {
@@ -525,9 +563,8 @@
     "support_box": {
         "header": "支持此插件",
         "header_highlight": "支持此插件",
-        "default_message_emphasis": "Nexus 已超过 15,000 次下载。当前每月只有约 5 位用户通过捐赠支持开发。",
-        "default_message": "我在个人时间维护这个插件，维持开发环境也有持续成本。新增 provider 支持还需要付费订阅，才能进行准确测试并提供可靠支持。",
-        "reality_check": "如果 Nexus 对你有价值，欢迎考虑一次性或按月捐赠。感谢所有已经在支持这个项目的用户。",
+        "default_message_emphasis": "Nexus 的下载量已超过 15,000 次。你的支持让开发得以继续，也覆盖了我的工具与订阅开销。",
+        "default_message": "我目前处于失业状态，每一份支持都非常重要。",
         "button_alt": "支持我的工作"
     }
 }

@@ -17,11 +17,7 @@
  */
 
 // src/providers/chatgpt/chatgpt-adapter.ts
-import {
-    StandardConversation,
-    StandardMessage,
-    StandardAttachment,
-} from "../../types/standard";
+import { StandardConversation, StandardMessage } from "../../types/standard";
 import { ChatGPTConverter } from "./chatgpt-converter";
 import { ChatGPTAttachmentExtractor } from "./chatgpt-attachment-extractor";
 import { ChatGPTReportNamingStrategy } from "./chatgpt-report-naming";
@@ -31,9 +27,10 @@ import {
     buildChatGPTLibraryIndex,
     ChatGPTLibraryIndex,
 } from "./chatgpt-library-index";
+import { reconcileChatGPTLibraryArtifacts } from "./chatgpt-library-artifact-reconciler";
 import { Chat, ChatMessage } from "./chatgpt-types";
-import { sanitizeFileName } from "../../utils/file-utils";
 import { ZipArchiveReader } from "../../utils/zip-loader";
+import { ScopedLogger } from "../../logger";
 import { AttachmentMap } from "../../services/attachment-map-builder";
 import type NexusAiChatImporterPlugin from "../../main";
 import {
@@ -44,6 +41,7 @@ import {
 export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
     private attachmentExtractor: ChatGPTAttachmentExtractor;
     private reportNamingStrategy: ChatGPTReportNamingStrategy;
+    private libraryLogger: ScopedLogger;
     // Cache the library index per ZIP so it is parsed once per import.
     private libraryIndexCache = new WeakMap<
         ZipArchiveReader,
@@ -57,6 +55,7 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
             plugin.logger
         );
         this.reportNamingStrategy = new ChatGPTReportNamingStrategy();
+        this.libraryLogger = plugin.logger.child("ChatGPTLibrary");
     }
 
     detect(rawConversations: unknown[]): boolean {
@@ -238,24 +237,38 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
     }
 
     /**
-     * Inject Canvas-generated library files (linked by origination_message_id),
-     * then run the shared attachment extraction. Canvas documents (e.g. a
-     * generated .docx) live in library_files.json rather than the message's
-     * metadata.attachments, so they would otherwise never be imported.
+     * Attach this conversation's library artifacts — generated images and
+     * generated documents alike — to the messages that produced them.
+     *
+     * Generated content lives in library_files.json rather than the message's
+     * metadata.attachments, and its producing message is sometimes missing from
+     * the export, so it would otherwise never be imported. All the decisions
+     * live in the pure reconciler; this method only supplies the index and a
+     * payload-presence predicate.
+     *
+     * Runs before attachment extraction and reads no `.dat` payload: `zip.has`
+     * is a central-directory lookup, so mobile and desktop stay lazy.
      */
-    async processMessageAttachments(
+    async reconcileConversationMessages(
         messages: StandardMessage[],
         conversationId: string,
         zip: ZipArchiveReader
     ): Promise<StandardMessage[]> {
         const libraryIndex = await this.getLibraryIndex(zip);
-        const prepared = libraryIndex
-            ? messages.map((message) =>
-                  this.injectLibraryAttachments(message, libraryIndex, zip)
-              )
-            : messages;
+        if (!libraryIndex) {
+            // Old-format export: nothing extra to attach.
+            return messages;
+        }
 
-        return super.processMessageAttachments(prepared, conversationId, zip);
+        const { messages: reconciled } = reconcileChatGPTLibraryArtifacts(
+            messages,
+            conversationId,
+            libraryIndex,
+            (fileId) => zip.has(`${fileId}.dat`),
+            this.libraryLogger
+        );
+
+        return reconciled;
     }
 
     private getLibraryIndex(
@@ -267,54 +280,6 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
             this.libraryIndexCache.set(zip, cached);
         }
         return cached;
-    }
-
-    /**
-     * Attach library files whose origination_message_id matches this message,
-     * skipping anything already present (by fileId) and anything whose payload
-     * is not actually in the ZIP (avoids spurious "missing" entries).
-     */
-    private injectLibraryAttachments(
-        message: StandardMessage,
-        libraryIndex: ChatGPTLibraryIndex,
-        zip: ZipArchiveReader
-    ): StandardMessage {
-        if (!message.id) return message;
-
-        const entries = libraryIndex.byOriginationMessageId.get(message.id);
-        if (!entries || entries.length === 0) return message;
-
-        const existing = message.attachments ?? [];
-        const seenFileIds = new Set(
-            existing.map((att) => att.fileId).filter(Boolean) as string[]
-        );
-
-        const additions: StandardAttachment[] = [];
-        for (const entry of entries) {
-            // Only inject known assistant-generated artifact types.
-            // - "report": assistant-produced document (e.g. Canvas .docx) — not
-            //   present in metadata.attachments, must be injected here.
-            // - "writing_block": user-pasted Canvas content — already in
-            //   metadata.attachments on the user message; injecting it here too
-            //   would create a duplicate on the wrong (assistant) message.
-            // - null/undefined: plain user upload, same reason as writing_block.
-            // Whitelist approach: add new assistant-generated types explicitly.
-            if (entry.artifactType !== "report") continue;
-            if (seenFileIds.has(entry.fileId)) continue;
-            if (!zip.has(`${entry.fileId}.dat`)) continue;
-
-            const baseName = entry.fileName.split("/").pop() || entry.fileName;
-            additions.push({
-                fileName: sanitizeFileName(baseName),
-                fileType: entry.mimeType || "application/octet-stream",
-                fileId: entry.fileId,
-            });
-            seenFileIds.add(entry.fileId);
-        }
-
-        if (additions.length === 0) return message;
-
-        return { ...message, attachments: [...existing, ...additions] };
     }
 
     getReportNamingStrategy() {

@@ -38,6 +38,7 @@ import { t } from "../i18n";
 import { Upgrade130 } from "./versions/upgrade-1.3.0";
 import { Upgrade140 } from "./versions/upgrade-1.4.0";
 import { Upgrade167 } from "./versions/upgrade-1.6.7";
+import { Upgrade170 } from "./versions/upgrade-1.7.0";
 
 const logger = new Logger();
 
@@ -80,6 +81,7 @@ export class IncrementalUpgradeManager {
             new Upgrade130(),
             new Upgrade140(),
             new Upgrade167(),
+            new Upgrade170(),
         ];
 
         // Sort by version for incremental execution

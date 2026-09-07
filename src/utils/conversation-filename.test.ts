@@ -19,6 +19,39 @@ describe("conversation filename length policy", () => {
         expect(name).toBe("Short title");
     });
 
+    it("preserves non-ASCII letters at the beginning of titles", () => {
+        const name = generateConversationFileName(
+            "Ошибка Ambiguous project name",
+            1_700_000_000,
+            false,
+            "YYYY-MM-DD"
+        );
+
+        expect(name).toBe("Ошибка Ambiguous project name");
+    });
+
+    it("keeps Cyrillic composed letters intact", () => {
+        const name = generateConversationFileName(
+            "Отладка IsActive свойства",
+            1_700_000_000,
+            false,
+            "YYYY-MM-DD"
+        );
+
+        expect(name).toBe("Отладка IsActive свойства");
+    });
+
+    it("still strips diacritics from Latin letters", () => {
+        const name = generateConversationFileName(
+            "Café résumé",
+            1_700_000_000,
+            false,
+            "YYYY-MM-DD"
+        );
+
+        expect(name).toBe("Cafe resume");
+    });
+
     it("truncates long ASCII titles to the configured byte budget", () => {
         const longTitle = "A".repeat(300);
         const maxBaseBytes = CONVERSATION_NOTE_FILENAME_MAX_BYTES - 3;
@@ -46,6 +79,7 @@ describe("conversation filename length policy", () => {
         );
 
         expect(getUtf8ByteLength(name)).toBeLessThanOrEqual(maxBaseBytes);
+        expect(name.startsWith("你好世界")).toBe(true);
         expect(name.length).toBeGreaterThan(0);
     });
 

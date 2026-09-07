@@ -31,10 +31,19 @@ export type ArchiveClassification =
           message?: string;
       };
 
-export function getArchiveProviderMismatchMessage(
-    provider: SupportedArchiveProvider
+/**
+ * Names what the archive actually is, since detection already knows: telling
+ * someone their Mistral Vibe export "does not look like a Claude export"
+ * hides the one fact that lets them fix it.
+ */
+export function getArchiveWrongProviderMessage(
+    detected: SupportedArchiveProvider,
+    expected: SupportedArchiveProvider
 ): string {
-    return t(`archive_messages.provider_mismatch.${provider}`);
+    return t("archive_messages.wrong_provider", {
+        detected: t(`archive_messages.provider_names.${detected}`),
+        expected: t(`archive_messages.provider_names.${expected}`),
+    });
 }
 
 export function getArchiveNestedZipMessage(
@@ -114,93 +123,42 @@ export function classifyArchiveEntries(
     if (forcedProvider) {
         const expectedProvider = forcedProvider as SupportedArchiveProvider;
 
-        if (expectedProvider === "chatgpt") {
-            if (detectedProvider === "chatgpt") {
-                return {
-                    supported: true,
-                    provider: "chatgpt",
-                    reason: "supported",
-                };
-            }
-
+        if (detectedProvider === expectedProvider) {
             return {
-                supported: false,
-                reason: detectedProvider
-                    ? "provider-mismatch"
-                    : nestedZipContainer
-                    ? "nested-zip-container"
-                    : "unsupported-format",
-                message: nestedZipContainer
-                    ? getArchiveNestedZipMessage(expectedProvider)
-                    : getArchiveProviderMismatchMessage("chatgpt"),
+                supported: true,
+                provider: expectedProvider,
+                reason: "supported",
             };
         }
 
-        if (expectedProvider === "claude") {
-            if (detectedProvider === "claude") {
-                return {
-                    supported: true,
-                    provider: "claude",
-                    reason: "supported",
-                };
-            }
-
+        // Three refusals, three sentences. They used to share one — "this does
+        // not look like a Claude export" — which told a user holding a Vibe
+        // archive nothing about what they were holding, and told a user
+        // holding an unrelated ZIP to go hunting for the right provider.
+        if (nestedZipContainer) {
             return {
                 supported: false,
-                reason: detectedProvider
-                    ? "provider-mismatch"
-                    : nestedZipContainer
-                    ? "nested-zip-container"
-                    : "unsupported-format",
-                message: nestedZipContainer
-                    ? getArchiveNestedZipMessage(expectedProvider)
-                    : getArchiveProviderMismatchMessage("claude"),
+                reason: "nested-zip-container",
+                message: getArchiveNestedZipMessage(expectedProvider),
             };
         }
 
-        if (expectedProvider === "vibe") {
-            if (detectedProvider === "vibe") {
-                return {
-                    supported: true,
-                    provider: "vibe",
-                    reason: "supported",
-                };
-            }
-
+        if (detectedProvider) {
             return {
                 supported: false,
-                reason: detectedProvider
-                    ? "provider-mismatch"
-                    : nestedZipContainer
-                    ? "nested-zip-container"
-                    : "unsupported-format",
-                message: nestedZipContainer
-                    ? getArchiveNestedZipMessage(expectedProvider)
-                    : getArchiveProviderMismatchMessage("vibe"),
+                reason: "provider-mismatch",
+                message: getArchiveWrongProviderMessage(
+                    detectedProvider,
+                    expectedProvider
+                ),
             };
         }
 
-        if (expectedProvider === "perplexity") {
-            if (detectedProvider === "perplexity") {
-                return {
-                    supported: true,
-                    provider: "perplexity",
-                    reason: "supported",
-                };
-            }
-
-            return {
-                supported: false,
-                reason: detectedProvider
-                    ? "provider-mismatch"
-                    : nestedZipContainer
-                    ? "nested-zip-container"
-                    : "unsupported-format",
-                message: nestedZipContainer
-                    ? getArchiveNestedZipMessage(expectedProvider)
-                    : getArchiveProviderMismatchMessage("perplexity"),
-            };
-        }
+        return {
+            supported: false,
+            reason: "unsupported-format",
+            message: getArchiveUnsupportedFormatMessage(),
+        };
     }
 
     if (!detectedProvider) {
@@ -309,10 +267,14 @@ export async function resolveArchiveClassification(
     }
 
     if (forcedProvider && forcedProvider !== "claude") {
+        // The probe just proved it is Claude, so the refusal can say so: a
+        // split export carries no users.json and passes for ChatGPT by name
+        // alone.
         return {
             supported: false,
             reason: "provider-mismatch",
-            message: getArchiveProviderMismatchMessage(
+            message: getArchiveWrongProviderMessage(
+                "claude",
                 forcedProvider as SupportedArchiveProvider
             ),
         };

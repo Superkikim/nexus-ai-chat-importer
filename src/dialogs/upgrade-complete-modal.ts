@@ -16,10 +16,11 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { App, Component, Modal, MarkdownRenderer, requestUrl } from "obsidian";
+import { App, Component, Modal, MarkdownRenderer } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
 import { createResourceLinks } from "../ui/components/resource-links";
+import { fetchWhatsNewSection } from "../utils/release-notes";
 import { t } from "../i18n";
 
 /**
@@ -72,28 +73,14 @@ export class UpgradeCompleteModal extends Modal {
     }
 
     private async addReleaseNotes() {
-        // Localized fallback content used when README fetch is unavailable
-        let content = t("upgrade.complete_modal.fallback_content", {
-            version: this.version,
-        });
-
-        try {
-            // Try to fetch What's New section from README
-            const response = await requestUrl({
-                url: `https://raw.githubusercontent.com/Superkikim/nexus-ai-chat-importer/${this.version}/README.md`,
-                method: "GET",
+        // Localized fallback, shown when the README fetch is unavailable
+        // (offline, tag not yet published).
+        const fetched = await fetchWhatsNewSection(this.version);
+        const content =
+            fetched ??
+            t("upgrade.complete_modal.fallback_content", {
+                version: this.version,
             });
-            if (response.status >= 200 && response.status < 300) {
-                const whatsNewMatch = response.text.match(
-                    /## ✨ What's New\s+([\s\S]*?)(?=\n## |\n# |$)/
-                );
-                if (whatsNewMatch && whatsNewMatch[1]) {
-                    content = whatsNewMatch[1].trim();
-                }
-            }
-        } catch {
-            // Use fallback content
-        }
 
         // Render markdown
         const contentDiv = this.contentEl.createDiv({

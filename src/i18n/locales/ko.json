@@ -70,6 +70,12 @@
             "selective_label": "개별 선택",
             "selective_description": "대화를 미리 보고 선택합니다"
         },
+        "reprocess": {
+            "label": "기존 노트 다시 처리",
+            "description": "보관함에 이미 있는 노트를 건너뛰지 않고 다시 만듭니다. 플러그인을 업데이트한 뒤 새 기능을 적용할 때 사용하세요.",
+            "selective_hint": "기존 노트를 다시 만들려면 다음 단계에서 선택한 뒤 “선택한 노트 다시 만들기”를 체크하세요.",
+            "warning": "해당 노트에 직접 편집한 내용은 사라집니다."
+        },
         "file_area": {
             "section_title": "파일 선택",
             "drop_text_default": "ZIP 파일을 여기에 끌어다 놓거나 클릭하여 찾아보기",
@@ -94,8 +100,8 @@
             "search_placeholder": "대화 검색...",
             "status_label": "상태:",
             "show_label": "표시:",
-            "existing_only_label": "기존 대화만 표시",
-            "existing_only_help": "기존 대화를 선택하면 해당 노트가 덮어쓰기되어 다시 처리됩니다."
+            "rebuild_existing_label": "선택한 노트가 이미 있으면 다시 만들기",
+            "rebuild_help": "끄면 기존 노트에는 새 메시지만 추가됩니다. 켜면 보관함에 이미 있는 선택된 노트가 모두 처음부터 다시 작성되며 수동 편집은 사라집니다."
         },
         "status_filter_options": {
             "all": "전체",
@@ -130,6 +136,7 @@
             "new": "신규",
             "updated": "업데이트됨",
             "unchanged": "변경 없음",
+            "scope_note": "아카이브 전체 기준",
             "selected_of": "{{total}}개 중 {{selected}}개 선택됨"
         },
         "buttons": {
@@ -161,18 +168,28 @@
         "title": "가져오기 완료",
         "success_message": "✅ 대화를 성공적으로 가져왔습니다",
         "stats": {
-            "zip_files_processed": "처리된 ZIP 파일",
-            "unique_conversations": "고유 대화",
-            "duplicates": "중복",
             "new": "신규",
             "updated": "업데이트됨",
-            "skipped": "건너뜀",
+            "recreated": "다시 만듦",
+            "unchanged": "변경 없음",
             "failed": "실패"
         },
+        "archive": {
+            "conversations": "대화 {{count}}개",
+            "zips": "ZIP 파일 {{count}}개",
+            "duplicates": "중복 {{count}}개 제거",
+            "not_selected": "선택 안 함 {{count}}개",
+            "empty": "내보낼 내용 없음 {{count}}개"
+        },
+        "nothing_changed": "보관함에서 바뀐 것이 없습니다.",
         "attachments": {
-            "label": "첨부 파일:",
-            "summary": "{{found}}/{{total}}개 추출됨 ({{percentage}}%)",
-            "missing_failed": "{{missing}}개 없음, {{failed}}개 실패"
+            "label": "파일",
+            "extracted": "저장됨",
+            "inline": "노트 내",
+            "not_provided": "내보내기에 없음",
+            "missing": "찾을 수 없음",
+            "failed": "실패",
+            "artifacts": "아티팩트"
         },
         "report": {
             "label": "📄 상세 보고서:"
@@ -217,7 +234,7 @@
             "section_title": "📅 메시지 날짜 형식",
             "custom_format": {
                 "name": "메시지 타임스탬프 형식 사용자 지정",
-                "desc": "메시지 헤더의 기본 로케일 기반 타임스탬프 형식을 재정의합니다. 비활성화되면 타임스탬프는 Obsidian의 언어 설정을 따릅니다. Obsidian이 영어로 설정된 경우 미국 형식(YYYY/DD/MM)이 적용됩니다."
+                "desc": "메시지 헤더의 기본 로케일 기반 타임스탬프 형식을 재정의합니다. 비활성화되면 타임스탬프는 Obsidian의 언어 설정을 따릅니다."
             },
             "timestamp_format": {
                 "name": "타임스탬프 형식",
@@ -322,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ 업그레이드 완료 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 🐛 수정\n- **Claude** — 새로운 분할 내보내기를 인식합니다. Anthropic이 여러 ZIP을 나열한 매니페스트를 제공하면서 `users.json`이 `conversations.json` 옆에 있지 않게 되어 `conversations-000.zip`이 ChatGPT 내보내기로 인식되고 아무것도 가져오지 못했습니다\n- `conversations-000.zip`을 바로 가져오세요. 프로젝트·메모리·메타데이터 아카이브에는 플러그인이 사용하는 내용이 없습니다\n- 기존에 지원하던 모든 내보내기 형식의 인식 방식은 그대로입니다\n- **Obsidian 1.13+** — 콜아웃 색상이 복구되었습니다. Obsidian 1.13.0부터 `--callout-color`에 실제 CSS 색상이 필요해지면서 Nexus 콜아웃이 색과 테두리 없이 표시되었습니다",
+            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### ✨ 새 기능\n- **ChatGPT** — 내보내기에 포함되어 있으면 생성된 이미지와 문서를 다시 가져옵니다\n- **ChatGPT** — Privacy Portal 아카이브를 그대로 가져옵니다. 계정 수준 ZIP을 먼저 풀 필요가 없습니다\n- **기존 노트 다시 만들기** — 오래된 가져오기도 최신 기능을 반영합니다. 다시 만든 노트의 수동 편집은 사라집니다\n- **대화 목록을 상태로 필터링** — 신규, 업데이트됨, 변경 없음\n- **붙여넣은 대용량 Claude 콘텐츠** 는 노트를 부풀리지 않고 링크된 파일로 분리됩니다\n\n### 🔧 개선\n- **보고서와 완료 대화상자** 를 노트에 실제로 일어난 일을 기준으로 다시 만들었습니다. 여러 카운터가 잘못되어 있었습니다\n- 파일 이름, 중복 제거, 첨부 파일 개수\n\n### 🐛 수정\n- **Claude 가져오기가 다시 작동합니다** (1.6.9) — Anthropic의 새 분할 내보내기가 ChatGPT 내보내기로 읽혀 아무것도 가져오지 못했습니다\n- **Obsidian 1.13+에서 콜아웃 색상 복원** (1.6.9)\n\n[전체 릴리스 노트](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "알겠어요!"
             }
@@ -343,6 +360,17 @@
             "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
             "buttons": {
                 "proceed": "Proceed"
+            }
+        },
+        "repair_notes": {
+            "title": "Obsidian을 느리게 만드는 노트 복구",
+            "intro": "{{count}}개의 대화에 붙여넣은 내용이 한 줄로 들어 있습니다. Obsidian은 한 줄을 통째로 읽기 때문에 보관함 전체의 색인이 느려집니다.",
+            "and_more": "… 외 {{count}}개",
+            "what_happens": "Nexus가 그 내용을 대화 옆 파일로 옮기고 자리에는 접힌 링크를 남길 수 있습니다. 가져오기에서 하는 것과 같습니다.",
+            "backup_note": "수정 전에 각 노트를 옆에 복사하므로 잃는 것은 없습니다. 확인 후 복사본은 삭제해도 됩니다.",
+            "buttons": {
+                "repair": "복구하기",
+                "ignore": "그대로 두기"
             }
         }
     },
@@ -480,17 +508,11 @@
             "get_started": "시작하기"
         }
     },
-    "mobile_archive_processed_dialog": {
-        "title": "이미 처리된 아카이브입니다",
-        "description": "파일 {{filename}} 는 이 기기에서 이미 가져왔습니다.",
-        "choice_help": "모바일에서 계속할 방식을 선택하세요:",
-        "button_reprocess": "다시 처리하고 모든 노트 재생성",
-        "button_incremental": "누락되었거나 업데이트된 노트만 추가/업데이트"
-    },
     "notices": {
         "import_analyzing": "{{count}}개 파일에서 대화를 분석하는 중...",
         "import_no_new": "새로운 대화나 업데이트된 대화가 없습니다. 모든 대화가 이미 최신 상태입니다.",
         "import_starting": "{{count}}개 대화를 가져오는 중 (신규 {{new}}개, 업데이트됨 {{updated}}개)...",
+        "import_starting_reprocess": "대화 {{count}}개를 가져오는 중입니다 ({{rebuilt}}개 다시 생성)…",
         "import_starting_selected": "{{files}}개 파일에서 선택한 {{count}}개 대화를 가져오는 중...",
         "import_completed_fallback": "가져오기 완료. {{created}}개 생성됨, {{updated}}개 업데이트됨.",
         "import_error": "가져오는 중 오류 발생: {{error}}",
@@ -506,7 +528,23 @@
         "report_failed": "로그 파일을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
         "attachment_map_failed": "첨부 파일 맵을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
         "ribbon_tooltip": "Nexus AI Chat Importer - 새 파일 가져오기",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "{{count}}개의 아카이브를 읽을 수 없습니다({{provider}}). 자세한 내용은 콘솔을 확인하세요."
+    },
+    "archive_messages": {
+        "empty": "이 ZIP 파일에는 파일이 없습니다. 올바른 내보내기 파일을 선택했는지 확인하세요.",
+        "unsupported_format": "이 ZIP 파일은 지원되는 내보내기 형식과 일치하지 않습니다.",
+        "nested_zip": {
+            "generic": "이 ZIP에는 다른 ZIP 파일이 들어 있습니다. 바깥쪽 ZIP을 풀고 안쪽 ZIP 파일을 직접 가져오세요.",
+            "perplexity": "이 ZIP에는 다른 ZIP 파일이 들어 있습니다. 바깥쪽 ZIP을 풀고 안쪽의 Perplexity part*.zip 파일을 직접 가져오세요."
+        },
+        "wrong_provider": "이 ZIP은 {{expected}}가 아니라 {{detected}} 내보내기입니다. 해당 제공자를 선택해 가져오세요.",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
+        }
     },
     "commands": {
         "import_conversations": {
@@ -525,9 +563,8 @@
     "support_box": {
         "header": "이 플러그인 후원하기",
         "header_highlight": "이 플러그인 후원하기",
-        "default_message_emphasis": "Nexus는 15,000회 이상 다운로드되었습니다. 현재 개발을 후원하는 기부는 월 평균 약 5명 수준입니다.",
-        "default_message": "이 플러그인은 제 개인 시간에 유지보수하고 있으며, 개발 환경을 유지하는 데는 지속적인 비용이 듭니다. 새로운 제공자 지원을 추가하려면 정확한 테스트와 지원을 위해 유료 구독도 필요합니다.",
-        "reality_check": "Nexus가 도움이 된다면 일회성 또는 정기 후원을 부탁드립니다. 이미 후원해 주시는 모든 분들께 진심으로 감사드립니다.",
+        "default_message_emphasis": "Nexus의 다운로드가 15,000회를 넘었습니다. 여러분의 후원이 개발을 이어가게 하고 도구와 구독 비용을 충당합니다.",
+        "default_message": "현재 실직 상태라 작은 후원도 큰 힘이 됩니다.",
         "button_alt": "내 작업 후원하기"
     }
 }

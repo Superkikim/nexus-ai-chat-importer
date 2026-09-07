@@ -26,12 +26,20 @@ import {
 import {
     ConversationSelectionResult,
     ConversationSelectionState,
-    FilterOptions,
+    ConversationStatusFilter,
 } from "../types/conversation-selection";
 import { t } from "../i18n";
 
+/** Chip order, and the only statuses the filter knows about. */
+const STATUS_FILTERS: readonly ConversationStatusFilter[] = [
+    "new",
+    "updated",
+    "unchanged",
+];
+
 export class ConversationSelectionDialog extends Modal {
     private state: ConversationSelectionState;
+    private rebuildExisting = false;
     private onSelectionComplete: (result: ConversationSelectionResult) => void;
     private plugin?: NexusAiChatImporterPlugin;
     private analysisInfo?: AnalysisInfo;
@@ -67,20 +75,23 @@ export class ConversationSelectionDialog extends Modal {
                 direction: "desc",
             },
             filter: {
-                existenceStatus: "all",
-                existingOnly: false,
+                // Unchanged is off by default: it is the one status with
+                // nothing to import unless the user asks for a rebuild.
+                statuses: new Set<ConversationStatusFilter>(["new", "updated"]),
             },
             isLoading: false,
         };
 
-        // Auto-select all if setting is enabled
+        this.applyFiltersAndSort();
+
+        // Auto-select what the filter shows, not the whole archive: unchanged
+        // conversations are in the list now, and selecting one rebuilds its
+        // note. "Select All" applies to the visible rows for the same reason.
         if (plugin?.settings?.autoSelectAllOnOpen) {
-            conversations.forEach((conv) => {
+            this.state.filteredConversations.forEach((conv) => {
                 this.state.selectedIds.add(conv.id);
             });
         }
-
-        this.applyFiltersAndSort();
     }
 
     onOpen() {
@@ -169,95 +180,7 @@ export class ConversationSelectionDialog extends Modal {
             this.updatePagination();
         });
 
-        // Filter by status dropdown
-        const statusLabel = section.createEl("label", {
-            cls: "nexus-filter-label",
-        });
-        statusLabel.textContent = t(
-            "conversation_selection.controls.status_label"
-        );
-
-        const statusSelect = section.createEl("select", {
-            cls: "nexus-custom-select nexus-filter-select",
-        });
-
-        const statusOptions = [
-            {
-                value: "all",
-                text: t("conversation_selection.status_filter_options.all"),
-            },
-            {
-                value: "new",
-                text: t("conversation_selection.status_filter_options.new"),
-            },
-            {
-                value: "updated",
-                text: t("conversation_selection.status_filter_options.updated"),
-            },
-            {
-                value: "unchanged",
-                text: t(
-                    "conversation_selection.status_filter_options.unchanged"
-                ),
-            },
-        ];
-
-        statusOptions.forEach((option) => {
-            const optionEl = statusSelect.createEl("option");
-            optionEl.value = option.value;
-            optionEl.textContent = option.text;
-        });
-
-        statusSelect.value = this.state.filter.existenceStatus || "all";
-        statusSelect.addEventListener("change", (e) => {
-            const target = e.target as HTMLSelectElement;
-            this.state.filter.existenceStatus =
-                target.value as FilterOptions["existenceStatus"];
-            this.applyFiltersAndSort();
-            this.renderConversationList();
-            this.updateSummary();
-            this.updatePagination();
-        });
-
-        // Existing-only toggle (reprocess selected existing conversations)
-        const existingOnlyControl = section.createDiv(
-            "nexus-existing-only-control"
-        );
-        const existingOnlyCheckboxId = `nexus-existing-only-${Date.now()}`;
-        const existingOnlyCheckbox = existingOnlyControl.createEl("input", {
-            type: "checkbox",
-            cls: "nexus-existing-only-checkbox",
-        });
-        existingOnlyCheckbox.id = existingOnlyCheckboxId;
-        existingOnlyCheckbox.checked = !!this.state.filter.existingOnly;
-
-        const existingOnlyLabel = existingOnlyControl.createEl("label", {
-            cls: "nexus-filter-label nexus-existing-only-label",
-        });
-        existingOnlyLabel.htmlFor = existingOnlyCheckboxId;
-        existingOnlyLabel.textContent = t(
-            "conversation_selection.controls.existing_only_label"
-        );
-
-        const syncExistingOnlyState = () => {
-            const existingOnlyEnabled = !!this.state.filter.existingOnly;
-            statusSelect.disabled = existingOnlyEnabled;
-            statusLabel.classList.toggle("is-disabled", existingOnlyEnabled);
-            if (existingOnlyEnabled) {
-                this.state.filter.existenceStatus = "all";
-                statusSelect.value = "all";
-            }
-        };
-
-        existingOnlyCheckbox.addEventListener("change", () => {
-            this.state.filter.existingOnly = existingOnlyCheckbox.checked;
-            syncExistingOnlyState();
-            this.applyFiltersAndSort();
-            this.renderConversationList();
-            this.updateSummary();
-            this.updatePagination();
-        });
-        syncExistingOnlyState();
+        this.createStatusChips(section);
 
         // Page size dropdown
         const pageSizeLabel = section.createEl("label", {
@@ -295,10 +218,109 @@ export class ConversationSelectionDialog extends Modal {
             this.renderConversationList();
         });
 
-        const existingOnlyHelp = section.createDiv("nexus-existing-only-help");
-        existingOnlyHelp.textContent = t(
-            "conversation_selection.controls.existing_only_help"
+        this.createRebuildToggle(section);
+    }
+
+    /**
+     * Opt-in rebuild of the selected conversations that already have a note.
+     *
+     * Without it a selection behaves like any import: new conversations are
+     * created, updated ones gain the messages they lack, and an unchanged one
+     * is left alone. The rebuild is a separate intent, so it gets a separate
+     * control rather than being inferred from the selection.
+     */
+    private createRebuildToggle(section: HTMLElement) {
+        const control = section.createDiv("nexus-rebuild-control");
+
+        const checkboxId = `nexus-rebuild-${Date.now()}`;
+        const checkbox = control.createEl("input", {
+            type: "checkbox",
+            cls: "nexus-rebuild-checkbox",
+        });
+        checkbox.id = checkboxId;
+        checkbox.checked = this.rebuildExisting;
+
+        const label = control.createEl("label", {
+            cls: "nexus-rebuild-label",
+        });
+        label.htmlFor = checkboxId;
+        label.textContent = t(
+            "conversation_selection.controls.rebuild_existing_label"
         );
+
+        const help = section.createDiv("nexus-controls-help");
+        help.textContent = t("conversation_selection.controls.rebuild_help");
+
+        checkbox.addEventListener("change", () => {
+            this.rebuildExisting = checkbox.checked;
+        });
+    }
+
+    /**
+     * Status filter as toggle chips rather than a single-choice dropdown: the
+     * three states are not exclusive. A chip reads as on or off and nothing
+     * else, so it stays neutral until selected.
+     */
+    private createStatusChips(section: HTMLElement) {
+        const group = section.createDiv("nexus-status-chips");
+
+        const label = group.createSpan({ cls: "nexus-filter-label" });
+        label.textContent = t("conversation_selection.controls.status_label");
+
+        const { statuses } = this.state.filter;
+        const chips = new Map<"all" | ConversationStatusFilter, HTMLElement>();
+
+        const allActive = () => STATUS_FILTERS.every((s) => statuses.has(s));
+
+        const sync = () => {
+            chips.forEach((chip, key) => {
+                const active = key === "all" ? allActive() : statuses.has(key);
+                chip.toggleClass("is-active", active);
+                chip.setAttribute("aria-pressed", String(active));
+            });
+        };
+
+        const refresh = () => {
+            sync();
+            this.applyFiltersAndSort();
+            this.renderConversationList();
+            this.updateSummary();
+            this.updatePagination();
+        };
+
+        const addChip = (
+            key: "all" | ConversationStatusFilter,
+            onClick: () => void
+        ) => {
+            const chip = group.createEl("button", {
+                cls: "nexus-status-chip",
+                text: t(`conversation_selection.status_filter_options.${key}`),
+            });
+            chip.type = "button";
+            chip.addEventListener("click", () => {
+                onClick();
+                refresh();
+            });
+            chips.set(key, chip);
+        };
+
+        addChip("all", () => {
+            STATUS_FILTERS.forEach((status) => statuses.add(status));
+        });
+
+        STATUS_FILTERS.forEach((status) => {
+            addChip(status, () => {
+                // Every chip can be turned off, the last one included: a
+                // filter that refuses to empty the list reads as broken.
+                if (statuses.has(status)) {
+                    statuses.delete(status);
+                } else {
+                    statuses.add(status);
+                }
+            });
+        });
+
+        sync();
     }
 
     private createConversationListSection(container: HTMLElement) {
@@ -454,25 +476,16 @@ export class ConversationSelectionDialog extends Modal {
             );
         }
 
-        // Apply existence status filter
-        if (
-            this.state.filter.existenceStatus &&
-            this.state.filter.existenceStatus !== "all"
-        ) {
-            filtered = filtered.filter(
-                (conv) =>
-                    conv.existenceStatus === this.state.filter.existenceStatus
-            );
-        }
-
-        // Show only conversations that already exist in vault.
-        if (this.state.filter.existingOnly) {
-            filtered = filtered.filter(
-                (conv) =>
-                    conv.existenceStatus === "updated" ||
-                    conv.existenceStatus === "unchanged"
-            );
-        }
+        // Apply existence status filter. A conversation with no known status
+        // is never hidden: the chips only speak for the three they name.
+        const { statuses } = this.state.filter;
+        filtered = filtered.filter((conv) => {
+            const status = conv.existenceStatus as
+                | ConversationStatusFilter
+                | undefined;
+            if (!status || !STATUS_FILTERS.includes(status)) return true;
+            return statuses.has(status);
+        });
 
         // Apply sorting
         filtered.sort((a, b) => {
@@ -576,8 +589,7 @@ export class ConversationSelectionDialog extends Modal {
             // Status cell with badge
             const statusCell = row.createEl("td");
             statusCell.addClass("nexus-td-center");
-            const statusBadge = this.createStatusBadge(conversation);
-            statusCell.appendChild(statusBadge);
+            this.createStatusBadge(statusCell, conversation);
 
             if (mobileList) {
                 this.renderMobileConversationCard(mobileList, conversation);
@@ -622,9 +634,8 @@ export class ConversationSelectionDialog extends Modal {
             sourceInfo.textContent = `📁 ${conversation.sourceFile}`;
         }
 
-        const badge = this.createStatusBadge(conversation);
+        const badge = this.createStatusBadge(header, conversation);
         badge.addClass("nexus-conversation-card-badge");
-        header.appendChild(badge);
 
         const meta = card.createDiv("nexus-conversation-card-meta");
         meta.createDiv({
@@ -644,8 +655,18 @@ export class ConversationSelectionDialog extends Modal {
         });
     }
 
-    private createStatusBadge(conversation: ConversationMetadata): HTMLElement {
-        const badge = activeDocument.createSpan();
+    /**
+     * Builds the badge inside `parent`.
+     *
+     * Obsidian's createSpan appends to the node it is called on, so it needs a
+     * real parent element: called on the document it throws "Only one element
+     * on document allowed" and takes the whole list down with it.
+     */
+    private createStatusBadge(
+        parent: HTMLElement,
+        conversation: ConversationMetadata
+    ): HTMLElement {
+        const badge = parent.createSpan();
         badge.classList.add("status-badge");
 
         switch (conversation.existenceStatus) {
@@ -762,28 +783,12 @@ export class ConversationSelectionDialog extends Modal {
         const selectedCount = this.state.selectedIds.size;
         const totalCount = this.state.filteredConversations.length;
 
-        // Calculate status counts from filtered conversations (what's currently shown)
-        const statusCounts = {
-            new: 0,
-            updated: 0,
-            unchanged: 0,
-            unknown: 0,
-        };
-
-        this.state.filteredConversations.forEach((conv) => {
-            const status = conv.existenceStatus || "unknown";
-            statusCounts[status]++;
-        });
-
-        // Build the comprehensive summary
+        // The cards deliberately describe the whole archive, not the current
+        // filter: they are what the user reads to decide how to filter.
         summary.empty();
         summary.append(
             sanitizeHTMLToDom(
-                this.buildComprehensiveSummary(
-                    selectedCount,
-                    totalCount,
-                    statusCounts
-                )
+                this.buildComprehensiveSummary(selectedCount, totalCount)
             )
         );
 
@@ -805,8 +810,7 @@ export class ConversationSelectionDialog extends Modal {
 
     private buildComprehensiveSummary(
         selectedCount: number,
-        totalCount: number,
-        _statusCounts: unknown
+        totalCount: number
     ): string {
         // 4 cartouches compacts
         if (this.analysisInfo) {
@@ -838,12 +842,15 @@ export class ConversationSelectionDialog extends Modal {
                 </div>
                 <div class="nexus-summary-card">
                     <div class="nexus-summary-value nexus-summary-value-muted">${
-                        info.conversationsIgnored
+                        info.conversationsUnchanged
                     }</div>
                     <div class="nexus-summary-label">${t(
                         "conversation_selection.summary.unchanged"
                     )}</div>
                 </div>
+                <div class="nexus-summary-scope">${t(
+                    "conversation_selection.summary.scope_note"
+                )}</div>
             `;
         }
 
@@ -868,6 +875,7 @@ export class ConversationSelectionDialog extends Modal {
             selectedIds,
             totalAvailable: this.state.allConversations.length,
             mode: "selective",
+            rebuildExisting: this.rebuildExisting,
         };
 
         this.close();

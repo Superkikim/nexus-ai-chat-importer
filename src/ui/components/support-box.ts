@@ -43,17 +43,15 @@ export function createSupportBox(
             }
         });
     } else {
-        // Default message - emphasize active maintenance and ongoing updates
+        // Two sentences: what the money is for, then why it matters right now.
+        // The counting of who does and does not donate read as a reproach to
+        // the many thousands who simply use the plugin.
         messageEl.createEl("p").createSpan({
             cls: "nexus-support-message-emphasis",
             text: t("support_box.default_message_emphasis"),
         });
         messageEl.createEl("p", { text: t("support_box.default_message") });
     }
-
-    // Appreciation message focused on impact and sustained support
-    const realityCheck = supportBox.createDiv("nexus-support-reality-check");
-    realityCheck.setText(t("support_box.reality_check"));
 
     const supportUrl = getLocalizedSupportUrl();
 

@@ -23,6 +23,7 @@ import { Logger } from "../../logger";
 import type NexusAiChatImporterPlugin from "../../main";
 import { AttachmentMap } from "../../services/attachment-map-builder";
 import { ZipArchiveReader, writeZipEntryToVault } from "../../utils/zip-loader";
+import { resolveAttachmentTarget } from "../../utils/attachment-target";
 
 /**
  * Attachment extractor for Mistral Vibe (formerly Le Chat)
@@ -184,9 +185,6 @@ export class MistralVibeAttachmentExtractor {
         const folderPath = vaultPath.substring(0, vaultPath.lastIndexOf("/"));
         await ensureFolderExists(folderPath, this.plugin.app.vault);
 
-        // Resolve file conflicts by adding numeric suffix if needed
-        vaultPath = await this.resolveFileConflict(vaultPath);
-
         const entry = zip.get(zipPathMatch);
         if (!entry) {
             throw new Error(
@@ -194,9 +192,15 @@ export class MistralVibeAttachmentExtractor {
             );
         }
 
+        const desiredPath = vaultPath;
         const writeResult = await writeZipEntryToVault(
             entry,
-            vaultPath,
+            (_detection, bytes) =>
+                resolveAttachmentTarget(
+                    this.plugin.app.vault.adapter,
+                    desiredPath,
+                    bytes
+                ),
             this.plugin.app.vault
         );
 
@@ -257,15 +261,19 @@ export class MistralVibeAttachmentExtractor {
     }
 
     /**
-     * Generate unique filename to avoid conflicts
-     * Strategy: vibe_{conversationId}_{messageId}_{timestamp}_{originalName}
+     * Stable name for one attachment: vibe_{conversationId}_{messageId}_{name}
+     *
+     * It used to carry Date.now(), which made every import write a brand new
+     * file for an attachment the vault already held — a rebuild of 64
+     * conversations left 19 fresh copies behind and orphaned the originals.
+     * The same attachment must land on the same path for the conflict
+     * resolution to recognise it.
      */
     private generateUniqueFileName(
         originalFileName: string,
         conversationId: string,
         messageId?: string
     ): string {
-        const timestamp = Date.now();
         const shortConversationId = conversationId.substring(0, 8);
         const shortMessageId = messageId
             ? messageId.substring(0, 8)
@@ -281,32 +289,8 @@ export class MistralVibeAttachmentExtractor {
         const safeBaseName = baseName.replace(/[^a-zA-Z0-9_-]/g, "_");
 
         // Build unique filename: vibe_{convId}_{msgId}_{timestamp}_{name}.{ext}
-        const uniqueName = `vibe_${shortConversationId}_${shortMessageId}_${timestamp}_${safeBaseName}`;
+        const uniqueName = `vibe_${shortConversationId}_${shortMessageId}_${safeBaseName}`;
 
         return extension ? `${uniqueName}.${extension}` : uniqueName;
-    }
-
-    /**
-     * Resolve file conflicts by adding numeric suffix
-     * Same strategy as ChatGPT provider
-     */
-    private async resolveFileConflict(originalPath: string): Promise<string> {
-        let finalPath = originalPath;
-        let counter = 1;
-
-        while (await this.plugin.app.vault.adapter.exists(finalPath)) {
-            // File exists, try with suffix
-            const lastDot = originalPath.lastIndexOf(".");
-            if (lastDot === -1) {
-                finalPath = `${originalPath}_${counter}`;
-            } else {
-                const nameWithoutExt = originalPath.substring(0, lastDot);
-                const extension = originalPath.substring(lastDot);
-                finalPath = `${nameWithoutExt}_${counter}${extension}`;
-            }
-            counter++;
-        }
-
-        return finalPath;
     }
 }

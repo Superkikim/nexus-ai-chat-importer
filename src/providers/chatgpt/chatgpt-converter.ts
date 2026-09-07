@@ -156,8 +156,10 @@ export class ChatGPTConverter {
         const ordered =
             messages.length <= 1 ? messages : sortMessagesByTimestamp(messages);
 
-        // Surface generated images that recent exports omit entirely (no-op for
-        // conversations that still carry their generated images).
+        // Surface generated images that some exports omit entirely (no-op for
+        // conversations that still carry their generated images). If a later
+        // export ships the file through library_files.json, the reconciliation
+        // pass replaces the placeholder with the real image.
         return annotateMissingGeneratedImages(ordered, chat);
     }
 

@@ -1,6 +1,20 @@
-import { describe, expect, it } from "vitest";
-import { buildChatGPTLibraryIndex } from "./chatgpt-library-index";
+import { describe, expect, it, vi } from "vitest";
+import {
+    buildChatGPTLibraryIndex,
+    classifyChatGPTLibraryArtifact,
+    ChatGPTLibraryEntry,
+} from "./chatgpt-library-index";
 import { ZipArchiveReader, ZipEntryHandle } from "../../utils/zip-loader";
+import {
+    SANITIZED_LIBRARY_FILES_SAMPLE,
+    SANITIZED_GENERATED_IMAGE_ENTRY,
+    SANITIZED_GENERATED_DOCUMENT_ENTRY,
+    SANITIZED_WRITING_BLOCK_ENTRY,
+    SANITIZED_PLAIN_UPLOAD_ENTRY,
+    SANITIZED_UNKNOWN_ARTIFACT_TYPE_ENTRY,
+    SANITIZED_MISSING_CREATED_AT_ENTRY,
+} from "./chatgpt-library-index.fixtures";
+import { ScopedLogger, Logger } from "../../logger";
 
 function createZipMock(files: Record<string, string>): ZipArchiveReader {
     const encoder = new TextEncoder();
@@ -107,5 +121,165 @@ describe("buildChatGPTLibraryIndex", () => {
         const index = await buildChatGPTLibraryIndex(zip);
         expect(index!.byFileId.size).toBe(1);
         expect(index!.byFileId.has("file_y")).toBe(true);
+    });
+
+    describe("with the sanitized 2026-08-03 fixture sample", () => {
+        const zip = createZipMock({
+            "library_files.json": JSON.stringify(
+                SANITIZED_LIBRARY_FILES_SAMPLE
+            ),
+        });
+
+        it("indexes entries by origination thread id, message id, and file id", async () => {
+            const index = await buildChatGPTLibraryIndex(zip);
+            expect(index).not.toBeNull();
+
+            expect(
+                index!.byFileId.get(SANITIZED_GENERATED_IMAGE_ENTRY.file_id)
+                    ?.fileName
+            ).toBe(SANITIZED_GENERATED_IMAGE_ENTRY.file_name);
+
+            expect(
+                index!.byOriginationMessageId.get(
+                    SANITIZED_GENERATED_DOCUMENT_ENTRY.origination_message_id
+                )
+            ).toHaveLength(1);
+
+            expect(
+                index!.byOriginationThreadId.get(
+                    SANITIZED_GENERATED_IMAGE_ENTRY.origination_thread_id
+                )
+            ).toHaveLength(1);
+
+            // Plain upload has no origination ids at all.
+            expect(
+                [...index!.byOriginationThreadId.values()].flat()
+            ).not.toContainEqual(
+                expect.objectContaining({
+                    fileId: SANITIZED_PLAIN_UPLOAD_ENTRY.file_id,
+                })
+            );
+        });
+
+        it("parses createdAt from created_at when present", async () => {
+            const index = await buildChatGPTLibraryIndex(zip);
+            const entry = index!.byFileId.get(
+                SANITIZED_GENERATED_IMAGE_ENTRY.file_id
+            );
+            expect(entry?.createdAt).toBe(
+                Date.parse(SANITIZED_GENERATED_IMAGE_ENTRY.created_at)
+            );
+        });
+
+        it("falls back to version_created_at when created_at and record_creation_time are missing", async () => {
+            const index = await buildChatGPTLibraryIndex(zip);
+            const entry = index!.byFileId.get(
+                SANITIZED_MISSING_CREATED_AT_ENTRY.file_id
+            );
+            expect(entry?.createdAt).toBe(
+                Date.parse(
+                    SANITIZED_MISSING_CREATED_AT_ENTRY.version_created_at
+                )
+            );
+        });
+
+        it("captures libraryFileId from the nested id.id field", async () => {
+            const index = await buildChatGPTLibraryIndex(zip);
+            const entry = index!.byFileId.get(
+                SANITIZED_GENERATED_IMAGE_ENTRY.file_id
+            );
+            expect(entry?.libraryFileId).toBe(
+                SANITIZED_GENERATED_IMAGE_ENTRY.id.id
+            );
+        });
+    });
+});
+
+describe("classifyChatGPTLibraryArtifact", () => {
+    function entryFor(fileId: string): ChatGPTLibraryEntry {
+        const raw = SANITIZED_LIBRARY_FILES_SAMPLE.find(
+            (e) => e.file_id === fileId
+        )!;
+        return {
+            fileId: raw.file_id,
+            fileName: raw.file_name,
+            mimeType: raw.mime_type,
+            artifactType: raw.library_artifact_type ?? undefined,
+            originationMessageId: raw.origination_message_id ?? undefined,
+            originationThreadId: raw.origination_thread_id ?? undefined,
+            imageGenerationId: raw.image_gen_generation_id ?? undefined,
+        };
+    }
+
+    it("classifies a generated image (image_gen_generation_id present) correctly", () => {
+        expect(
+            classifyChatGPTLibraryArtifact(
+                entryFor(SANITIZED_GENERATED_IMAGE_ENTRY.file_id)
+            )
+        ).toBe("generated_image");
+    });
+
+    it("classifies a generated report document correctly", () => {
+        expect(
+            classifyChatGPTLibraryArtifact(
+                entryFor(SANITIZED_GENERATED_DOCUMENT_ENTRY.file_id)
+            )
+        ).toBe("generated_document");
+    });
+
+    it("does not classify a writing_block as generated (already on its own message)", () => {
+        expect(
+            classifyChatGPTLibraryArtifact(
+                entryFor(SANITIZED_WRITING_BLOCK_ENTRY.file_id)
+            )
+        ).toBe("unsupported");
+    });
+
+    it("does not classify a plain upload as generated", () => {
+        expect(
+            classifyChatGPTLibraryArtifact(
+                entryFor(SANITIZED_PLAIN_UPLOAD_ENTRY.file_id)
+            )
+        ).toBe("unsupported");
+    });
+
+    it("ignores an unknown artifact type without throwing, and logs it at debug level", () => {
+        const debug = vi.fn();
+        const log = { debug } as unknown as ScopedLogger;
+
+        const result = classifyChatGPTLibraryArtifact(
+            entryFor(SANITIZED_UNKNOWN_ARTIFACT_TYPE_ENTRY.file_id),
+            log
+        );
+
+        expect(result).toBe("unsupported");
+        expect(debug).toHaveBeenCalledTimes(1);
+    });
+
+    it("does not log for known non-generated types (writing_block, plain upload)", () => {
+        const debug = vi.fn();
+        const log = { debug } as unknown as ScopedLogger;
+
+        classifyChatGPTLibraryArtifact(
+            entryFor(SANITIZED_WRITING_BLOCK_ENTRY.file_id),
+            log
+        );
+        classifyChatGPTLibraryArtifact(
+            entryFor(SANITIZED_PLAIN_UPLOAD_ENTRY.file_id),
+            log
+        );
+
+        expect(debug).not.toHaveBeenCalled();
+    });
+
+    it("defaults to the module logger when none is supplied", () => {
+        // Real Logger instance, default log level (warn) — debug() is a no-op
+        // but must not throw.
+        expect(() =>
+            classifyChatGPTLibraryArtifact(
+                entryFor(SANITIZED_UNKNOWN_ARTIFACT_TYPE_ENTRY.file_id),
+                new Logger().child("Test")
+            )
+        ).not.toThrow();
     });
 });

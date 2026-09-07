@@ -1,15 +1,17 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+@AGENTS.md
+
+This file is the legacy technical orientation for Claude Code. `AGENTS.md` is the canonical source for shared working agreements, attribution, Git permissions, evidence, and validation. If this file conflicts with `AGENTS.md`, follow `AGENTS.md`.
 
 ## Project Overview
 
 **Nexus AI Chat Importer** is an Obsidian plugin that imports AI chat conversations (ChatGPT, Claude, Mistral Vibe, Perplexity) as beautifully formatted Markdown files with full attachment support, metadata preservation, and intelligent deduplication.
 
-- **Current Version**: 1.6.9
+- **Current Version**: 1.7.0
 - **License**: GPL-3.0-or-later
 - **Author**: Akim Sissaoui (Superkikim)
-- **Minimum Obsidian**: 1.4.0
+- **Minimum Obsidian**: 1.6.6 (from `manifest.json` / `versions.json`)
 
 ## Development Commands
 
@@ -38,21 +40,22 @@ npm run test:coverage      # Run tests with coverage report
 npm run test               # Interactive test UI
 ```
 
-**174 tests** across 24 test files. Tests live alongside source files as `*.test.ts`.
+Tests live alongside source files as `*.test.ts`. Run `npm run test:run` for the current count.
 
 ## Pre-Commit Checklist
 
 **Always run before committing:**
 
 ```bash
-npm run test:run           # All 174 tests must pass
+npm run type-check         # Must be clean — vitest does NOT type-check
+npm run test:run           # All tests must pass
 npx eslint src/            # Zero errors on modified files
 npm run build              # Build must succeed
 ```
 
 Fix any Prettier/ESLint issues with `npx eslint --fix src/<file>` before committing.
 
-**Commit discipline**: Make **granular commits** as work progresses — one logical change per commit. Do not batch unrelated changes. Use standard prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`.
+**Commit discipline**: Commit and push completed, validated work unless the maintainer explicitly says not to. Make granular commits — one logical change per commit. Do not batch unrelated changes. Use standard prefixes: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`. Never add AI-assistance attribution or commit trailers. Inspect staged content for public suitability before every commit.
 
 ## High-Level Architecture
 
@@ -84,11 +87,13 @@ Provider-Specific Format → ProviderAdapter → StandardConversation → Format
 
 ### Dialog-Driven User Flow
 
-1. **ProviderSelectionDialog** - Choose provider (ChatGPT / Claude / Mistral Vibe / Perplexity)
-2. **EnhancedFileSelectionDialog** - Select ZIP file(s) + import mode (all/selective)
-3. **ConversationSelectionDialog** - Choose specific conversations (selective mode only)
-4. **ImportProgressModal** - Real-time import feedback
-5. **Completion Notice** - Summary with report link
+The provider is auto-detected from the selected archive, not chosen by the user
+(despite the legacy `showProviderSelectionDialog` method name).
+
+1. **EnhancedFileSelectionDialog** - Select ZIP file(s) + import mode (all/selective); provider is detected and locked from the first supported archive
+2. **ConversationSelectionDialog** - Choose specific conversations (selective mode only)
+3. **ImportProgressModal** - Real-time import feedback
+4. **ImportCompletionDialog** - Summary with report link
 
 ### Upgrade System
 
@@ -195,13 +200,13 @@ Claude exports store attachment content in `conversations.json`, not as files in
 
 ## Configuration and Settings
 
-All settings defined in [src/types/plugin.ts](src/types/plugin.ts). Defaults in [src/config/default-settings.ts](src/config/default-settings.ts).
+All settings defined in [src/types/plugin.ts](src/types/plugin.ts). Defaults (`DEFAULT_SETTINGS`) in [src/config/constants.ts](src/config/constants.ts).
 
 **File Organization Pattern**:
 ```
 <conversationFolder>/<provider>/<YYYY>/<MM>/<filename>.md
 <attachmentFolder>/<provider>/images|documents|artifacts/...
-<reportFolder>/<provider>/<YYYYMMDD-HHMMSS> - import report.md
+<reportFolder>/<provider>/<YYYYMMDD-HHMMSS> - import summary.md   (+ "index heavy" / "index mobile")
 ```
 
 ## Build System

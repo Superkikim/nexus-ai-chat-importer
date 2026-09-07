@@ -242,7 +242,9 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
         const existingMsg = settingEl.querySelector(".operation-result");
         if (existingMsg) existingMsg.remove();
 
-        const resultEl = activeDocument.createDiv();
+        // Created on settingEl, not on the document: createDiv appends to the
+        // node it is called on, and a document accepts only one root element.
+        const resultEl = settingEl.createDiv();
         resultEl.className = "operation-result";
         resultEl.textContent = message;
         resultEl.style.cssText = `
@@ -263,7 +265,6 @@ export class MigrationsSettingsSection extends BaseSettingsSection {
             };
         `;
 
-        settingEl.appendChild(resultEl);
         window.setTimeout(() => {
             if (resultEl.parentNode) {
                 resultEl.remove();

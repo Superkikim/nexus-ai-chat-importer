@@ -30,6 +30,13 @@ export interface FileSelectionResult {
     files: File[];
     mode: ImportMode;
     provider: string;
+    /**
+     * Rebuild notes that already exist in the vault instead of skipping them.
+     * Without it, a conversation whose `update_time` has not moved is reported
+     * as "No Updates" — so a plugin update that adds new rendering would never
+     * reach notes imported by an earlier version.
+     */
+    reprocess: boolean;
 }
 
 /**
@@ -39,6 +46,11 @@ export interface ConversationSelectionResult {
     selectedIds: string[];
     totalAvailable: number;
     mode: ImportMode;
+    /**
+     * Regenerate the selected conversations that already have a note. Without
+     * it an existing note is updated or left alone, never rewritten.
+     */
+    rebuildExisting: boolean;
 }
 
 /**
@@ -59,6 +71,9 @@ export interface SortOptions {
     direction: "asc" | "desc";
 }
 
+/** The conversation states the list can be filtered on. */
+export type ConversationStatusFilter = "new" | "updated" | "unchanged";
+
 /**
  * Filter options for conversation list
  */
@@ -72,8 +87,8 @@ export interface FilterOptions {
     maxMessages?: number;
     showStarred?: boolean;
     showArchived?: boolean;
-    existenceStatus?: "all" | "new" | "updated" | "unchanged"; // New filter for existence status
-    existingOnly?: boolean;
+    /** Statuses kept in the list. Empty hides every conversation. */
+    statuses: Set<ConversationStatusFilter>;
 }
 
 /**

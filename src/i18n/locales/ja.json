@@ -70,6 +70,12 @@
             "selective_label": "個別に選択",
             "selective_description": "会話をプレビューして選択する"
         },
+        "reprocess": {
+            "label": "既存のノートを再処理する",
+            "description": "保管庫にすでにあるノートをスキップせずに再構築します。プラグインの更新後に新機能を反映させるために使用します。",
+            "selective_hint": "既存のノートを作り直すには、次のステップで選択し、「選択したノートを作り直す」にチェックを入れてください。",
+            "warning": "これらのノートに加えた手動の編集は失われます。"
+        },
         "file_area": {
             "section_title": "ファイルを選択",
             "drop_text_default": "ZIPファイルをここにドロップするか、クリックして参照",
@@ -94,8 +100,8 @@
             "search_placeholder": "会話を検索...",
             "status_label": "ステータス：",
             "show_label": "表示：",
-            "existing_only_label": "既存の会話のみ表示",
-            "existing_only_help": "既存の会話を選択すると、対応するノートは上書きされ再処理されます。"
+            "rebuild_existing_label": "選択した会話のノートが既にある場合は作り直す",
+            "rebuild_help": "オフの場合、既存のノートには新しいメッセージだけが追加されます。オンの場合、保管庫にある選択済みのノートはすべて一から書き直され、手動の編集は失われます。"
         },
         "status_filter_options": {
             "all": "すべて",
@@ -130,6 +136,7 @@
             "new": "新規",
             "updated": "更新済み",
             "unchanged": "変更なし",
+            "scope_note": "アーカイブ全体",
             "selected_of": "{{total}} 件中 {{selected}} 件を選択"
         },
         "buttons": {
@@ -161,18 +168,28 @@
         "title": "インポート完了",
         "success_message": "✅ 会話が正常にインポートされました",
         "stats": {
-            "zip_files_processed": "処理済みZIPファイル",
-            "unique_conversations": "固有の会話",
-            "duplicates": "重複",
             "new": "新規",
             "updated": "更新済み",
-            "skipped": "スキップ済み",
+            "recreated": "再作成",
+            "unchanged": "変更なし",
             "failed": "失敗"
         },
+        "archive": {
+            "conversations": "会話 {{count}} 件",
+            "zips": "ZIP ファイル {{count}} 個",
+            "duplicates": "重複 {{count}} 件を除外",
+            "not_selected": "未選択 {{count}} 件",
+            "empty": "エクスポート可能な内容なし {{count}} 件"
+        },
+        "nothing_changed": "保管庫に変更はありませんでした。",
         "attachments": {
-            "label": "添付ファイル：",
-            "summary": "{{found}}/{{total}} 件を抽出（{{percentage}}%）",
-            "missing_failed": "{{missing}} 件欠落、{{failed}} 件失敗"
+            "label": "ファイル",
+            "extracted": "保存済み",
+            "inline": "ノート内",
+            "not_provided": "エクスポート外",
+            "missing": "見つからない",
+            "failed": "失敗",
+            "artifacts": "アーティファクト"
         },
         "report": {
             "label": "📄 詳細レポート："
@@ -217,7 +234,7 @@
             "section_title": "📅 メッセージの日付形式",
             "custom_format": {
                 "name": "メッセージのタイムスタンプ形式をカスタマイズ",
-                "desc": "メッセージヘッダーのデフォルトのロケールベースのタイムスタンプ形式を上書きします。無効の場合、タイムスタンプは Obsidian の言語設定に従います。Obsidian が英語に設定されている場合、US形式（YYYY/DD/MM）が適用されます。"
+                "desc": "メッセージヘッダーのデフォルトのロケールベースのタイムスタンプ形式を上書きします。無効の場合、タイムスタンプは Obsidian の言語設定に従います。"
             },
             "timestamp_format": {
                 "name": "タイムスタンプ形式",
@@ -322,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ アップグレード完了 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} の新機能\n\n### 🐛 修正\n- **Claude** — 新しい分割エクスポートを検出できるようになりました。Anthropic は複数の ZIP を列挙したマニフェストを提供し、`users.json` は `conversations.json` の隣に置かれなくなったため、`conversations-000.zip` が ChatGPT のエクスポートとして扱われ、何もインポートされませんでした\n- `conversations-000.zip` をそのままインポートしてください。プロジェクト・メモリ・メタデータのアーカイブにプラグインが使う情報は含まれていません\n- これまで対応していたすべてのエクスポート形式の検出は変わりません\n- **Obsidian 1.13+** — コールアウトの色を修正しました。Obsidian 1.13.0 で `--callout-color` に実際の CSS カラーが必要になり、Nexus のコールアウトが色も枠線もない状態で表示されていました",
+            "fallback_content": "## ✨ v{{version}} の新機能\n\n### ✨ 新機能\n- **ChatGPT** — エクスポートに含まれていれば、生成画像とドキュメントが再びインポートされます\n- **ChatGPT** — Privacy Portal のアーカイブはそのままインポートできます。アカウント単位の ZIP を先に展開する必要はありません\n- **既存ノートの再構築** — 古いインポートでも最新機能を反映できます。再構築したノートへの手動編集は失われます\n- **会話リストをステータスで絞り込み** — 新規、更新、変更なし\n- **貼り付けられた大きな Claude コンテンツ** は、ノートを肥大化させず、リンクされたファイルに切り出されます\n\n### 🔧 改善\n- **レポートと完了ダイアログ** を、ノートに実際に起きたことに合わせて作り直しました。いくつかのカウンターが誤っていました\n- ファイル名、重複排除、添付ファイル数\n\n### 🐛 修正\n- **Claude のインポートが再び動作します**（1.6.9）— Anthropic の新しい分割エクスポートが ChatGPT のものとして読み込まれ、何もインポートされませんでした\n- **Obsidian 1.13+ でコールアウトの色を復元**（1.6.9）\n\n[完全なリリースノート](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "了解！"
             }
@@ -343,6 +360,17 @@
             "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
             "buttons": {
                 "proceed": "Proceed"
+            }
+        },
+        "repair_notes": {
+            "title": "Obsidian を遅くしているノートを修復",
+            "intro": "{{count}} 件の会話に、1 行に収まった巨大な貼り付け内容があります。Obsidian は 1 行をまとめて読むため、保管庫全体のインデックス作成が遅くなります。",
+            "and_more": "…ほか {{count}} 件",
+            "what_happens": "Nexus はその内容を会話の隣のファイルへ移し、跡地に折りたたんだリンクを残せます。インポート時と同じ処理です。",
+            "backup_note": "変更前に各ノートを隣にコピーするので、何も失われません。納得できたらコピーは削除できます。",
+            "buttons": {
+                "repair": "修復する",
+                "ignore": "そのままにする"
             }
         }
     },
@@ -480,17 +508,11 @@
             "get_started": "始める"
         }
     },
-    "mobile_archive_processed_dialog": {
-        "title": "アーカイブは既に処理済みです",
-        "description": "ファイル {{filename}} はこの端末ですでにインポートされています。",
-        "choice_help": "モバイルでの続行方法を選択してください：",
-        "button_reprocess": "再処理してすべてのノートを再作成",
-        "button_incremental": "不足・更新分のノートのみ追加/更新"
-    },
     "notices": {
         "import_analyzing": "{{count}} 件のファイルから会話を分析中...",
         "import_no_new": "新規または更新された会話は見つかりませんでした。すべての会話は最新の状態です。",
         "import_starting": "{{count}} 件の会話をインポート中（新規 {{new}} 件、更新済み {{updated}} 件）...",
+        "import_starting_reprocess": "{{count}} 件の会話をインポートしています（{{rebuilt}} 件を再構築）…",
         "import_starting_selected": "{{files}} 件のファイルから選択した {{count}} 件の会話をインポート中...",
         "import_completed_fallback": "インポートが完了しました。{{created}} 件を作成、{{updated}} 件を更新。",
         "import_error": "インポート中にエラーが発生しました：{{error}}",
@@ -506,7 +528,23 @@
         "report_failed": "ログファイルの作成に失敗しました。詳細はコンソールをご確認ください。",
         "attachment_map_failed": "添付ファイルマップの構築に失敗しました。詳細はコンソールをご確認ください。",
         "ribbon_tooltip": "Nexus AI Chat Importer - 新しいファイルをインポート",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "{{count}} 個のアーカイブを読み込めませんでした（{{provider}}）。詳細はコンソールを確認してください。"
+    },
+    "archive_messages": {
+        "empty": "この ZIP ファイルにはファイルが含まれていません。正しいエクスポートファイルを選択したか確認してください。",
+        "unsupported_format": "この ZIP ファイルは、サポートされているエクスポート形式のいずれにも一致しません。",
+        "nested_zip": {
+            "generic": "この ZIP には別の ZIP ファイルが含まれています。外側の ZIP を展開し、内側の ZIP ファイルを直接インポートしてください。",
+            "perplexity": "この ZIP には別の ZIP ファイルが含まれています。外側の ZIP を展開し、内側の Perplexity の part*.zip ファイルを直接インポートしてください。"
+        },
+        "wrong_provider": "この ZIP は {{expected}} ではなく {{detected}} のエクスポートです。対応するプロバイダーを選んでインポートしてください。",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
+        }
     },
     "commands": {
         "import_conversations": {
@@ -525,9 +563,8 @@
     "support_box": {
         "header": "このプラグインを支援する",
         "header_highlight": "このプラグインを支援する",
-        "default_message_emphasis": "Nexus は 15,000 以上のダウンロードに到達しました。現在、寄付で開発を支えてくださるのは月に平均約 5 人です。",
-        "default_message": "このプラグインは私の個人時間で保守しており、開発環境の維持には継続的な費用がかかります。新しいプロバイダーへの対応には、正確な検証と安定したサポートのための有料サブスクリプションも必要です。",
-        "reality_check": "Nexus が役立っている場合は、単発または毎月の寄付をご検討ください。すでに支援してくださっている皆さま、本当にありがとうございます。",
+        "default_message_emphasis": "Nexus のダウンロードは 15,000 件を超えました。皆さまの支援が開発を支え、ツールやサブスクリプションの費用をまかなっています。",
+        "default_message": "現在は無職のため、どんなご支援も本当に助かります。",
         "button_alt": "私の活動を支援する"
     }
 }

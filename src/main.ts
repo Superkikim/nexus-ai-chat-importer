@@ -29,6 +29,7 @@ import { NexusAiChatImporterPluginSettingTab } from "./ui/settings-tab";
 import { CommandRegistry } from "./commands/command-registry";
 import { EventHandlers } from "./events/event-handlers";
 import { ImportService } from "./services/import-service";
+import type { ArchiveImportMode } from "./services/import-service";
 import { StorageService } from "./services/storage-service";
 import { FileService } from "./services/file-service";
 import { IncrementalUpgradeManager } from "./upgrade/incremental-upgrade-manager";
@@ -37,7 +38,6 @@ import { EnhancedFileSelectionDialog } from "./dialogs/enhanced-file-selection-d
 import { ConversationSelectionDialog } from "./dialogs/conversation-selection-dialog";
 import { InstallationWelcomeDialog } from "./dialogs/installation-welcome-dialog";
 import { UpgradeNotice132Dialog } from "./dialogs/upgrade-notice-1.3.2-dialog";
-import { showDialog } from "./dialogs";
 import { createProviderRegistry } from "./providers/provider-registry";
 import {
     FileSelectionResult,
@@ -58,12 +58,11 @@ import {
     extractZipTimestamp,
     formatMessageTimestamp,
     formatTimestamp,
-    getFileFingerprint,
 } from "./utils";
 import { sortFilesForImport } from "./utils/file-sort";
 import { createZipArchiveReader } from "./utils/zip-loader";
 import { resolveArchiveClassification } from "./utils/zip-content-reader";
-
+import { expandContainerArchives } from "./utils/container-archive";
 interface ImportCheckpoint {
     operation: "import-all" | "selective-analysis" | "selective-import";
     phase: string;
@@ -73,8 +72,6 @@ interface ImportCheckpoint {
     conversationCount?: number;
     timestampMs: number;
 }
-
-type MobileArchiveImportMode = "reprocess" | "incremental";
 
 export default class NexusAiChatImporterPlugin extends Plugin {
     settings!: PluginSettings;
@@ -400,7 +397,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private async handleFileSelectionResult(
         result: FileSelectionResult
     ): Promise<void> {
-        const { files, mode, provider } = result;
+        const { files, mode, provider, reprocess } = result;
 
         if (files.length === 0) {
             return;
@@ -412,6 +409,20 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         );
         files.filter((file) => file.name.toLowerCase().endsWith(".json"));
         const isMobile = this.isMobileTaskQueueMode();
+
+        // Account-level downloads (OpenAI Privacy Portal) wrap the real export
+        // in a container ZIP. Replace it with the conversation archives it
+        // carries, so the rest of the flow sees an ordinary export.
+        const containerExpansion = await expandContainerArchives(zipFiles);
+        if (containerExpansion.expandedContainers.length > 0) {
+            this.logger
+                .child("ImportFlow")
+                .info("Expanded container archive selection", {
+                    containers: containerExpansion.expandedContainers,
+                    archiveCount: containerExpansion.files.length,
+                });
+        }
+        zipFiles = containerExpansion.files;
 
         if (isMobile && zipFiles.length > 1) {
             this.logger
@@ -469,9 +480,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         if (mode === "all") {
-            await this.handleImportAll(sortedZipFiles, effectiveProvider);
+            await this.handleImportAll(
+                sortedZipFiles,
+                effectiveProvider,
+                reprocess
+            );
         } else {
-            await this.handleSelectiveImport(sortedZipFiles, effectiveProvider);
+            await this.handleSelectiveImport(
+                sortedZipFiles,
+                effectiveProvider,
+                reprocess
+            );
         }
     }
 
@@ -480,12 +499,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleImportAll(
         files: File[],
-        provider: string
+        provider: string,
+        forceReprocess = false
     ): Promise<void> {
         try {
             const isMobile = this.isMobileTaskQueueMode();
             if (isMobile) {
-                await this.handleImportAllMobileSequential(files, provider);
+                await this.handleImportAllMobileSequential(
+                    files,
+                    provider,
+                    forceReprocess
+                );
                 return;
             }
 
@@ -528,7 +552,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await metadataExtractor.extractMetadataFromMultipleZips(
                     files,
                     provider,
-                    existingConversations
+                    existingConversations,
+                    forceReprocess ? "rebuild" : "drop"
                 );
             this.logIgnoredArchives(
                 extractionResult.ignoredArchives,
@@ -589,19 +614,27 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 return;
             }
 
-            // Auto-select ALL conversations (NEW + UPDATED)
+            // Auto-select ALL conversations (NEW + UPDATED, plus unchanged
+            // ones when a rebuild was requested).
             const allIds = extractionResult.conversations.map((c) => c.id);
 
             const newCount =
                 extractionResult.analysisInfo?.conversationsNew ?? 0;
             const updatedCount =
                 extractionResult.analysisInfo?.conversationsUpdated ?? 0;
+            const reprocessedCount =
+                extractionResult.analysisInfo?.conversationsReprocessed ?? 0;
             new Notice(
-                t("notices.import_starting", {
-                    count: String(allIds.length),
-                    new: String(newCount),
-                    updated: String(updatedCount),
-                })
+                reprocessedCount > 0
+                    ? t("notices.import_starting_reprocess", {
+                          count: String(allIds.length),
+                          rebuilt: String(reprocessedCount),
+                      })
+                    : t("notices.import_starting", {
+                          count: String(allIds.length),
+                          new: String(newCount),
+                          updated: String(updatedCount),
+                      })
             );
 
             // Group conversations by file and import
@@ -630,7 +663,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 provider,
                 filesToImport,
                 conversationsByFile,
-                operationReport
+                operationReport,
+                undefined,
+                forceReprocess
             );
 
             // Write the consolidated report (always, even if some files failed)
@@ -671,7 +706,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
     private async handleImportAllMobileSequential(
         files: File[],
-        provider: string
+        provider: string,
+        forceReprocess = false
     ): Promise<void> {
         const mobileFiles = files.slice(0, 1);
         if (files.length > 1) {
@@ -798,10 +834,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 fileName: file.name,
                 task: `${i + 1}/${mobileFiles.length}`,
             });
-            const archiveImportMode = await this.resolveMobileArchiveImportMode(
-                file,
-                provider
-            );
+            const archiveImportMode = forceReprocess ? "reprocess" : undefined;
             await this.importService.handleZipFile(
                 file,
                 provider,
@@ -876,7 +909,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
      */
     private async handleSelectiveImport(
         files: File[],
-        provider: string
+        provider: string,
+        forceReprocess = false
     ): Promise<void> {
         try {
             const mobileFiles = this.isMobileTaskQueueMode()
@@ -937,7 +971,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 await metadataExtractor.extractMetadataFromMultipleZips(
                     mobileFiles,
                     provider,
-                    existingConversations
+                    existingConversations,
+                    // The selection dialog decides what happens to an existing
+                    // conversation, so it needs every one of them on screen.
+                    "offer"
                 );
             this.logIgnoredArchives(
                 extractionResult.ignoredArchives,
@@ -969,6 +1006,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
 
                 // Write report showing what was analyzed
                 const operationReport = new ImportReport();
+                if (this.settings.useCustomMessageTimestampFormat) {
+                    operationReport.setCustomTimestampFormat(
+                        this.settings.messageTimestampFormat
+                    );
+                }
                 const reportPath = await this.writeConsolidatedReport(
                     operationReport,
                     provider,
@@ -1001,7 +1043,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                         provider,
                         extractionResult.analysisInfo,
                         extractionResult.fileStats,
-                        extractionResult.ignoredArchives
+                        extractionResult.ignoredArchives,
+                        forceReprocess
                     );
                 },
                 this,
@@ -1028,7 +1071,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         provider: string,
         analysisInfo?: AnalysisInfo,
         fileStats?: Map<string, FileAnalysisStats>,
-        ignoredArchives?: IgnoredArchiveInfo[]
+        ignoredArchives?: IgnoredArchiveInfo[],
+        forceReprocess = false
     ): Promise<void> {
         try {
             this.setImportCheckpoint({
@@ -1039,6 +1083,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             });
             // Create shared report for the entire operation
             const operationReport = new ImportReport();
+            operationReport.setSelection(
+                result.totalAvailable,
+                result.selectedIds.length
+            );
 
             // Set custom timestamp format if enabled
             if (this.settings.useCustomMessageTimestampFormat) {
@@ -1084,11 +1132,15 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const filesToImport = files.filter((file) =>
                 conversationsByFile.has(file.name)
             );
-            const selectedExistingConversationIds =
-                this.collectSelectedExistingConversationIds(
-                    result.selectedIds,
-                    availableConversations
-                );
+            // Only a rebuild request touches a note that is already current.
+            // Without it the processor applies its normal rules: create the
+            // new ones, append to the updated ones, leave the rest alone.
+            const selectedExistingConversationIds = result.rebuildExisting
+                ? this.collectSelectedExistingConversationIds(
+                      result.selectedIds,
+                      availableConversations
+                  )
+                : undefined;
 
             this.setImportCheckpoint({
                 operation: "selective-import",
@@ -1103,7 +1155,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 filesToImport,
                 conversationsByFile,
                 operationReport,
-                selectedExistingConversationIds
+                selectedExistingConversationIds,
+                forceReprocess
             );
 
             // Write the consolidated report (always, even if some files failed)
@@ -1163,7 +1216,10 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const strategy = adapter.getReportNamingStrategy();
             providerName = strategy.getProviderName();
             const columnInfo = strategy.getProviderSpecificColumn();
-            report.setProviderSpecificColumnHeader(columnInfo.header);
+            report.setProviderSpecificColumnHeader(
+                columnInfo.header,
+                !!columnInfo.countsImportedAttachments
+            );
         }
 
         const folderPath = `${reportFolder}/${providerName}`;
@@ -1181,11 +1237,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         }
 
         const now = Date.now() / 1000;
-        const datePrefix = formatTimestamp(now, "prefix");
-        const timeStr = formatTimestamp(now, "time")
-            .replace(/:/g, "")
-            .replace(/ /g, "");
-        let basePrefix = `${datePrefix}-${timeStr}`;
+        let basePrefix = formatTimestamp(now, "fileStamp");
         let counter = 2;
         let summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
         let heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
@@ -1196,7 +1248,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             (await this.app.vault.adapter.exists(heavyPath)) ||
             (await this.app.vault.adapter.exists(mobilePath))
         ) {
-            basePrefix = `${datePrefix}-${timeStr}-${counter}`;
+            basePrefix = `${formatTimestamp(now, "fileStamp")}-${counter}`;
             summaryPath = `${folderPath}/${basePrefix} - import summary.md`;
             heavyPath = `${folderPath}/${basePrefix} - index heavy.md`;
             mobilePath = `${folderPath}/${basePrefix} - index mobile.md`;
@@ -1214,6 +1266,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         report.setIgnoredArchives(ignoredArchives ?? []);
 
         const stats = report.getCompletionStats();
+        const ledger = report.getConversationLedger();
         const processedFiles: string[] = [];
         const skippedFiles: string[] = [];
         if (stats.totalFiles > 0 || report.getProcessedFileNames().length > 0) {
@@ -1245,15 +1298,31 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 ? this.settings.messageTimestampFormat
                 : undefined
         );
+        // Archive counters come from the analysis phase, which the mobile
+        // flow skips. Omitted rather than written as zeros nobody can tell
+        // apart from a real count.
+        const archiveFrontmatter = ledger.analysisAvailable
+            ? `totalConversationsFound: ${ledger.totalFound}
+totalDuplicatesRemoved: ${ledger.duplicates}
+totalConversationsKept: ${ledger.uniqueKept}
+totalSelected: ${ledger.selected}
+`
+            : "";
+
+        // One key per quantity, grouped as the report reads: the operation,
+        // then the archives, then what became of the notes. The archive block
+        // ends on the number the note block adds up to.
         const commonFrontmatter = `importdate: ${currentDate}
 provider: ${provider}
+importMode: ${isSelectiveImport ? "selective" : "all"}
 totalFilesAnalyzed: ${files.length}
 totalFilesProcessed: ${processedFiles.length}
-totalFilesSkipped: ${skippedFiles.length}
-totalConversations: ${stats.totalConversations}
+totalFilesNotProcessed: ${skippedFiles.length}
+${archiveFrontmatter}totalEmpty: ${ledger.empty}
 totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
-totalSkipped: ${stats.skipped}
+totalRecreated: ${stats.recreated}
+totalUnchanged: ${stats.unchanged}
 totalFailed: ${stats.failed}
 `;
 
@@ -1267,8 +1336,6 @@ ${report.generateSummaryReportContent(
     files,
     processedFiles,
     skippedFiles,
-    analysisInfo,
-    fileStats,
     isSelectiveImport,
     archiveDisplayNames,
     links,
@@ -1483,67 +1550,6 @@ ${report.generateMobileIndexContent(files, links)}
         return null;
     }
 
-    private async resolveMobileArchiveImportMode(
-        file: File,
-        provider: string
-    ): Promise<MobileArchiveImportMode> {
-        if (!this.isMobileTaskQueueMode()) {
-            return "incremental";
-        }
-
-        const storage = this.getStorageService();
-        const archiveFingerprint = getFileFingerprint(file);
-        const alreadyImported =
-            storage.isArchiveImported(archiveFingerprint) ||
-            storage.isArchiveImported(file.name);
-        if (!alreadyImported) {
-            return "incremental";
-        }
-
-        this.logger
-            .child("ImportFlow")
-            .debug(
-                "Mobile archive already processed, prompting for import mode",
-                {
-                    provider,
-                    fileName: file.name,
-                    fingerprint: archiveFingerprint,
-                }
-            );
-
-        const shouldReprocess = await showDialog(
-            this.app,
-            "confirmation",
-            t("mobile_archive_processed_dialog.title"),
-            [
-                t("mobile_archive_processed_dialog.description", {
-                    filename: file.name,
-                }),
-                t("mobile_archive_processed_dialog.choice_help"),
-            ],
-            undefined,
-            {
-                button1: t("mobile_archive_processed_dialog.button_reprocess"),
-                button2: t(
-                    "mobile_archive_processed_dialog.button_incremental"
-                ),
-            }
-        );
-
-        const selectedMode: MobileArchiveImportMode = shouldReprocess
-            ? "reprocess"
-            : "incremental";
-        this.logger
-            .child("ImportFlow")
-            .debug("Mobile archive import mode selected", {
-                provider,
-                fileName: file.name,
-                selectedMode,
-            });
-
-        return selectedMode;
-    }
-
     private async yieldToEventLoop(): Promise<void> {
         await new Promise<void>((resolve) => window.setTimeout(resolve, 0));
     }
@@ -1587,7 +1593,8 @@ ${report.generateMobileIndexContent(files, links)}
         filesToImport: File[],
         conversationsByFile: Map<string, string[]>,
         operationReport: ImportReport,
-        selectedExistingConversationIds?: Set<string>
+        selectedExistingConversationIds?: Set<string>,
+        forceReprocess = false
     ): Promise<void> {
         const importFlowLogger = this.logger.child("ImportFlow");
         const mobileTaskQueueMode = this.isMobileTaskQueueMode();
@@ -1679,13 +1686,8 @@ ${report.generateMobileIndexContent(files, links)}
                         : "standard",
                 });
 
-                const archiveImportMode =
-                    mobileTaskQueueMode && operation === "import-all"
-                        ? await this.resolveMobileArchiveImportMode(
-                              file,
-                              provider
-                          )
-                        : undefined;
+                const archiveImportMode: ArchiveImportMode | undefined =
+                    forceReprocess ? "reprocess" : undefined;
                 const fileReprocessIds = selectedExistingConversationIds
                     ? conversationsForFile.filter((id) =>
                           selectedExistingConversationIds.has(id)
@@ -1737,6 +1739,11 @@ ${report.generateMobileIndexContent(files, links)}
         }
     }
 
+    /**
+     * The selected conversations that already have a note, which a rebuild
+     * request turns into full regenerations. Called only when the user asked
+     * for one.
+     */
     private collectSelectedExistingConversationIds(
         selectedIds: string[],
         availableConversations: ConversationMetadata[]
@@ -1810,22 +1817,42 @@ ${report.generateMobileIndexContent(files, links)}
             {}
         );
 
-        this.logger
-            .child("ImportFlow")
-            .warn("Archives ignored during metadata extraction", {
-                operation,
-                provider,
-                ignoredCount: ignoredArchives.length,
-                groupedCounts,
-                archives: ignoredArchives.map((archive) => ({
-                    fileName: archive.fileName,
-                    reason: archive.reason,
-                    message: archive.message,
-                })),
-            });
+        // Picking a provider in a folder holding several providers' exports
+        // rejects the others, every time, by design. That is a fact of the
+        // run, not a warning; only an archive we failed to read is.
+        const expected = ignoredArchives.every(
+            (archive) =>
+                archive.reason === "provider-mismatch" ||
+                archive.reason === "unsupported-format"
+        );
 
+        const details = {
+            operation,
+            provider,
+            ignoredCount: ignoredArchives.length,
+            groupedCounts,
+            archives: ignoredArchives.map((archive) => ({
+                fileName: archive.fileName,
+                reason: archive.reason,
+                message: archive.message,
+            })),
+        };
+
+        const flowLogger = this.logger.child("ImportFlow");
+        if (expected) {
+            flowLogger.debug(
+                "Archives ignored during metadata extraction",
+                details
+            );
+            return;
+        }
+
+        flowLogger.warn("Archives ignored during metadata extraction", details);
         new Notice(
-            `${ignoredArchives.length} archive(s) ignored during analysis (${provider}). Check console logs for details.`,
+            t("notices.import_archives_ignored", {
+                count: String(ignoredArchives.length),
+                provider,
+            }),
             5000
         );
     }

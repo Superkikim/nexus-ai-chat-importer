@@ -70,6 +70,12 @@
             "selective_label": "Select Specific",
             "selective_description": "Preview and choose conversations"
         },
+        "reprocess": {
+            "label": "Reprocess existing notes",
+            "description": "Rebuilds notes already in your vault instead of skipping them. Use this after a plugin update to pick up new features.",
+            "selective_hint": "To rebuild existing notes, select them in the next step and tick “Rebuild selected notes”.",
+            "warning": "Manual edits to those notes will be lost."
+        },
         "file_area": {
             "section_title": "Select Files",
             "drop_text_default": "Drop ZIP files here or click to browse",
@@ -94,8 +100,8 @@
             "search_placeholder": "Search conversations...",
             "status_label": "Status:",
             "show_label": "Show:",
-            "existing_only_label": "Show existing conversations only",
-            "existing_only_help": "Selecting an existing conversation will overwrite and reprocess the matching note."
+            "rebuild_existing_label": "Rebuild selected notes if they exist",
+            "rebuild_help": "Off, an existing note only receives its new messages. On, every selected note already in your vault is rewritten from scratch and manual edits are lost."
         },
         "status_filter_options": {
             "all": "All",
@@ -130,6 +136,7 @@
             "new": "New",
             "updated": "Updated",
             "unchanged": "Unchanged",
+            "scope_note": "Across the whole archive",
             "selected_of": "{{selected}} of {{total}} selected"
         },
         "buttons": {
@@ -161,18 +168,28 @@
         "title": "Import Completed",
         "success_message": "✅ Successfully imported conversations",
         "stats": {
-            "zip_files_processed": "ZIP Files Processed",
-            "unique_conversations": "Unique Conversations",
-            "duplicates": "Duplicates",
             "new": "New",
             "updated": "Updated",
-            "skipped": "Skipped",
+            "recreated": "Recreated",
+            "unchanged": "Unchanged",
             "failed": "Failed"
         },
+        "archive": {
+            "conversations": "{{count}} conversations",
+            "zips": "{{count}} ZIP files",
+            "duplicates": "{{count}} duplicates removed",
+            "not_selected": "{{count}} not selected",
+            "empty": "{{count}} with no exportable content"
+        },
+        "nothing_changed": "Nothing in your vault changed.",
         "attachments": {
-            "label": "Attachments:",
-            "summary": "{{found}}/{{total}} extracted ({{percentage}}%)",
-            "missing_failed": "{{missing}} missing, {{failed}} failed"
+            "label": "Files",
+            "extracted": "Extracted",
+            "inline": "In the note",
+            "not_provided": "Not in the export",
+            "missing": "Missing",
+            "failed": "Failed",
+            "artifacts": "Artifacts"
         },
         "report": {
             "label": "📄 Detailed report:"
@@ -217,7 +234,7 @@
             "section_title": "📅 Message Date Format",
             "custom_format": {
                 "name": "Custom message timestamp format",
-                "desc": "Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting. If Obsidian is set to english, the US format (YYYY/DD/MM) is enforced."
+                "desc": "Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting."
             },
             "timestamp_format": {
                 "name": "Timestamp format",
@@ -322,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade Complete - v{{version}}",
-            "fallback_content": "## ✨ What's New in v{{version}}\n\n### 🐛 Fixed\n- **Claude** — The new split export is now detected: Anthropic delivers a manifest listing several ZIPs, and `users.json` no longer sits next to `conversations.json`, so `conversations-000.zip` was misread as a ChatGPT export and imported nothing\n- Import `conversations-000.zip` directly — the projects, memories and light metadata archives contain nothing the plugin uses\n- Detection of all previously supported export formats is unchanged\n- **Obsidian 1.13+** — callout colors restored: Obsidian 1.13.0 changed `--callout-color` to require a real CSS color, leaving Nexus callouts without color or border",
+            "fallback_content": "## ✨ What's New in v{{version}}\n\n### ✨ New\n- **ChatGPT** — Generated images and documents are imported again when the export includes them\n- **ChatGPT** — Privacy Portal archives import as-is; no need to extract the account-level ZIP first\n- **Rebuild existing notes** so older imports pick up current features — manual edits to a rebuilt note are lost\n- **Filter the conversation list by status** — New, Updated, Unchanged\n- **Large pasted Claude content** is extracted into linked files instead of bloating the note\n\n### 🔧 Improved\n- **Reports and the completion dialog** were rebuilt around what actually happened to your notes; several counters were wrong\n- Filenames, deduplication and attachment counts\n\n### 🐛 Fixed\n- **Claude imports work again** (1.6.9) — Anthropic's new split export was read as a ChatGPT one and imported nothing\n- **Callout colours restored on Obsidian 1.13+** (1.6.9)\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Got it!"
             }
@@ -343,6 +360,17 @@
             "fallback_message": "🎉 **Upgrade to v1.2.0**\n\nYour conversations will be reorganized with provider structure and modern callouts. All links in your reports will be updated.\n\n**💡 To get ALL v1.2.0 features:** Reimport your original ChatGPT ZIP files.",
             "buttons": {
                 "proceed": "Proceed"
+            }
+        },
+        "repair_notes": {
+            "title": "Repair notes that slow Obsidian down",
+            "intro": "{{count}} conversation(s) hold pasted content on a single enormous line. Obsidian reads a line whole, so these slow indexing across your whole vault.",
+            "and_more": "…and {{count}} more",
+            "what_happens": "Nexus can move that content into files beside each conversation and leave a collapsed link in its place — the same thing it now does when importing.",
+            "backup_note": "Each note is copied beside itself before being touched, so nothing is lost. You can delete the copies once you are satisfied.",
+            "buttons": {
+                "repair": "Repair them",
+                "ignore": "Leave them alone"
             }
         }
     },
@@ -480,17 +508,11 @@
             "get_started": "Get Started"
         }
     },
-    "mobile_archive_processed_dialog": {
-        "title": "Archive already processed",
-        "description": "The file {{filename}} was already imported on this device.",
-        "choice_help": "Choose how to continue on mobile:",
-        "button_reprocess": "Reprocess and recreate all notes",
-        "button_incremental": "Add/update missing or updated notes"
-    },
     "notices": {
         "import_analyzing": "Analyzing conversations from {{count}} file(s)...",
         "import_no_new": "No new or updated conversations found. All conversations are already up to date.",
         "import_starting": "Importing {{count}} conversations ({{new}} new, {{updated}} updated)...",
+        "import_starting_reprocess": "Importing {{count}} conversations ({{rebuilt}} rebuilt)...",
         "import_starting_selected": "Importing {{count}} selected conversations from {{files}} file(s)...",
         "import_completed_fallback": "Import completed. {{created}} created, {{updated}} updated.",
         "import_error": "Error during import: {{error}}",
@@ -506,7 +528,8 @@
         "report_failed": "Failed to create log file. Check console for details.",
         "attachment_map_failed": "Failed to build attachment map. Check console for details.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Import new file",
-        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files."
+        "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
+        "import_archives_ignored": "{{count}} archive(s) could not be read ({{provider}}). See the console for details."
     },
     "archive_messages": {
         "empty": "The ZIP file contains no files. Please check that you selected the correct export file.",
@@ -515,12 +538,12 @@
             "generic": "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner ZIP files directly.",
             "perplexity": "This ZIP contains other ZIP files. Extract the outer ZIP and import the inner Perplexity part*.zip files directly."
         },
-        "provider_mismatch": {
-            "chatgpt": "This ZIP file does not look like a ChatGPT export.",
-            "claude": "This ZIP file does not look like a Claude export.",
-            "vibe": "This ZIP file does not look like a Mistral Vibe export.",
-            "gemini": "This ZIP file does not look like a Gemini Takeout export.",
-            "perplexity": "This ZIP file does not look like a Perplexity Thread Exporter archive."
+        "wrong_provider": "This ZIP is a {{detected}} export, not a {{expected}} one. Pick the matching provider to import it.",
+        "provider_names": {
+            "chatgpt": "ChatGPT",
+            "claude": "Claude",
+            "vibe": "Mistral Vibe",
+            "perplexity": "Perplexity"
         }
     },
     "commands": {
@@ -540,9 +563,8 @@
     "support_box": {
         "header": "Support This Plugin",
         "header_highlight": "Support This Plugin",
-        "default_message_emphasis": "Nexus has reached 15,000+ downloads. Right now, only about 5 users per month donate to support development.",
-        "default_message": "I maintain this plugin in my own time, and keeping my dev ecosystem running has ongoing costs. Adding new providers also requires paid subscriptions so I can test and deliver accurate support.",
-        "reality_check": "If Nexus is valuable to you, please consider a one-time or monthly donation. Thank you to everyone already supporting the project.",
+        "default_message_emphasis": "Nexus has reached 15,000+ downloads. Your support keeps development going and covers my tooling and subscription costs.",
+        "default_message": "I'm currently unemployed, so every contribution genuinely counts.",
         "button_alt": "Support my work"
     }
 }

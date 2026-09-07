@@ -21,6 +21,7 @@ import { StandardAttachment } from "../../types/standard";
 import { Logger } from "../../logger";
 import { isImageFile, isTextFile } from "../../utils/file-utils";
 import type NexusAiChatImporterPlugin from "../../main";
+import { resolveAttachmentTarget } from "../../utils/attachment-target";
 import {
     ZipArchiveReader,
     ZipEntryHandle,
@@ -91,9 +92,11 @@ export class ClaudeAttachmentExtractor {
     ): Promise<StandardAttachment> {
         const fileName = attachment.fileName;
 
-        // If content was already extracted from the JSON (inline attachments),
-        // skip the ZIP lookup entirely
-        if (attachment.extractedContent) {
+        // Nothing to look up when the converter already dealt with it: either
+        // the content is inline in the note, or it was too large for that and
+        // was written beside the conversation. Falling through would hand a
+        // "not provided by export" placeholder to a file that is right there.
+        if (attachment.extractedContent || attachment.url) {
             return attachment;
         }
 
@@ -315,13 +318,17 @@ export class ClaudeAttachmentExtractor {
     }
 
     /**
-     * Generate unique filename to avoid conflicts
+     * Stable name for one attachment: claude_{conversationId}_{name}
+     *
+     * It used to carry Date.now(), so re-importing a conversation wrote a
+     * second copy of an attachment the vault already held instead of
+     * recognising it. The path has to be the same across imports for the
+     * conflict resolution to compare anything.
      */
     private generateUniqueFileName(
         originalFileName: string,
         conversationId: string
     ): string {
-        const timestamp = Date.now();
         const shortConversationId = conversationId.substring(0, 8);
         const extension = originalFileName.includes(".")
             ? originalFileName.split(".").pop()
@@ -329,8 +336,8 @@ export class ClaudeAttachmentExtractor {
         const baseName = originalFileName.replace(/\.[^/.]+$/, "");
 
         return extension
-            ? `claude_${shortConversationId}_${timestamp}_${baseName}.${extension}`
-            : `claude_${shortConversationId}_${timestamp}_${baseName}`;
+            ? `claude_${shortConversationId}_${baseName}.${extension}`
+            : `claude_${shortConversationId}_${baseName}`;
     }
 
     /**
@@ -358,7 +365,12 @@ export class ClaudeAttachmentExtractor {
         const filePath = `${attachmentFolder}/${fileName}`;
         const writeResult = await writeZipEntryToVault(
             zipFile,
-            filePath,
+            (_detection, bytes) =>
+                resolveAttachmentTarget(
+                    this.plugin.app.vault.adapter,
+                    filePath,
+                    bytes
+                ),
             this.plugin.app.vault
         );
         return writeResult.targetPath;

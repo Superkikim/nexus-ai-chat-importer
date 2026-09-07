@@ -56,8 +56,11 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
 
     private async renderSections(containerEl: HTMLElement): Promise<void> {
         for (const section of this.sections) {
+            // The heading carried an empty name, so every section title —
+            // translated, and sitting in the locale files all along — rendered
+            // as a blank separator instead.
             if (section.title) {
-                new Setting(containerEl).setName("").setHeading();
+                new Setting(containerEl).setName(section.title).setHeading();
             }
 
             await section.render(containerEl);

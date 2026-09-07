@@ -1,5 +1,50 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.7.0 — ChatGPT images, selective import rebuilt, honest reports
+
+![Version](https://img.shields.io/badge/version-1.7.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
+
+ChatGPT ships generated images and documents in its export library again, and Nexus finds them. Selective import gains status filters and a rebuild option of its own. Reports and the completion dialog were rebuilt around what actually happened to your notes — several counters were wrong, some since the beginning.
+
+### ✨ New
+
+- **ChatGPT — Privacy Portal archives import directly.** Import the account-level ZIP from OpenAI as-is; no need to extract it first.
+- **ChatGPT — Generated images and documents imported again.** Recent exports (August 2026+) carry them in the file library; each file is restored to the message that produced it, with its prompt when identifiable.
+- **Rebuild existing notes.** Two checkboxes bring notes already in your vault up to date with current features: one in the file dialog for *Import All*, one in the conversation list for *Select Specific*. Backlinks survive; manual edits are lost.
+- **Filter conversations by status.** New, Updated and Unchanged chips replace the dropdown. Unchanged conversations are listed for the first time, off by default.
+- **Claude — Large inline content (pasted) is extracted into linked files.** Text over 20 KB is written beside the conversation and linked instead of inlined, keeping notes small.
+
+### 🔧 Improved
+
+- **Recreated is its own outcome** — a rebuilt note is regenerated, not updated with new messages, and reports say which.
+- **The completion dialog shows only what happened** — no grid of zeros. A second row covers files: extracted, kept in the note, artifacts, absent from the export.
+- **Import summaries reconcile** — an Archive block ending on *Selected*, then a Notes block that adds up to it.
+- **A refused archive says what it is** — *"this ZIP is a Mistral Vibe export, not a Claude one"*.
+- **An archive that contributed nothing says why** — superseded, already up to date, or nothing importable.
+- **The settings pane was reordered** — date settings before the folder pickers, blank section headings fixed, timestamp preview moved into its own setting.
+- Report filenames are sortable (`20260829-161009`).
+
+### 🐛 Fixed
+
+- Attachment counts were wrong — doubled for ChatGPT and Vibe, a false *0/10 extracted* for Claude. Artifacts now have their own counter.
+- A rebuild duplicated attachments instead of reusing the files already in your vault.
+- A conversation could be lost to a filename collision between two titles differing only in case.
+- A conversation could be offered as *Updated* forever, with nothing to add.
+- A selected conversation the import left alone vanished from the report.
+- Conversations that Claude re-exported with emptied messages were silently skipped; they import correctly now.
+- Attachment-only messages are imported rather than treated as empty.
+- Generation prompts are kept for image requests without an explicit "generate" verb.
+- Filenames keep leading non-ASCII letters — Cyrillic, Chinese and other scripts are no longer trimmed.
+- The message-timestamp setting no longer claims that English forces a "US format"; it follows your Obsidian language. Corrected in all ten languages.
+- The upgrade dialogs show the release summary again.
+
+### ℹ️ Notes
+
+- Whether an export contains generated files is decided by OpenAI and has varied over time. When a file is absent from the archive, the placeholder stays.
+- Rebuilding overwrites manual edits, so it is opt-in per import rather than a saved preference.
+- **Claude** — recent exports arrive as several ZIPs; import the one holding `conversations.json`.
+- The command-line importer now lives in [its own repository](https://github.com/Superkikim/nexus-ai-chat-importer-cli). The plugin is unaffected.
+
 ## Version 1.6.9 — Claude Split Export Detection
 
 ![Version](https://img.shields.io/badge/version-1.6.9-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
@@ -609,7 +654,7 @@ Versions ≤1.2.0 remain under MIT license (already released, can't be revoked).
 
 Thank you for your understanding and continued support! 🙏
 
-See [LICENSE.md](LICENSE.md) for full legal details.
+See [LICENSE](LICENSE) for full legal details.
 
 ---
 

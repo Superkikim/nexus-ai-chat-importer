@@ -28,7 +28,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
     get title() {
         return t("settings.timestamps.section_title");
     }
-    readonly order = 21;
+    readonly order = 11;
 
     render(containerEl: HTMLElement): void {
         // Add custom styling for better readability
@@ -55,7 +55,7 @@ export class MessageDateFormatSection extends BaseSettingsSection {
 
         // Message Timestamp Format Dropdown (only shown if custom format is enabled)
         if (this.plugin.settings.useCustomMessageTimestampFormat) {
-            new Setting(sectionContainer)
+            const formatSetting = new Setting(sectionContainer)
                 .setName(t("settings.timestamps.timestamp_format.name"))
                 .setDesc(t("settings.timestamps.timestamp_format.desc"))
                 .addDropdown((dropdown) => {
@@ -81,8 +81,11 @@ export class MessageDateFormatSection extends BaseSettingsSection {
                         });
                 });
 
-            // Preview container AFTER the dropdown setting
-            const previewContainer = sectionContainer.createDiv({
+            // Inside the setting item, on a line of its own: a preview that
+            // sits outside the box reads as an orphan paragraph rather than
+            // as what the dropdown above it produces.
+            formatSetting.settingEl.addClass("nexus-timestamp-setting");
+            const previewContainer = formatSetting.settingEl.createDiv({
                 cls: "nexus-timestamp-preview",
             });
 

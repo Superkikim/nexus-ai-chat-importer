@@ -140,7 +140,7 @@ export function extractZipTimestamp(fileName: string): number | null {
  */
 export function formatTimestamp(
     unixTime: number,
-    format: "prefix" | "date" | "time"
+    format: "prefix" | "date" | "time" | "fileStamp"
 ): string {
     const date = moment(unixTime * 1000);
     switch (format) {
@@ -150,6 +150,11 @@ export function formatTimestamp(
             return date.format("L");
         case "time":
             return date.format("LTS");
+        // Sortable and locale-independent, for names a machine orders and a
+        // human reads: the locale time format produced "75411PM" once its
+        // separators were stripped.
+        case "fileStamp":
+            return date.format("YYYYMMDD-HHmmss");
     }
 }
 
@@ -168,14 +173,18 @@ export function formatTitle(title: string): string {
 export function generateFileName(title: string): string {
     let fileName = formatTitle(title)
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        // Remove diacritics from Latin letters only (café -> cafe).
+        // Non-Latin scripts keep their marks: in Cyrillic they are part of the
+        // letter itself (и + U+0306 = й), so stripping them changes the word.
+        .replace(/(\p{Script=Latin})\p{Mn}+/gu, "$1")
+        .normalize("NFC")
         .replace(/[<>:"/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 
     // CRITICAL: Remove special characters from the beginning
     // This fixes issues like ".htaccess" becoming an invisible file
-    fileName = fileName.replace(/^[^\w\d\s]+/, ""); // Remove non-alphanumeric at start
+    fileName = fileName.replace(/^[^\p{L}\p{N}\s]+/u, ""); // Remove non-letter/number characters at start
 
     // Clean up any remaining problematic patterns
     fileName = fileName
@@ -345,12 +354,19 @@ export async function generateUniqueFileName(
 }
 
 // Function to check if the full file path exists
+/**
+ * Whether the vault's storage already holds this path.
+ *
+ * Asks the adapter, not the metadata index: the index is keyed by exact case,
+ * while macOS and Windows filesystems are not. Two conversations whose titles
+ * differ only in case produced one path on disk and two index entries, so no
+ * collision was detected and the create failed with "File already exists".
+ */
 export async function doesFilePathExist(
     filePath: string,
     vault: Vault
 ): Promise<boolean> {
-    const file = vault.getAbstractFileByPath(filePath);
-    return file !== null; // Return true if the file exists, false otherwise
+    return vault.adapter.exists(filePath);
 }
 
 /**
@@ -422,14 +438,18 @@ export function generateSafeAlias(title: string): string {
     // Start with the title and apply minimal sanitization
     let cleanName = title
         .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+        // Remove diacritics from Latin letters only (café -> cafe).
+        // Non-Latin scripts keep their marks: in Cyrillic they are part of the
+        // letter itself (и + U+0306 = й), so stripping them changes the word.
+        .replace(/(\p{Script=Latin})\p{Mn}+/gu, "$1")
+        .normalize("NFC")
         .replace(/[<>/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters (keep quotes and colons)
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 
     // Remove special characters from the beginning (for filesystem safety)
     // But we'll remember if we had YAML special chars for quoting decision
-    cleanName = cleanName.replace(/^[^\w\d\s"']+/, "");
+    cleanName = cleanName.replace(/^[^\p{L}\p{N}\s"']+/u, "");
 
     // Clean up any remaining problematic patterns
     cleanName = cleanName

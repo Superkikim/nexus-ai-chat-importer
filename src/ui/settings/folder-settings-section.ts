@@ -33,7 +33,10 @@ export class FolderSettingsSection extends BaseSettingsSection {
     get title() {
         return t("settings.folders.section_title");
     }
-    readonly order = 10;
+    // After the date settings: those shape the filenames of every note, and a
+    // user who discovers them late is left with a vault in two conventions.
+    // The folder has a sane default and can be migrated afterwards.
+    readonly order = 20;
 
     render(containerEl: HTMLElement): void {
         // Conversation Folder

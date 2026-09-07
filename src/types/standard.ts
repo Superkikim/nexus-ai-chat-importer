@@ -122,6 +122,23 @@ export const URL_GENERATORS: Record<string, UrlGenerator> = {
 /**
  * Provider-specific report naming strategy
  */
+/** The provider-specific column shown in import report tables. */
+export interface ProviderSpecificColumn {
+    header: string;
+    getValue: (adapter: unknown, chat: unknown) => number;
+    /**
+     * Count what actually landed in the note rather than what the raw export
+     * declared.
+     *
+     * A provider whose column is "Attachments" cannot count from the raw chat:
+     * files reconciled from outside the conversation payload (such as ChatGPT's
+     * generated images in `library_files.json`) are invisible there, and one
+     * file described by two entries would be counted twice. Columns with other
+     * semantics — Claude artifacts, Perplexity turns — keep using `getValue`.
+     */
+    countsImportedAttachments?: boolean;
+}
+
 export interface ReportNamingStrategy {
     /**
      * Extract report prefix from archive filename
@@ -140,10 +157,7 @@ export interface ReportNamingStrategy {
      * Get provider-specific column info for reports
      * @returns column header and value extractor
      */
-    getProviderSpecificColumn(): {
-        header: string;
-        getValue: (adapter: unknown, chat: unknown) => number;
-    };
+    getProviderSpecificColumn(): ProviderSpecificColumn;
 }
 
 /**

@@ -30,6 +30,7 @@ import {
     ClaudeAttachment,
     ClaudeFile,
 } from "./claude-types";
+import { isExportableClaudeMessage } from "./claude-message-filter";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
 
@@ -413,7 +414,7 @@ export class ClaudeConverter {
                 )
             );
             // Add inline attachments (text/docs with extracted_content in JSON)
-            const inlineAttachments = this.processInlineAttachments(
+            const inlineAttachments = await this.processInlineAttachments(
                 message.attachments || [],
                 conversationId
             );
@@ -439,19 +440,7 @@ export class ClaudeConverter {
     }
 
     private static shouldIncludeMessage(message: ClaudeMessage): boolean {
-        // Include all human and assistant messages
-        if (message.sender === "human" || message.sender === "assistant") {
-            // Skip empty messages
-            if (
-                !message.text &&
-                (!message.content || message.content.length === 0)
-            ) {
-                return false;
-            }
-            return true;
-        }
-
-        return false;
+        return isExportableClaudeMessage(message);
     }
 
     /**
@@ -482,6 +471,10 @@ export class ClaudeConverter {
         const versionCounters = new Map<string, number>();
         const artifactContents = new Map<string, string>();
         const artifactLanguages = new Map<string, string>(); // Track language per artifact ID
+        // Track title per artifact ID. Claude only sends `title` on create/rewrite;
+        // an `update` is an incremental patch identified by `id` alone, so later
+        // versions must inherit the title instead of falling back to a placeholder.
+        const artifactTitles = new Map<string, string>();
 
         for (const {
             artifact,
@@ -522,6 +515,11 @@ export class ClaudeConverter {
                           artifact.type
                       );
                 artifactLanguages.set(artifactId, detectedLanguage);
+
+                // For create/rewrite: store the title for subsequent updates
+                if (artifact.title) {
+                    artifactTitles.set(artifactId, artifact.title);
+                }
             } else if (command === "update") {
                 // Apply update to PREVIOUS content
                 const previousContent = artifactContents.get(artifactId) || "";
@@ -551,6 +549,13 @@ export class ClaudeConverter {
                     storedLanguage ||
                     this.detectLanguageFromContent(finalContent, artifact.type);
 
+                // Title inherited from the create/rewrite version of this artifact;
+                // the id is the last resort when no version ever carried a title.
+                const resolvedTitle =
+                    artifactTitles.get(artifactId) ||
+                    artifact.title ||
+                    artifactId;
+
                 // Save this specific version with message timestamp
                 await this.saveSingleArtifactVersionWithContent(
                     artifactId,
@@ -561,7 +566,8 @@ export class ClaudeConverter {
                     conversationTitle,
                     conversationCreateTime,
                     languageToUse,
-                    messageTimestamp
+                    messageTimestamp,
+                    resolvedTitle
                 );
 
                 // Track version info for linking
@@ -573,14 +579,14 @@ export class ClaudeConverter {
 
                 artifactVersionMap.set(versionKey, {
                     versionNumber: currentVersion,
-                    title: artifact.title || artifactId,
+                    title: resolvedTitle,
                 });
 
                 // Build per-message callout map for new format artifacts
                 if (isNewFormat) {
                     const fileName = (artifact.path ?? "").split("/").pop();
                     if (fileName) {
-                        const title = artifact.title || artifactId;
+                        const title = resolvedTitle;
                         const artifactFileName = `${artifactId}_v${currentVersion}`;
                         const artifactPath = `${
                             this.plugin.settings.attachmentFolder
@@ -1062,15 +1068,22 @@ export class ClaudeConverter {
         return attachments;
     }
 
-    private static processInlineAttachments(
+    /**
+     * Text a message carried, which Claude ships inside conversations.json
+     * rather than as a file in the ZIP. It goes into the note, inside a
+     * collapsed callout; anything too long for a note is moved out later by
+     * LongContentExtractor, which does the same for every provider.
+     */
+    private static async processInlineAttachments(
         attachments: ClaudeAttachment[],
         conversationId?: string
-    ): StandardAttachment[] {
+    ): Promise<StandardAttachment[]> {
         if (!attachments || attachments.length === 0) return [];
         const result: StandardAttachment[] = [];
 
-        attachments.forEach((att, index) => {
-            if (!att || !att.extracted_content) return;
+        for (let index = 0; index < attachments.length; index++) {
+            const att = attachments[index];
+            if (!att || !att.extracted_content) continue;
 
             const displayName =
                 att.file_name || `Attachment ${result.length + 1}`;
@@ -1114,7 +1127,7 @@ export class ClaudeConverter {
                 extractedContent,
                 status: { processed: true, found: true }, // no localPath → counts as inline
             });
-        });
+        }
 
         return result;
     }
@@ -1199,7 +1212,8 @@ export class ClaudeConverter {
         conversationTitle?: string,
         conversationCreateTime?: number,
         forcedLanguage?: string,
-        messageTimestamp?: number
+        messageTimestamp?: number,
+        resolvedTitle?: string
     ): Promise<void> {
         if (!this.plugin) {
             throw new Error("Plugin not available");
@@ -1251,7 +1265,8 @@ export class ClaudeConverter {
             conversationTitle,
             conversationCreateTime,
             forcedLanguage,
-            messageTimestamp
+            messageTimestamp,
+            resolvedTitle
         );
     }
 
@@ -1341,17 +1356,20 @@ export class ClaudeConverter {
         conversationTitle?: string,
         conversationCreateTime?: number,
         forcedLanguage?: string,
-        messageTimestamp?: number
+        messageTimestamp?: number,
+        resolvedTitle?: string
     ): Promise<void> {
         // Detect format
         const isNewFormat =
             artifactInput._format === "create_file" ||
             artifactInput._format === "str_replace";
 
-        // Extract metadata based on format
+        // Extract metadata based on format. `resolvedTitle` carries the title
+        // inherited from the artifact's create/rewrite version, so `update`
+        // versions (which Claude exports without a title) keep the real name.
         const title = isNewFormat
             ? this.extractArtifactIdFromPath(artifactInput.path)
-            : artifactInput.title || "Untitled Artifact";
+            : resolvedTitle || artifactInput.title || "Untitled Artifact";
         let language = isNewFormat
             ? "text" // Will be detected from path or content
             : artifactInput.language || "text";

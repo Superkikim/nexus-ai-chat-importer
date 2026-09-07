@@ -24,6 +24,7 @@ import { ImportReport } from "../models/import-report";
 import { MessageFormatter } from "../formatters/message-formatter";
 import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
+import { LongContentExtractor } from "./long-content-extractor";
 import {
     ProviderRegistry,
     ProviderAdapter,
@@ -47,6 +48,7 @@ export class ConversationProcessor {
     private fileService: FileService;
     private noteFormatter: NoteFormatter;
     private providerRegistry: ProviderRegistry;
+    private longContentExtractorInstance?: LongContentExtractor;
     private counters = {
         totalExistingConversations: 0,
         totalNewConversationsToImport: 0,
@@ -72,6 +74,20 @@ export class ConversationProcessor {
             plugin
         );
         this.providerRegistry = providerRegistry;
+    }
+
+    /**
+     * Built on first use rather than in the constructor: the pipeline tests
+     * hand-wire an instance through Object.create and would otherwise reach a
+     * field nobody assigned.
+     */
+    private get longContentExtractor(): LongContentExtractor {
+        if (!this.longContentExtractorInstance) {
+            this.longContentExtractorInstance = new LongContentExtractor(
+                this.plugin
+            );
+        }
+        return this.longContentExtractorInstance;
     }
 
     /**
@@ -562,14 +578,26 @@ export class ConversationProcessor {
     /**
      * Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
      */
+    /**
+     * Value for the provider-specific report column.
+     *
+     * Attachment columns are taken from the stats of the messages actually
+     * written, so files reconciled from outside the conversation payload are
+     * included and a file described twice is still counted once. Columns with
+     * other semantics are computed from the raw chat by the provider.
+     */
     private getProviderSpecificCount(
         adapter: ProviderAdapter,
-        chat: unknown
+        chat: unknown,
+        attachmentStats?: AttachmentStats
     ): number {
         try {
             const strategy = adapter.getReportNamingStrategy();
             if (strategy && strategy.getProviderSpecificColumn) {
                 const columnInfo = strategy.getProviderSpecificColumn();
+                if (columnInfo.countsImportedAttachments) {
+                    return attachmentStats?.total ?? 0;
+                }
                 return columnInfo.getValue(adapter, chat);
             }
         } catch {
@@ -611,32 +639,40 @@ export class ConversationProcessor {
                 const existingMessageIds =
                     this.extractMessageUIDsFromNote(content);
 
-                // For StandardConversation, get new messages directly; otherwise use adapter
-                let newMessages: unknown[];
+                // Convert and reconcile ONCE, up front. Reconciliation must see
+                // the whole conversation (never a filtered subset) so it can
+                // tell "this artifact is already in the note" from "this
+                // artifact needs a host message" — that is what keeps a repeat
+                // import idempotent.
+                let standardConversation: StandardConversation;
                 if (isStandardConversation) {
-                    newMessages = std.messages.filter(
-                        (msg: StandardMessage) =>
-                            !existingMessageIds.includes(msg.id)
-                    );
+                    standardConversation = chat as StandardConversation;
                 } else {
-                    newMessages = adapter.getNewMessages(
-                        chat,
-                        existingMessageIds
-                    );
+                    standardConversation = await adapter.convertChat(chat);
                 }
+
+                if (zip) {
+                    standardConversation.messages =
+                        await this.reconcileMessages(
+                            adapter,
+                            standardConversation.messages,
+                            chatId,
+                            zip
+                        );
+                }
+
+                // New messages are decided on the reconciled conversation, so a
+                // newly available library artifact counts as new content even
+                // when ChatGPT omitted the raw message that carried it.
+                const newMessages = standardConversation.messages.filter(
+                    (msg: StandardMessage) =>
+                        !existingMessageIds.includes(msg.id)
+                );
 
                 let attachmentStats: AttachmentStats | undefined = undefined;
 
                 // REPROCESS LOGIC: If forced update, recreate the entire note with attachment support
                 if (forceUpdate) {
-                    // Get or convert to standard format
-                    let standardConversation: StandardConversation;
-                    if (isStandardConversation) {
-                        standardConversation = chat as StandardConversation;
-                    } else {
-                        standardConversation = await adapter.convertChat(chat);
-                    }
-
                     // Process attachments if ZIP provided
                     if (zip && adapter.processMessageAttachments) {
                         standardConversation.messages =
@@ -645,8 +681,18 @@ export class ConversationProcessor {
                                 chatId,
                                 zip
                             );
+                    }
 
-                        // Calculate attachment stats
+                    standardConversation.messages =
+                        await this.longContentExtractor.extract(
+                            standardConversation.messages,
+                            standardConversation
+                        );
+
+                    // Counted last: the extractor turns oversized content into
+                    // files, and the stats read what each attachment ended up
+                    // being rather than what it was on arrival.
+                    if (zip && adapter.processMessageAttachments) {
                         attachmentStats = this.calculateAttachmentStats(
                             standardConversation.messages
                         );
@@ -659,57 +705,63 @@ export class ConversationProcessor {
                         );
                     await this.fileService.writeToFile(filePath, newContent);
 
-                    importReport.addUpdated(
+                    // Recreated, not updated: the note that was there is
+                    // gone, and the count is every message, not the new ones.
+                    importReport.addRecreated(
                         chatTitle,
                         filePath,
                         chatCreateTime,
                         chatUpdateTime,
                         totalMessageCount,
-                        attachmentStats
+                        attachmentStats,
+                        this.getProviderSpecificCount(
+                            adapter,
+                            chat,
+                            attachmentStats
+                        )
                     );
 
                     this.counters.totalConversationsActuallyUpdated++;
                     return;
                 }
 
-                // Unified update logic - use convertChat for consistency
+                // The archive is newer than the note — that is the only way
+                // this path runs — so the note's stamp follows it even when no
+                // message came with it. Providers move update_time for things
+                // that produce no content, and leaving the old stamp behind
+                // meant the conversation was offered as "Updated" at every
+                // future import, forever, with nothing to show for it.
+                content = this.updateMetadata(
+                    content,
+                    chatUpdateTime,
+                    standardConversation
+                );
+
+                // Unified update logic - append only what the note lacks
                 if (newMessages.length > 0) {
-                    // Get or convert to standard conversation
-                    let standardConversation: StandardConversation;
-                    if (isStandardConversation) {
-                        standardConversation = chat as StandardConversation;
-                    } else {
-                        standardConversation = await adapter.convertChat(chat);
-                    }
-
-                    // Update frontmatter metadata only when there are new messages.
-                    content = this.updateMetadata(
-                        content,
-                        chatUpdateTime,
-                        standardConversation
-                    );
-
-                    // Filter only new messages for formatting.
-                    // Use note message IDs as source of truth because adapter.getNewMessages()
-                    // may return provider-native objects (e.g. Claude uses uuid, not id).
-                    const newStandardMessages =
-                        standardConversation.messages.filter(
-                            (msg: StandardMessage) =>
-                                !existingMessageIds.includes(msg.id)
-                        );
-
-                    // Process attachments on new messages only
-                    let processedNewMessages = newStandardMessages;
+                    // Process attachments on new messages only. Note message IDs
+                    // are the source of truth here, which also covers providers
+                    // whose raw ids differ from the standard ones (e.g. Claude
+                    // uses uuid, not id).
+                    let processedNewMessages = newMessages;
                     if (zip && adapter.processMessageAttachments) {
                         processedNewMessages =
                             await adapter.processMessageAttachments(
-                                newStandardMessages,
+                                newMessages,
                                 chatId,
                                 zip
                             );
                     }
 
-                    // Always calculate attachment stats (even if not processed)
+                    processedNewMessages =
+                        await this.longContentExtractor.extract(
+                            processedNewMessages,
+                            standardConversation
+                        );
+
+                    // Always calculate attachment stats (even if not
+                    // processed), and after the extractor, so an attachment it
+                    // turned into a file counts as one.
                     attachmentStats =
                         this.calculateAttachmentStats(processedNewMessages);
 
@@ -736,9 +788,15 @@ export class ConversationProcessor {
                         chatCreateTime,
                         chatUpdateTime,
                         newMessages.length,
-                        attachmentStats
+                        attachmentStats,
+                        this.getProviderSpecificCount(
+                            adapter,
+                            chat,
+                            attachmentStats
+                        )
                     );
                 } else {
+                    // Same stamp, same content: the note was already current.
                     importReport.addSkipped(
                         chatTitle,
                         filePath,
@@ -797,6 +855,15 @@ export class ConversationProcessor {
                 missing: 0,
                 failed: 0,
             };
+            if (zip) {
+                standardConversation.messages = await this.reconcileMessages(
+                    adapter,
+                    standardConversation.messages,
+                    chatId,
+                    zip
+                );
+            }
+
             if (zip && adapter.processMessageAttachments) {
                 standardConversation.messages =
                     await adapter.processMessageAttachments(
@@ -805,7 +872,14 @@ export class ConversationProcessor {
                         zip
                     );
 
-                // Calculate attachment stats
+                standardConversation.messages =
+                    await this.longContentExtractor.extract(
+                        standardConversation.messages,
+                        standardConversation
+                    );
+
+                // Counted after the extractor: an attachment it turned into a
+                // file must be reported as a file, not as text in the note.
                 attachmentStats = this.calculateAttachmentStats(
                     standardConversation.messages
                 );
@@ -831,30 +905,48 @@ export class ConversationProcessor {
             try {
                 await this.fileService.writeToFile(finalFilePath, content);
             } catch (error: unknown) {
-                if (!this.isNameTooLongError(error)) {
+                if (this.isFileAlreadyExistsError(error)) {
+                    // doesFilePathExist now asks the filesystem, so reaching
+                    // here means a genuine race. Take the next free name
+                    // rather than lose the conversation.
+                    this.plugin.logger.warn(
+                        "Conversation path was taken between the check and the write; retrying with a unique name",
+                        {
+                            provider: standardConversation.provider,
+                            conversationId: chatId,
+                            path: finalFilePath,
+                        }
+                    );
+                    finalFilePath = await generateUniqueFileName(
+                        finalFilePath,
+                        this.plugin.app.vault.adapter,
+                        CONVERSATION_NOTE_FILENAME_MAX_BYTES
+                    );
+                    await this.fileService.writeToFile(finalFilePath, content);
+                } else if (this.isNameTooLongError(error)) {
+                    const fallbackPath = this.buildFallbackConversationPath(
+                        finalFilePath,
+                        chatId
+                    );
+                    this.plugin.logger.warn(
+                        "Conversation filename exceeded platform limits; retrying with fallback name",
+                        {
+                            provider: standardConversation.provider,
+                            conversationId: chatId,
+                            originalPath: finalFilePath,
+                            fallbackPath,
+                        }
+                    );
+
+                    finalFilePath = await generateUniqueFileName(
+                        fallbackPath,
+                        this.plugin.app.vault.adapter,
+                        CONVERSATION_NOTE_FILENAME_MAX_BYTES
+                    );
+                    await this.fileService.writeToFile(finalFilePath, content);
+                } else {
                     throw error;
                 }
-
-                const fallbackPath = this.buildFallbackConversationPath(
-                    finalFilePath,
-                    chatId
-                );
-                this.plugin.logger.warn(
-                    "Conversation filename exceeded platform limits; retrying with fallback name",
-                    {
-                        provider: standardConversation.provider,
-                        conversationId: chatId,
-                        originalPath: finalFilePath,
-                        fallbackPath,
-                    }
-                );
-
-                finalFilePath = await generateUniqueFileName(
-                    fallbackPath,
-                    this.plugin.app.vault.adapter,
-                    CONVERSATION_NOTE_FILENAME_MAX_BYTES
-                );
-                await this.fileService.writeToFile(finalFilePath, content);
             }
 
             const messageCount = standardConversation.messages.length;
@@ -864,7 +956,8 @@ export class ConversationProcessor {
             // Get provider-specific count (artifacts for Claude, attachments for ChatGPT)
             const providerSpecificCount = this.getProviderSpecificCount(
                 adapter,
-                chat
+                chat,
+                attachmentStats
             );
 
             importReport.addCreated(
@@ -904,6 +997,44 @@ export class ConversationProcessor {
                 getErrorMessage(error)
             );
             throw error;
+        }
+    }
+
+    /**
+     * Run the provider's optional reconciliation pass over a whole
+     * conversation, between conversion and attachment extraction.
+     *
+     * Providers that ship content outside the conversation payload (ChatGPT's
+     * library_files.json) use it to attach that content to the message that
+     * produced it. A failure here must never sink the conversation: the import
+     * continues with the unreconciled messages.
+     */
+    private async reconcileMessages(
+        adapter: ProviderAdapter,
+        messages: StandardMessage[],
+        conversationId: string,
+        zip: ZipArchiveReader
+    ): Promise<StandardMessage[]> {
+        if (!adapter.reconcileConversationMessages) {
+            return messages;
+        }
+
+        try {
+            return await adapter.reconcileConversationMessages(
+                messages,
+                conversationId,
+                zip
+            );
+        } catch (error: unknown) {
+            this.plugin.logger.warn(
+                "Conversation reconciliation failed; continuing without it",
+                {
+                    provider: this.currentProvider,
+                    conversationId,
+                    message: getErrorMessage(error),
+                }
+            );
+            return messages;
         }
     }
 
@@ -1098,6 +1229,22 @@ export class ConversationProcessor {
         }
 
         return filePath;
+    }
+
+    /**
+     * Obsidian reports a path already taken on disk with this message. It
+     * reaches us when the vault's own check said the path was free, which the
+     * case-insensitive filesystems make possible whenever two titles differ
+     * only in case.
+     */
+    private isFileAlreadyExistsError(error: unknown): boolean {
+        const message =
+            error instanceof Error
+                ? error.message
+                : typeof error === "string"
+                ? error
+                : "";
+        return message.toLowerCase().includes("already exists");
     }
 
     private isNameTooLongError(error: unknown): boolean {

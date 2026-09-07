@@ -16,7 +16,10 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { ReportNamingStrategy } from "../../types/standard";
+import {
+    ProviderSpecificColumn,
+    ReportNamingStrategy,
+} from "../../types/standard";
 import { extractReportPrefixFromZip } from "../../utils/report-naming-utils";
 import { PerplexityConversationFile } from "./perplexity-types";
 
@@ -30,10 +33,7 @@ export class PerplexityReportNamingStrategy implements ReportNamingStrategy {
         return "perplexity";
     }
 
-    getProviderSpecificColumn(): {
-        header: string;
-        getValue: (adapter: unknown, chat: unknown) => number;
-    } {
+    getProviderSpecificColumn(): ProviderSpecificColumn {
         return {
             header: "Turns",
             getValue: (_adapter: unknown, chat: unknown) => {

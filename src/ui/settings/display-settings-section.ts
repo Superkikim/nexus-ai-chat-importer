@@ -25,7 +25,7 @@ export class DisplaySettingsSection extends BaseSettingsSection {
     get title() {
         return t("settings.display.section_title");
     }
-    readonly order = 20;
+    readonly order = 10;
 
     render(containerEl: HTMLElement): void {
         // Add custom styling for better readability

@@ -5,13 +5,17 @@ export async function writeZipEntryToVault(
     entry: ZipEntryHandle,
     targetPath:
         | string
-        | ((result: BinaryWriteResult) => Promise<string> | string),
+        | ((
+              result: BinaryWriteResult,
+              bytes: Uint8Array
+          ) => Promise<string> | string),
     vault: BinaryVaultTarget
 ): Promise<BinaryWriteResult & { targetPath: string }>;
 export async function writeZipEntryToVault(
     entry: ZipEntryHandle,
     targetPath: (
-        result: BinaryWriteResult
+        result: BinaryWriteResult,
+        bytes: Uint8Array
     ) => Promise<string | null> | string | null,
     vault: BinaryVaultTarget
 ): Promise<BinaryWriteResult & { targetPath: string | null }>;
@@ -20,7 +24,8 @@ export async function writeZipEntryToVault(
     targetPath:
         | string
         | ((
-              result: BinaryWriteResult
+              result: BinaryWriteResult,
+              bytes: Uint8Array
           ) => Promise<string | null> | string | null),
     vault: BinaryVaultTarget
 ): Promise<BinaryWriteResult & { targetPath: string | null }> {
@@ -34,9 +39,11 @@ export async function writeZipEntryToVault(
         detectedExtension: detected.extension ?? undefined,
     };
 
+    // The bytes reach the callback so it can compare them with whatever
+    // already occupies the path it is about to choose.
     const resolvedTargetPath =
         typeof targetPath === "function"
-            ? await targetPath(result)
+            ? await targetPath(result, bytes)
             : targetPath;
 
     // A null target path cancels the write (e.g. voice recordings detected

@@ -46,6 +46,21 @@ export interface ProviderAdapter<TChat = unknown> {
     // New messages detection given existing message IDs extracted from note
     getNewMessages(chat: TChat, existingMessageIds: string[]): unknown[];
 
+    // Optional reconciliation pass, run on the WHOLE conversation after
+    // conversion and before attachment extraction. Providers that ship content
+    // outside the conversation payload (e.g. ChatGPT's library_files.json) use
+    // it to attach that content to the message that produced it, and may add
+    // synthetic messages when the producing message is missing from the export.
+    //
+    // Must be idempotent and always receive the full message list, never a
+    // filtered subset — otherwise a second import would re-add what the note
+    // already contains.
+    reconcileConversationMessages?(
+        messages: StandardMessage[],
+        conversationId: string,
+        zip: ZipArchiveReader
+    ): Promise<StandardMessage[]>;
+
     // Attachment processing (best-effort); return messages with updated attachments
     processMessageAttachments?(
         messages: StandardMessage[],
