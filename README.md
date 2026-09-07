@@ -41,6 +41,10 @@ import report. Everything runs locally in your vault.
 - **Reports and the completion dialog were rebuilt** around what actually happened
   to your notes; several counters were wrong.
 - Plus fixes to filenames, deduplication and attachment counts.
+- **Claude imports work again** — Anthropic's new split export was read as a
+  ChatGPT one and imported nothing. *(patched in 1.6.9)*
+- **Callout colours restored on Obsidian 1.13+** — Obsidian changed the colour
+  format and Nexus callouts lost their colour and border. *(patched in 1.6.9)*
 
 [Full release notes →](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
 
