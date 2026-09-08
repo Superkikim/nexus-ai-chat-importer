@@ -6,6 +6,8 @@ Import your AI chat exports into your Obsidian vault as plain Markdown — organ
 by provider and date, with attachments, frontmatter metadata, and a reviewable
 import report. Everything runs locally in your vault.
 
+> 🌍 **Translated docs** — the user guide is also published on **[nexus-prod.dev](https://nexus-prod.dev/nexus-ai-chat-importer/)** in [Deutsch](https://nexus-prod.dev/de/nexus-ai-chat-importer/) · [Español](https://nexus-prod.dev/es/nexus-ai-chat-importer/) · [Français](https://nexus-prod.dev/fr/nexus-ai-chat-importer/) · [Italiano](https://nexus-prod.dev/it/nexus-ai-chat-importer/) · [日本語](https://nexus-prod.dev/ja/nexus-ai-chat-importer/) · [한국어](https://nexus-prod.dev/ko/nexus-ai-chat-importer/) · [Português](https://nexus-prod.dev/pt/nexus-ai-chat-importer/) · [Русский](https://nexus-prod.dev/ru/nexus-ai-chat-importer/) · [中文](https://nexus-prod.dev/zh/nexus-ai-chat-importer/)
+
 > **Note:** the optional command-line importer has moved to its own repository,
 > [nexus-ai-chat-importer-cli](https://github.com/Superkikim/nexus-ai-chat-importer-cli).
 > The Obsidian plugin is unaffected.
@@ -25,7 +27,7 @@ import report. Everything runs locally in your vault.
   extracted when the export contains them; anything missing is shown explicitly.
 - **Structured Markdown** — role callouts, ISO 8601 UTC frontmatter, per-provider
   folders, and a detailed import report.
-- **Localised UI** in 10 languages, with an optional desktop [CLI](docs/user/cli.md).
+- **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and an optional desktop [CLI](docs/user/cli.md).
 
 ## What's new in 1.7.0
 
