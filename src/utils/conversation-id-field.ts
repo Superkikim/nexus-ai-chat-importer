@@ -21,38 +21,57 @@
 /**
  * Which frontmatter key holds a note's conversation id.
  *
- * The importer uses this key as its primary key: every scan reads it to decide
+ * The importer uses this id as its primary key: every scan reads it to decide
  * whether a conversation already has a note. Vaults that key notes on their own
- * identifier — `uid` is the common one — otherwise end up invisible to the
- * importer, and the next run re-creates every conversation it already has.
+ * identifier — `uid` is the common one — otherwise end up with imported notes
+ * that their own tooling cannot see.
  *
- * Reading therefore never depends on the setting alone. The configured key is
- * tried first, then the built-in fallbacks, so changing the setting (or
- * renaming the field across a vault by hand) cannot orphan existing notes.
+ * Reading is deliberately NOT "configured key first". A vault that identifies
+ * notes by `uid` normally has a plugin stamping a random `uid` on every note,
+ * including conversation notes already written with `conversation_id`. Trying
+ * the configured key first would resolve those notes to their vault uid rather
+ * than their chat id, empty the catalog of real ids, and duplicate the whole
+ * library on the next import — the exact failure this setting exists to avoid.
+ *
+ * So `conversation_id` — the key every previously written note carries — is
+ * always tried first, and the configured key only when that is absent. A note
+ * written under the configured key has no `conversation_id`, so it resolves
+ * correctly either way, and switching the setting cannot orphan anything.
  */
 
-/** The key written when nothing is configured. */
+/** The key written when nothing is configured, and always read first. */
 export const DEFAULT_CONVERSATION_ID_FIELD = "conversation_id";
 
 /**
- * Keys always accepted when reading, in order, after the configured one.
- * `uid` is here because it is the identifier Obsidian vaults most often use.
+ * Keys the note formatter already writes. Reusing one would emit the same
+ * mapping key twice; Obsidian's YAML parser rejects a duplicate key, the note
+ * loses its frontmatter entirely, and the importer stops recognising it — so
+ * every import would re-create it. `conversation_id` is excluded: it is the
+ * default, and writing it is not a duplicate.
  */
-export const FALLBACK_CONVERSATION_ID_FIELDS = [
-    DEFAULT_CONVERSATION_ID_FIELD,
-    "uid",
-] as const;
+const RESERVED_FIELDS = new Set([
+    "nexus",
+    "plugin_version",
+    "provider",
+    "aliases",
+    "create_time",
+    "update_time",
+    "mode",
+    "models",
+]);
 
 /** A frontmatter key must be usable unquoted in YAML and stable across writes. */
 const VALID_FIELD = /^[A-Za-z_][A-Za-z0-9_-]*$/;
 
 export function isValidConversationIdField(field: string): boolean {
-    return VALID_FIELD.test(field.trim());
+    const trimmed = field.trim();
+    return VALID_FIELD.test(trimmed) && !RESERVED_FIELDS.has(trimmed);
 }
 
 /**
- * The key to write. Falls back to the default when unset or malformed, so a
- * bad setting degrades to standard behaviour instead of producing broken YAML.
+ * The key to write. Falls back to the default when unset, malformed, or one the
+ * formatter already writes, so a bad setting degrades to standard behaviour
+ * instead of producing frontmatter that will not parse.
  */
 export function resolveConversationIdField(configured?: string): string {
     const trimmed = (configured ?? "").trim();
@@ -61,23 +80,24 @@ export function resolveConversationIdField(configured?: string): string {
         : DEFAULT_CONVERSATION_ID_FIELD;
 }
 
-/** Every key to try when reading, configured first, without duplicates. */
+/**
+ * Every key to try when reading: the built-in key first, then the configured
+ * one. Nothing else — a key that is neither is not this plugin's to interpret.
+ */
 export function conversationIdFieldCandidates(configured?: string): string[] {
-    const primary = resolveConversationIdField(configured);
-    const seen = new Set<string>([primary]);
-    const out = [primary];
-    for (const field of FALLBACK_CONVERSATION_ID_FIELDS) {
-        if (!seen.has(field)) {
-            seen.add(field);
-            out.push(field);
-        }
-    }
-    return out;
+    const resolved = resolveConversationIdField(configured);
+    return resolved === DEFAULT_CONVERSATION_ID_FIELD
+        ? [DEFAULT_CONVERSATION_ID_FIELD]
+        : [DEFAULT_CONVERSATION_ID_FIELD, resolved];
 }
 
 /**
- * Read the conversation id out of a frontmatter object, trying the configured
- * key then the fallbacks. Returns null when no candidate holds a usable value.
+ * Read the conversation id out of a frontmatter object. Returns null when no
+ * candidate holds a usable value.
+ *
+ * Numbers are accepted and stringified: Obsidian's YAML cache parses an
+ * unquoted all-digit value as a number, and timestamp-shaped uids
+ * (`20240115143022`) are common.
  */
 export function readConversationId(
     frontmatter: Record<string, unknown> | null | undefined,
@@ -88,6 +108,9 @@ export function readConversationId(
         const value = frontmatter[field];
         if (typeof value === "string" && value.trim()) {
             return value.trim();
+        }
+        if (typeof value === "number" && Number.isFinite(value)) {
+            return String(value);
         }
     }
     return null;

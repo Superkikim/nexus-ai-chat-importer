@@ -19,6 +19,7 @@
 // src/ui/settings/frontmatter-settings-section.ts
 import { Setting } from "obsidian";
 import { BaseSettingsSection } from "./base-settings-section";
+import { t } from "../../i18n";
 import {
     DEFAULT_CONVERSATION_ID_FIELD,
     isValidConversationIdField,
@@ -26,16 +27,14 @@ import {
 
 export class FrontmatterSettingsSection extends BaseSettingsSection {
     get title() {
-        return "Frontmatter";
+        return t("settings.frontmatter.section_title");
     }
     readonly order = 25;
 
     render(containerEl: HTMLElement): void {
         const setting = new Setting(containerEl)
-            .setName("Conversation ID field")
-            .setDesc(
-                "Frontmatter key holding each conversation's id. Set this to your vault's own identifier — commonly 'uid' — so imported notes join that scheme. Notes already written under another key are still recognised, so changing this will not duplicate them."
-            );
+            .setName(t("settings.frontmatter.conversation_id_field.name"))
+            .setDesc(t("settings.frontmatter.conversation_id_field.desc"));
 
         const warning = containerEl.createDiv({
             cls: "nexus-setting-warning",
@@ -46,30 +45,47 @@ export class FrontmatterSettingsSection extends BaseSettingsSection {
             text
                 .setPlaceholder(DEFAULT_CONVERSATION_ID_FIELD)
                 .setValue(this.plugin.settings.conversationIdField)
-                .onChange(async (raw: string) => {
-                    const value = raw.trim();
+                // Commit on blur, not per keystroke. onChange fires on every
+                // character, so typing "uid" over a valid key would persist
+                // "u" then "ui" — and a user interrupted mid-word would leave
+                // a one-letter key saved, writing `u: <id>` into every note.
+                .onChange(() => {
+                    warning.hide();
+                })
+                .inputEl.addEventListener("blur", (event) => {
+                    const input = event.target as HTMLInputElement;
+                    const value = input.value.trim();
 
                     // Empty means "use the default" rather than "no key".
                     if (!value) {
                         warning.hide();
+                        input.value = DEFAULT_CONVERSATION_ID_FIELD;
                         this.plugin.settings.conversationIdField =
                             DEFAULT_CONVERSATION_ID_FIELD;
-                        await this.plugin.saveSettings();
+                        void this.plugin.saveSettings();
                         return;
                     }
 
-                    // Reject rather than write frontmatter that will not parse.
+                    // Reject rather than write frontmatter that will not parse,
+                    // or a key the formatter already emits.
                     if (!isValidConversationIdField(value)) {
                         warning.setText(
-                            `"${value}" is not a usable frontmatter key — use letters, digits, underscore or hyphen, starting with a letter or underscore. Keeping the previous value.`
+                            t(
+                                "settings.frontmatter.conversation_id_field.invalid",
+                                {
+                                    value,
+                                }
+                            )
                         );
                         warning.show();
+                        // Show what is actually in effect, not the rejection.
+                        input.value = this.plugin.settings.conversationIdField;
                         return;
                     }
 
                     warning.hide();
                     this.plugin.settings.conversationIdField = value;
-                    await this.plugin.saveSettings();
+                    void this.plugin.saveSettings();
                 })
         );
     }

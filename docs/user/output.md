@@ -57,6 +57,13 @@ Added only when the export provides them:
 - `mode:` — the provider's conversation mode, when it has one.
 - `models:` — a list of the model(s) used in the conversation.
 
+`conversation_id` is the key the importer uses to recognise a note it has
+already written. If your vault identifies notes by its own key, **Settings →
+Frontmatter → Conversation ID field** changes which key is written — set it to
+`uid`, for example, and new notes carry `uid: <id>` instead. Notes already
+written under `conversation_id` keep being recognised, so changing the setting
+does not duplicate them.
+
 Timestamps in frontmatter are **always ISO 8601 UTC**.
 
 ### Body
