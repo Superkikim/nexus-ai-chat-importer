@@ -17,6 +17,8 @@
 // every content line with an extra ">", turning the callout into a properly
 // nested "        >>[!nexus_canvas]-" block inside the message callout.
 
+import { splitLines } from "../../utils";
+
 const OPEN_RE = /^:::([a-zA-Z][\w-]*)\{([^}]*)\}\s*$/;
 const CLOSE_RE = /^:::\s*$/;
 
@@ -84,7 +86,10 @@ export function transformCanvasDirectives(text: string): string {
         return text;
     }
 
-    const lines = text.split("\n");
+    // Bare CR would collapse the whole message to one "line", so the
+    // anchored OPEN_RE never matches and the raw ":::" syntax survives
+    // into the note — the one thing this module exists to prevent.
+    const lines = splitLines(text);
     const out: string[] = [];
 
     for (let i = 0; i < lines.length; i++) {

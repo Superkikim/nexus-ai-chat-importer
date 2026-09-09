@@ -10,6 +10,7 @@
 
 import { StandardAttachment } from "../../types/standard";
 import { sanitizeFileName } from "../../utils/file-utils";
+import { splitLines } from "../../utils";
 import {
     ChatGPTLibraryArtifactKind,
     ChatGPTLibraryEntry,
@@ -25,7 +26,7 @@ import {
  * extractor matches the attachment half with a regex.
  */
 function buildGeneratedImageContent(prompt: string): string {
-    const formattedPrompt = prompt.split("\n").join("\n>> ");
+    const formattedPrompt = splitLines(prompt).join("\n>> ");
     return `>>[!nexus_prompt] **Image prompt**
 >> \`\`\`
 >> ${formattedPrompt}
