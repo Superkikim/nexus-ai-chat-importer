@@ -18,6 +18,7 @@
 
 // src/formatters/note-formatter.ts
 import { StandardConversation } from "../types/standard";
+import { resolveConversationIdField } from "../utils/conversation-id-field";
 import { formatTimestamp, generateSafeAlias } from "../utils";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
@@ -100,6 +101,10 @@ export class NoteFormatter {
                       .join("\n")}\n`
                 : "";
 
+        const idField = resolveConversationIdField(
+            this.plugin.settings.conversationIdField
+        );
+
         // Build frontmatter with plugin_version after nexus
         // Timestamps in ISO 8601 format (v1.3.0+)
         let frontmatter = `---
@@ -107,7 +112,7 @@ nexus: ${this.pluginId}
 plugin_version: "${this.pluginVersion}"
 provider: ${conversation.provider}
 aliases: ${title}
-conversation_id: ${conversationId}
+${idField}: ${conversationId}
 create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
 ${modeLine}${modelsBlock}---

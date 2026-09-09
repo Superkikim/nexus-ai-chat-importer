@@ -18,6 +18,7 @@
 
 // src/services/storage-service.ts
 import { ConversationCatalogEntry } from "../types/plugin";
+import { readConversationId } from "../utils/conversation-id-field";
 import { TFile } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { DateParser } from "../utils/date-parser";
@@ -271,9 +272,13 @@ export class StorageService {
                 return null;
             }
 
-            if (!frontmatter.conversation_id) {
+            const conversationId = readConversationId(
+                frontmatter,
+                this.plugin.settings.conversationIdField
+            );
+            if (!conversationId) {
                 this.plugin.logger.debug(
-                    `[parseWithCache] No conversation_id for ${file.path}`
+                    `[parseWithCache] No conversation id for ${file.path}`
                 );
                 return null;
             }
@@ -289,7 +294,7 @@ export class StorageService {
             }
 
             return {
-                conversationId: frontmatter.conversation_id,
+                conversationId,
                 provider: frontmatter.provider || "unknown",
                 path: file.path,
                 updateTime: updateTime,
@@ -351,7 +356,11 @@ export class StorageService {
                 return null;
             }
 
-            if (!frontmatterData.conversation_id) {
+            const conversationId = readConversationId(
+                frontmatterData,
+                this.plugin.settings.conversationIdField
+            );
+            if (!conversationId) {
                 return null;
             }
 
@@ -363,7 +372,7 @@ export class StorageService {
             );
 
             return {
-                conversationId: frontmatterData.conversation_id,
+                conversationId,
                 provider: frontmatterData.provider || "unknown",
                 path: file.path,
                 updateTime: updateTime,
