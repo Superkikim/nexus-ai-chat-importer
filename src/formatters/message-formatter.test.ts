@@ -131,3 +131,51 @@ describe("MessageFormatter", () => {
         expect(rendered).toContain("> Here you go.");
     });
 });
+
+describe("MessageFormatter line endings", () => {
+    it("keeps every physical line inside the callout when the body uses bare CR", async () => {
+        const formatter = await createFormatter();
+        const rendered = formatter.formatMessage({
+            id: "m-cr",
+            role: "user",
+            content: "first\rsecond\rthird",
+            timestamp: 1_700_000_000,
+        } as never);
+
+        const body = calloutBodyLines(rendered);
+        expect(body.every((l) => l.startsWith(">"))).toBe(true);
+        expect(body).toContain("> second");
+        expect(body).toContain("> third");
+    });
+
+    it("keeps the nested-callout branch working across a CR boundary", async () => {
+        // The `line.startsWith(">")` branch turns `>[!x]` into `>>[!x]`. A CR
+        // before it used to hide the line from that branch entirely, so the
+        // nested callout was emitted unprefixed and fell outside the message.
+        const formatter = await createFormatter();
+        const rendered = formatter.formatMessage({
+            id: "m-cr-nested",
+            role: "assistant",
+            content: "intro\r>[!nexus_artifact] Title\r> body",
+            timestamp: 1_700_000_000,
+        } as never);
+
+        const body = calloutBodyLines(rendered);
+        expect(body.every((l) => l.startsWith(">"))).toBe(true);
+        expect(body).toContain(">>[!nexus_artifact] Title");
+    });
+
+    it("does not emit a stray blank line for CRLF", async () => {
+        const formatter = await createFormatter();
+        const rendered = formatter.formatMessage({
+            id: "m-crlf",
+            role: "user",
+            content: "one\r\ntwo",
+            timestamp: 1_700_000_000,
+        } as never);
+
+        // The first callout line is the header; the body follows it.
+        expect(rendered).not.toContain("\r");
+        expect(calloutBodyLines(rendered).slice(1)).toEqual(["> one", "> two"]);
+    });
+});

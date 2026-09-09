@@ -21,6 +21,7 @@ import type NexusAiChatImporterPlugin from "../main";
 import { StandardMessage } from "../types/standard";
 import { ensureFolderExists, generateConversationFileName } from "../utils";
 import { resolveAttachmentTarget } from "../utils/attachment-target";
+import { splitLines } from "../utils";
 
 /**
  * A line this long is not prose. Nobody writes ten thousand characters without
@@ -117,7 +118,7 @@ export function beautify(text: string, kind: ExtractedKind): string {
         }
     }
 
-    const lines = text.split("\n");
+    const lines = splitLines(text);
     const out: string[] = [];
 
     for (const line of lines) {
@@ -193,7 +194,7 @@ export class LongContentExtractor {
         const hasLongLine = (text?: string) =>
             !!text &&
             text.length > LONG_LINE_CHARS &&
-            text.split("\n").some((line) => line.length > LONG_LINE_CHARS);
+            splitLines(text).some((line) => line.length > LONG_LINE_CHARS);
 
         if (
             !messages.some(
@@ -305,7 +306,7 @@ export class LongContentExtractor {
     ): Promise<{ content: string; path: string | null }> {
         if (!text) return { content: text ?? "", path: null };
 
-        const lines = text.split("\n");
+        const lines = splitLines(text);
         const out: string[] = [];
         let written: string | null = null;
 

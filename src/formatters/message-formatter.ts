@@ -22,6 +22,7 @@ import { formatMessageTimestamp } from "../utils";
 import { formatFileSize, isImageFile } from "../utils/file-utils";
 import { Logger } from "../logger";
 import type NexusAiChatImporterPlugin from "../main";
+import { splitLines } from "../utils";
 
 export class MessageFormatter {
     // Nexus custom callouts with icons
@@ -94,7 +95,7 @@ export class MessageFormatter {
             // nested callouts in Obsidian. When a content line already starts
             // with `>`, we add only one extra `>` (no space) so that
             // `>[!callout]` becomes `>>[!callout]` instead of `> >[!callout]`.
-            const lines = contentWithMath.split("\n");
+            const lines = splitLines(contentWithMath);
             const formattedLines = lines.map((line) => {
                 // Preserve empty lines inside the callout
                 if (line.trim() === "") {
