@@ -177,10 +177,16 @@ export function detectFileFormat(fileContent: Uint8Array): {
  * @returns Sanitized filename
  */
 export function sanitizeFileName(fileName: string): string {
-    return fileName
-        .trim()
-        .replace(/[<>:"/\\|?*]/g, "_")
-        .replace(/\s+/g, "_");
+    return (
+        fileName
+            .trim()
+            .replace(/[<>:"/\\|?*]/g, "_")
+            // Obsidian reads # ^ [ ] as structure inside a wikilink, and
+            // attachments are linked as [[path]] — a file named
+            // "Invoice #12.pdf" would never resolve.
+            .replace(/[#^[\]]+/g, "")
+            .replace(/\s+/g, "_")
+    );
 }
 
 /**

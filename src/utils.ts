@@ -192,6 +192,11 @@ export function generateFileName(title: string): string {
         .replace(/(\p{Script=Latin})\p{Mn}+/gu, "$1")
         .normalize("NFC")
         .replace(/[<>:"/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
+        // Obsidian reads # ^ [ ] as structure inside a wikilink: `#` opens a
+        // heading anchor and `^` a block reference. A note whose name contains
+        // one cannot be resolved by a `[[path]]` link, and the index reports
+        // link every conversation by path.
+        .replace(/[#^[\]]+/g, "")
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 
