@@ -23,6 +23,7 @@ import { BaseSettingsSection } from "./settings/base-settings-section";
 import { SupportSection } from "./settings/support-section";
 import { FolderSettingsSection } from "./settings/folder-settings-section";
 import { DisplaySettingsSection } from "./settings/display-settings-section";
+import { FrontmatterSettingsSection } from "./settings/frontmatter-settings-section";
 import { MessageDateFormatSection } from "./settings/message-date-format-section";
 
 export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
@@ -39,6 +40,7 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
             new FolderSettingsSection(this.plugin),
             new DisplaySettingsSection(this.plugin),
             new MessageDateFormatSection(this.plugin),
+            new FrontmatterSettingsSection(this.plugin),
         ].sort((a, b) => a.order - b.order);
 
         // Set redraw callback for each section

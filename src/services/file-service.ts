@@ -20,6 +20,7 @@
 import { TFile, TFolder } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { getErrorMessage } from "../utils";
+import { readConversationId } from "../utils/conversation-id-field";
 
 export class FileService {
     constructor(private plugin: NexusAiChatImporterPlugin) {}
@@ -53,7 +54,10 @@ export class FileService {
                 this.plugin.app.metadataCache.getFileCache(file)?.frontmatter;
 
             if (
-                !frontmatter?.conversation_id ||
+                !readConversationId(
+                    frontmatter,
+                    this.plugin.settings.conversationIdField
+                ) ||
                 frontmatter?.nexus !== this.plugin.manifest.id
             ) {
                 return; // Not a Nexus conversation file

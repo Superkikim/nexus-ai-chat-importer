@@ -230,6 +230,14 @@
                 "format_label": "Seleccionar formato de fecha: "
             }
         },
+        "frontmatter": {
+            "section_title": "🔑 Frontmatter",
+            "conversation_id_field": {
+                "name": "Conversation ID field",
+                "desc": "Frontmatter key holding each conversation's id. Set this to your vault's own identifier — commonly 'uid' — so imported notes join that scheme. Notes already written under 'conversation_id' keep being recognised, so changing this does not duplicate them.",
+                "invalid": "\"{{value}}\" cannot be used: it must start with a letter or underscore, contain only letters, digits, underscore or hyphen, and must not be a key the importer already writes. Keeping the previous value."
+            }
+        },
         "timestamps": {
             "section_title": "📅 Formato de fecha de mensajes",
             "custom_format": {

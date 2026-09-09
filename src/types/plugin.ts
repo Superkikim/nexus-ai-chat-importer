@@ -35,6 +35,12 @@ export interface PluginSettings {
     useCustomMessageTimestampFormat: boolean;
     messageTimestampFormat: MessageTimestampFormat;
 
+    // Frontmatter key holding the conversation id. Vaults that key notes on
+    // their own identifier (commonly `uid`) set it here so imported notes join
+    // that scheme. Reading always falls back to the built-in keys, so changing
+    // this cannot orphan notes already written.
+    conversationIdField: string;
+
     // ========================================
     // 🔧 INTERNAL SETTINGS (not shown in UI)
     // ========================================

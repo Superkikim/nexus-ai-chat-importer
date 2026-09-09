@@ -18,6 +18,7 @@
 
 // src/config/constants.ts
 import { PluginSettings, MessageTimestampFormat } from "../types/plugin";
+import { DEFAULT_CONVERSATION_ID_FIELD } from "../utils/conversation-id-field";
 
 export const DEFAULT_SETTINGS: PluginSettings = {
     // ========================================
@@ -36,6 +37,7 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     // Message timestamp format
     useCustomMessageTimestampFormat: false,
     messageTimestampFormat: "locale",
+    conversationIdField: DEFAULT_CONVERSATION_ID_FIELD,
 
     // ========================================
     // 🔧 INTERNAL SETTINGS

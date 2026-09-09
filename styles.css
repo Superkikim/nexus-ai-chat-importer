@@ -2532,3 +2532,13 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 .nexus-folder-migration-desc {
     margin-bottom: 20px;
 }
+
+/* Rejected value in the Frontmatter settings section. Matches
+   .nexus-reprocess-warning so both settings warnings read alike. */
+.nexus-setting-warning {
+    margin-top: 6px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: var(--text-warning, var(--text-muted));
+    font-weight: 500;
+}

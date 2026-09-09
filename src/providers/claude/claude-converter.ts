@@ -1439,7 +1439,14 @@ export class ClaudeConverter {
                 ? new Date(artifactCreateTime * 1000).toISOString()
                 : "unknown";
 
-        // Create markdown content with enhanced frontmatter
+        // Create markdown content with enhanced frontmatter.
+        //
+        // `conversation_id` below is deliberately NOT the configurable
+        // conversation-id key. It is a foreign key into the plugin's own model
+        // — the 1.3.0 and 1.4.0 upgrades join an artifact to its conversation
+        // by reading it — and artifact notes live under the attachment folder,
+        // outside the storage scan, so a vault's own note-identity scheme does
+        // not apply to them.
         let markdownContent = `---
 nexus: nexus-ai-chat-importer
 plugin_version: "${this.plugin.manifest.version}"
