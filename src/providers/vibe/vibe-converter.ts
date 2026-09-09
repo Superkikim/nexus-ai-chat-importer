@@ -30,6 +30,7 @@ import {
     MistralVibeCanvasItem,
 } from "./vibe-types";
 import { deriveMistralVibeConversationTitle } from "./vibe-title";
+import { splitLines } from "../../utils";
 
 /**
  * Converter for Mistral Vibe (formerly Le Chat) export format
@@ -324,12 +325,12 @@ export class MistralVibeConverter {
 
             if (isSlides) {
                 lines.push("> ```");
-                for (const line of (item.content || "").split("\n")) {
+                for (const line of splitLines(item.content || "")) {
                     lines.push(line === "" ? ">" : `> ${line}`);
                 }
                 lines.push("> ```");
             } else {
-                for (const line of (item.content || "").split("\n")) {
+                for (const line of splitLines(item.content || "")) {
                     lines.push(line === "" ? ">" : `> ${line}`);
                 }
             }

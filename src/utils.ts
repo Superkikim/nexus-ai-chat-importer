@@ -170,6 +170,19 @@ export function formatTitle(title: string): string {
     return title.trim() || "Untitled"; // Just trim whitespace; retain spaces and characters for readability
 }
 
+/**
+ * Split text on any line ending, not just LF.
+ *
+ * Exported content carries whatever line endings its author's tools produced;
+ * AppleScript and older Mac tooling emit bare CR. Splitting on "\n" alone
+ * leaves a CR-separated run as a single element, so callers that prefix each
+ * line (`> `, `>> `) prefix only the first physical line while the CRs still
+ * render as breaks — the remainder escapes the callout and any code fence.
+ */
+export function splitLines(text: string): string[] {
+    return text.split(/\r\n|\r|\n/);
+}
+
 export function generateFileName(title: string): string {
     let fileName = formatTitle(title)
         .normalize("NFD")
@@ -179,6 +192,11 @@ export function generateFileName(title: string): string {
         .replace(/(\p{Script=Latin})\p{Mn}+/gu, "$1")
         .normalize("NFC")
         .replace(/[<>:"/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
+        // Obsidian reads # ^ [ ] as structure inside a wikilink: `#` opens a
+        // heading anchor and `^` a block reference. A note whose name contains
+        // one cannot be resolved by a `[[path]]` link, and the index reports
+        // link every conversation by path.
+        .replace(/[#^[\]]+/g, "")
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
 

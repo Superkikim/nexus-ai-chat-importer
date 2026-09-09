@@ -26,6 +26,7 @@ import { Chat, ChatMessage } from "./chatgpt-types";
 import { StandardMessage, StandardAttachment } from "../../types/standard";
 import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { isImageFile } from "../../utils/file-utils";
+import { splitLines } from "../../utils";
 
 // A user asking for an image: a generation verb followed (closely) by an
 // image noun. Matched per line to keep the window tight.
@@ -50,7 +51,7 @@ const ASSISTANT_CLAIM_RES: RegExp[] = [
 /** True when a user line asks for an image to be generated. */
 export function isImageGenerationRequest(text: string): boolean {
     if (!text) return false;
-    return text.split("\n").some((line) => REQUEST_RE.test(line));
+    return splitLines(text).some((line) => REQUEST_RE.test(line));
 }
 
 /** True when an assistant message claims it produced an image. */
@@ -103,7 +104,7 @@ export function createMissingGeneratedImageAttachment(
 
     let extractedContent: string;
     if (trimmed) {
-        const formattedPrompt = trimmed.split("\n").join("\n>> ");
+        const formattedPrompt = splitLines(trimmed).join("\n>> ");
         extractedContent = `>>[!nexus_prompt] **Image prompt**
 >> \`\`\`
 >> ${formattedPrompt}

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
     CONVERSATION_NOTE_FILENAME_MAX_BYTES,
+    generateFileName,
     generateConversationFileName,
     generateUniqueFileName,
     getUtf8ByteLength,
@@ -128,5 +129,31 @@ describe("conversation filename length policy", () => {
         expect(getUtf8ByteLength(fileName)).toBeLessThanOrEqual(
             CONVERSATION_NOTE_FILENAME_MAX_BYTES
         );
+    });
+});
+
+describe("generateFileName — wikilink-structural characters", () => {
+    it("drops # so the note can be linked", () => {
+        expect(generateFileName("STR# to JSON Parser")).toBe(
+            "STR to JSON Parser"
+        );
+    });
+
+    it("drops ^ used for block references", () => {
+        expect(generateFileName("Exponent ^2 notes")).toBe("Exponent 2 notes");
+    });
+
+    it("drops square brackets", () => {
+        expect(generateFileName("Draft [v2] review")).toBe("Draft v2 review");
+    });
+
+    it("leaves ordinary titles alone", () => {
+        expect(generateFileName("Balance of Power Code")).toBe(
+            "Balance of Power Code"
+        );
+    });
+
+    it("still keeps leading non-ASCII letters", () => {
+        expect(generateFileName("Привет мир")).toBe("Привет мир");
     });
 });
