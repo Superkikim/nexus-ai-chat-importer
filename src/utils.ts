@@ -23,6 +23,7 @@ type MomentFn = (date: number | string) => MomentResult;
 const moment = (window as unknown as { moment: MomentFn }).moment;
 import { Logger } from "./logger";
 import { MESSAGE_TIMESTAMP_FORMATS } from "./config/constants";
+import { substituteWikilinkStructuralChars } from "./utils/wikilink-safe-name";
 import type { MessageTimestampFormat } from "./types/plugin";
 
 const logger = new Logger();
@@ -181,6 +182,9 @@ export function generateFileName(title: string): string {
         .replace(/[<>:"/\\|?*\n\r]+/g, "") // Remove invalid filesystem characters
         .replace(/\.{2,}/g, ".") // Replace multiple dots with single dot
         .trim();
+
+    // Obsidian reads # ^ [ ] as wikilink structure; see wikilink-safe-name.ts.
+    fileName = substituteWikilinkStructuralChars(fileName);
 
     // CRITICAL: Remove special characters from the beginning
     // This fixes issues like ".htaccess" becoming an invisible file

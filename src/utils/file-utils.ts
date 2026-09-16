@@ -22,6 +22,7 @@
  */
 
 import { StandardAttachment } from "../types/standard";
+import { substituteWikilinkStructuralChars } from "./wikilink-safe-name";
 
 /**
  * Format file size in human-readable format
@@ -177,10 +178,12 @@ export function detectFileFormat(fileContent: Uint8Array): {
  * @returns Sanitized filename
  */
 export function sanitizeFileName(fileName: string): string {
-    return fileName
-        .trim()
-        .replace(/[<>:"/\\|?*]/g, "_")
-        .replace(/\s+/g, "_");
+    return substituteWikilinkStructuralChars(
+        fileName
+            .trim()
+            .replace(/[<>:"/\\|?*]/g, "_")
+            .replace(/\s+/g, "_")
+    );
 }
 
 /**

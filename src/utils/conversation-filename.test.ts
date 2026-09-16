@@ -52,6 +52,29 @@ describe("conversation filename length policy", () => {
         expect(name).toBe("Cafe resume");
     });
 
+    it("substitutes wikilink-structural characters instead of dropping them", () => {
+        // Obsidian reads # ^ [ ] as wikilink structure — a note named with
+        // one can never be resolved by a [[path]] link (index reports,
+        // artifact cross-links). See issue #83.
+        expect(
+            generateConversationFileName(
+                "STR# to JSON Parser",
+                1_700_000_000,
+                false,
+                "YYYY-MM-DD"
+            )
+        ).toBe("STR＃ to JSON Parser");
+
+        expect(
+            generateConversationFileName(
+                "Draft [WIP] ^v2",
+                1_700_000_000,
+                false,
+                "YYYY-MM-DD"
+            )
+        ).toBe("Draft (WIP) -v2");
+    });
+
     it("truncates long ASCII titles to the configured byte budget", () => {
         const longTitle = "A".repeat(300);
         const maxBaseBytes = CONVERSATION_NOTE_FILENAME_MAX_BYTES - 3;
