@@ -6,18 +6,9 @@
 
 ### 🐛 Fixed
 
-- **Oversized-note repair now actually works.** 1.7.0's fix was optional, and
-  its backup file was still indexed by Obsidian either way — the performance
-  impact it was meant to fix persisted. The repair is now mandatory, and
-  every backup (new or left over from 1.7.0) is renamed to `.bak` so it's
-  excluded from indexing.
-- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided.** These
-  characters break wikilinks, so they're now substituted rather than
-  dropped. An automatic migration fixes files and links already affected.
-  *(Nelson Love — [@nelsonlove](https://github.com/nelsonlove) — identified
-  and diagnosed this one.)*
-- The upgrade dialog could hang indefinitely if dismissed via Escape, the ×
-  icon, or a click outside it.
+- **Oversized-note repair now actually works.** 1.7.0's fix was optional, and its backup file was still indexed by Obsidian either way — the performance impact it was meant to fix persisted. The repair is now mandatory, and every backup (new or left over from 1.7.0) is renamed to `.bak` so it's excluded from indexing.
+- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided.** These characters break wikilinks, so they're now substituted rather than dropped. An automatic migration fixes files and links already affected. *(Nelson Love — [@nelsonlove](https://github.com/nelsonlove) — identified and diagnosed this one.)*
+- The upgrade dialog could hang indefinitely if dismissed via Escape, the × icon, or a click outside it.
 
 ## Version 1.7.0 — ChatGPT images, selective import rebuilt, honest reports
 

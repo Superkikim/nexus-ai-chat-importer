@@ -31,14 +31,9 @@ import report. Everything runs locally in your vault.
 
 ## What's new in 1.7.1
 
-- **Oversized-note repair is now mandatory, and actually works** — the 1.7.0
-  fix's own backup file was still being indexed, quietly reintroducing the
-  performance impact it was meant to fix.
-- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these
-  characters break wikilinks, so they're now substituted rather than
-  dropped, for new imports and existing notes alike.
-- The upgrade dialog no longer hangs when dismissed without clicking a
-  button.
+- **Oversized-note repair is now mandatory, and actually works** — the 1.7.0 fix's own backup file was still being indexed, quietly reintroducing the performance impact it was meant to fix.
+- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike.
+- The upgrade dialog no longer hangs when dismissed without clicking a button.
 
 [Full release notes →](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
 
