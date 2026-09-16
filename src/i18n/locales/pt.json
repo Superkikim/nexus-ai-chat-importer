@@ -553,18 +553,17 @@
     },
     "donation_dialog": {
         "title": "Apoiar o Nexus",
-        "message_emphasis": "As doações realmente importam.",
-        "message": "Estou atualmente desempregado e sem renda. Dedico muito tempo a este plugin e pago do meu bolso as assinaturas das plataformas de IA que ele suporta, para testar exportações reais e manter tudo preciso.",
-        "reality_check": "No mês passado, apenas três usuários fizeram uma doação, totalizando 20 € / 23 $.",
-        "cta": "Se este plugin é útil para você, uma doação faz uma diferença real.",
+        "message_emphasis": "As doações mantêm este plugin vivo.",
+        "message": "Cada versão que você já usou existe porque um punhado de usuários decidiu apoiar o projeto. As doações deles cobrem as assinaturas das plataformas de IA e as ferramentas de que preciso para testar exportações reais e manter o plugin preciso — eu não conseguiria fazer isso sem eles.",
+        "cta": "Se o Nexus é útil para você, juntar-se a eles torna a próxima versão possível também.",
         "button_donate": "Apoiar o projeto",
         "button_later": "Talvez mais tarde"
     },
     "support_box": {
         "header": "Apoiar este plugin",
         "header_highlight": "Apoiar este plugin",
-        "default_message_emphasis": "O Nexus ultrapassou os 15 000 downloads. O seu apoio mantém o desenvolvimento e cobre os meus custos de ferramentas e subscrições.",
-        "default_message": "Estou atualmente desempregado, por isso cada contribuição conta mesmo.",
+        "default_message_emphasis": "O Nexus continua a melhorar graças aos usuários que o apoiam.",
+        "default_message": "As doações deles financiam as assinaturas e ferramentas por trás de cada atualização — a sua ajudaria a manter isso.",
         "button_alt": "Apoiar o meu trabalho"
     }
 }

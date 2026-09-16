@@ -553,18 +553,17 @@
     },
     "donation_dialog": {
         "title": "支持 Nexus",
-        "message_emphasis": "捐款真的很重要。",
-        "message": "我目前失业，没有收入。我花大量时间在这个插件上，并自掏腰包订阅它所支持的 AI 平台，以便测试真实的导出并保持一切准确。",
-        "reality_check": "上个月，只有三位用户捐款，总计 20 € / 23 $。",
-        "cta": "如果这个插件对您有用，您的捐款将产生真正的影响。",
+        "message_emphasis": "捐款让这个插件得以延续。",
+        "message": "您用过的每一个版本，都是因为一小部分用户选择支持这个项目才得以存在。他们的捐款覆盖了我测试真实导出、保持插件准确所需的 AI 平台订阅和工具费用——没有他们，我无法做到这一点。",
+        "cta": "如果 Nexus 对您有用，加入他们也能让下一个版本成为可能。",
         "button_donate": "支持项目",
         "button_later": "也许以后"
     },
     "support_box": {
         "header": "支持此插件",
         "header_highlight": "支持此插件",
-        "default_message_emphasis": "Nexus 的下载量已超过 15,000 次。你的支持让开发得以继续，也覆盖了我的工具与订阅开销。",
-        "default_message": "我目前处于失业状态，每一份支持都非常重要。",
+        "default_message_emphasis": "Nexus 之所以不断改进，要归功于支持它的用户。",
+        "default_message": "他们的捐款资助了每次更新背后的订阅和工具费用——您的支持也能帮助这一切延续下去。",
         "button_alt": "支持我的工作"
     }
 }
