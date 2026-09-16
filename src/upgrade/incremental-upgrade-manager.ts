@@ -388,10 +388,9 @@ export class IncrementalUpgradeManager {
             progressModal.markComplete(
                 `All operations completed successfully!`
             );
-            // Laisser apparaître le message "Completed!" brièvement avant de fermer automatiquement
-            await new Promise((resolve) => window.setTimeout(resolve, 450));
-            progressModal.close();
-            // No Notice here - completion dialog will be shown after
+            // Stays open until the user dismisses it (OK button or ×) — only
+            // then does the caller move on to the "upgrade complete" dialog.
+            await progressModal.waitForClose();
 
             return {
                 success: overallSuccess,
@@ -403,6 +402,7 @@ export class IncrementalUpgradeManager {
         } catch (error) {
             logger.error("Modal upgrade execution failed:", error);
             progressModal.showError(`Upgrade failed: ${error}`);
+            await progressModal.waitForClose();
             throw error;
         }
     }

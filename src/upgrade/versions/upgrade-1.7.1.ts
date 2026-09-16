@@ -65,14 +65,30 @@ class RenameOldBackupsOperation extends UpgradeOperation {
         let failed = 0;
 
         for (const file of oldBackups) {
+            const bakName = `${file.name}.bak`;
             const newPath = `${file.path}.bak`;
+            const folder = file.path.slice(0, file.path.lastIndexOf("/"));
+
+            // The conversation note this backup sits beside — a real, open-able
+            // file, unlike the .bak itself. Linking to it is how the report
+            // points at the folder: click through to the note, and the backup
+            // is right there next to it in the file explorer.
+            const noteBasename = file.basename.slice(
+                0,
+                file.basename.length - BACKUP_SUFFIX.length
+            );
+            const notePath = `${folder}/${noteBasename}.md`;
+            const noteExists =
+                !!plugin.app.vault.getAbstractFileByPath(notePath);
+            const noteTitle = noteBasename.replace(/\|/g, "\\|");
+            const location = noteExists
+                ? `[[${notePath}\\|${noteTitle}]]`
+                : folder;
+
             try {
                 await plugin.app.vault.rename(file, newPath);
                 renamed++;
-                const title = file.basename.replace(/\|/g, "\\|");
-                details.push(
-                    `Renamed: [[${newPath}\\|${title}]] — was still a .md file holding the oversized line it backs up, so Obsidian kept indexing it`
-                );
+                details.push(`**${bakName}** — same folder as ${location}`);
             } catch (error) {
                 failed++;
                 details.push(
@@ -85,7 +101,9 @@ class RenameOldBackupsOperation extends UpgradeOperation {
 
         return {
             success: failed === 0,
-            message: `Renamed ${renamed} backup(s) from .md to .md.bak. ${failed} failure(s).`,
+            message:
+                `Renamed ${renamed} backup(s), ${failed} failure(s). These are backups from an earlier repair. They were still ` +
+                "`.md` files carrying the same oversized line as the note they protect, so Obsidian kept indexing them and the slowdown persisted. Each has been renamed with a `.bak` suffix so Obsidian stops scanning it.",
             details,
         };
     }
