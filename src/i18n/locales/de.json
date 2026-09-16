@@ -554,7 +554,7 @@
     "donation_dialog": {
         "title": "Nexus unterstützen",
         "message_emphasis": "Spenden halten dieses Plugin am Leben.",
-        "message": "Jede Version, die Sie genutzt haben, existiert, weil eine Handvoll Nutzer das Projekt unterstützt hat. Ihre Spenden decken die Abonnements der KI-Plattformen und die Werkzeuge, die ich brauche, um echte Exporte zu testen und das Plugin genau zu halten — ohne sie könnte ich das nicht schaffen.",
+        "message": "Ich bin derzeit arbeitslos und habe kein Einkommen. Ich investiere viel Zeit in dieses Plugin und bezahle aus eigener Tasche Abonnements für die KI-Plattformen, die es unterstützt, um echte Exporte testen und alles akkurat halten zu können.",
         "cta": "Wenn Nexus für Sie nützlich ist, macht Ihr Beitritt die nächste Version ebenfalls möglich.",
         "button_donate": "Projekt unterstützen",
         "button_later": "Vielleicht später"
@@ -563,7 +563,7 @@
         "header": "Dieses Plugin unterstützen",
         "header_highlight": "Dieses Plugin unterstützen",
         "default_message_emphasis": "Nexus wird dank der Nutzer, die es unterstützen, stetig besser.",
-        "default_message": "Ihre Spenden finanzieren die Abonnements und Werkzeuge hinter jedem Update — Ihre Unterstützung würde helfen, das fortzusetzen.",
+        "default_message": "Ich bin derzeit arbeitslos, jeder Beitrag zählt wirklich.",
         "button_alt": "Meine Arbeit unterstützen"
     }
 }
