@@ -367,7 +367,7 @@
             "intro": "{{count}} conversa(s) contêm conteúdo colado numa única linha enorme. O Obsidian lê cada linha por inteiro, o que atrasa a indexação de todo o cofre.",
             "and_more": "… e mais {{count}}",
             "what_happens": "O Nexus pode mover esse conteúdo para ficheiros junto de cada conversa e deixar um link recolhido no lugar — tal como já faz ao importar.",
-            "backup_note": "Cada nota é copiada ao lado antes de ser alterada, nada se perde. Pode apagar as cópias quando quiser.",
+            "backup_note": "**Recomendado.** Cada nota é copiada ao lado antes de qualquer alteração, nada se perde — apague as cópias quando estiver satisfeito com o resultado.",
             "buttons": {
                 "repair": "Reparar",
                 "ignore": "Deixar como está"

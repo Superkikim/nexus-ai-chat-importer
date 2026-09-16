@@ -368,6 +368,18 @@
     font-weight: 600;
 }
 
+/* Info variant: reassurance / recommendation, not a warning */
+.nexus-ai-chat-importer-modal .modal-note.modal-note-info {
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    color: var(--text-normal);
+    border-left: 4px solid var(--text-accent);
+}
+
+.nexus-ai-chat-importer-modal .modal-note.modal-note-info strong {
+    color: var(--text-accent);
+}
+
 /* Upgrade dialog specific styles */
 .nexus-ai-chat-importer-modal .upgrade-overview {
     margin-bottom: 1.5em;

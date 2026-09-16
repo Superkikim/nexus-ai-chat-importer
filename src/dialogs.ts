@@ -25,7 +25,8 @@ function displayModal(
     app: App,
     title: string,
     paragraphs: string[],
-    note?: string
+    note?: string,
+    noteStyle: "warning" | "info" = "warning"
 ): Modal {
     const modal = new Modal(app);
     modal.contentEl.addClass("nexus-ai-chat-importer-modal");
@@ -105,7 +106,12 @@ function displayModal(
         // Add spacing before note
         contentContainer.createDiv({ cls: "modal-major-break" });
 
-        const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
+        const noteDiv = contentContainer.createDiv({
+            cls:
+                noteStyle === "info"
+                    ? "modal-note modal-note-info"
+                    : "modal-note",
+        });
 
         // Process note content with same formatting
         let noteContent = note
@@ -177,10 +183,11 @@ export async function showDialog(
     title: string,
     paragraphs: string[],
     note?: string,
-    customLabels?: { button1?: string; button2?: string }
+    customLabels?: { button1?: string; button2?: string },
+    noteStyle: "warning" | "info" = "warning"
 ): Promise<boolean> {
     return new Promise((resolve) => {
-        const modal = displayModal(app, title, paragraphs, note);
+        const modal = displayModal(app, title, paragraphs, note, noteStyle);
         addButtons(modal, type, resolve, customLabels);
         modal.open();
     });

@@ -104,7 +104,8 @@ class RepairOversizedNotesOperation extends UpgradeOperation {
             {
                 button1: t("upgrade.repair_notes.buttons.repair"),
                 button2: t("upgrade.repair_notes.buttons.ignore"),
-            }
+            },
+            "info"
         );
 
         if (!accepted) {

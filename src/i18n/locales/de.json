@@ -367,7 +367,7 @@
             "intro": "{{count}} Konversation(en) enthalten eingefügten Inhalt in einer einzigen riesigen Zeile. Obsidian liest eine Zeile am Stück, was die Indizierung des gesamten Tresors verlangsamt.",
             "and_more": "… und {{count}} weitere",
             "what_happens": "Nexus kann diesen Inhalt in Dateien neben der Konversation auslagern und an seiner Stelle einen eingeklappten Link hinterlassen — genau wie beim Import.",
-            "backup_note": "Jede Notiz wird vorher daneben kopiert, es geht nichts verloren. Die Kopien können Sie später löschen.",
+            "backup_note": "**Empfohlen.** Jede Notiz wird vor jeder Änderung daneben kopiert, es geht nichts verloren — die Kopien können Sie löschen, sobald Sie zufrieden sind.",
             "buttons": {
                 "repair": "Reparieren",
                 "ignore": "Unverändert lassen"
