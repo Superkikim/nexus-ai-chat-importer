@@ -726,6 +726,7 @@ export class IncrementalUpgradeManager {
     ): string | undefined {
         let repaired = 0;
         let renamed = 0;
+        let wikilinkFixed = 0;
 
         for (const entry of result.results) {
             const ops = entry.automaticResults?.results || [];
@@ -741,6 +742,20 @@ export class IncrementalUpgradeManager {
             )?.result?.message;
             const renameMatch = renameMsg?.match(/^Renamed (\d+) backup/);
             if (renameMatch) renamed += Number(renameMatch[1]);
+
+            // TODO(#85): this per-ID regex approach doesn't scale — #85
+            // tracks a generic, i18n-driven replacement that reads every
+            // operation's result instead of a hardcoded list of three.
+            const wikilinkMsg = ops.find(
+                (r) => r.operationId === "migrate-wikilink-structural-chars"
+            )?.result?.message;
+            const wikilinkMatch = wikilinkMsg?.match(
+                /^Renamed (\d+) note\(s\) and (\d+) attachment\(s\)/
+            );
+            if (wikilinkMatch) {
+                wikilinkFixed +=
+                    Number(wikilinkMatch[1]) + Number(wikilinkMatch[2]);
+            }
         }
 
         const parts: string[] = [];
@@ -756,6 +771,15 @@ export class IncrementalUpgradeManager {
                 `renamed ${renamed} old backup${
                     renamed === 1 ? "" : "s"
                 } Obsidian was still indexing`
+            );
+        }
+        if (wikilinkFixed > 0) {
+            parts.push(
+                `fixed ${wikilinkFixed} note${
+                    wikilinkFixed === 1 ? "" : "s"
+                } and attachment${
+                    wikilinkFixed === 1 ? "" : "s"
+                } whose name broke a link`
             );
         }
 
