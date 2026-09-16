@@ -837,8 +837,8 @@
 .nexus-donation-btn-primary {
     width: 100%;
     padding: 12px 0;
-    background-color: #FF5E5B;
-    color: #ffffff;
+    background-color: #FF5E5B !important;
+    color: #ffffff !important;
     font-size: 1.05em;
     font-weight: 600;
     border-radius: 8px;
@@ -847,7 +847,7 @@
 }
 
 .nexus-donation-btn-primary:hover {
-    background-color: #e04a47;
+    background-color: #e04a47 !important;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
