@@ -34,6 +34,13 @@ export interface WikilinkCharScanResult {
     attachmentFiles: TFile[];
 }
 
+/** The filename a path ends in, extension dropped — for a wikilink's display text. */
+function basenameOf(path: string): string {
+    const name = path.slice(path.lastIndexOf("/") + 1);
+    const dot = name.lastIndexOf(".");
+    return dot > 0 ? name.slice(0, dot) : name;
+}
+
 /**
  * Finds and fixes notes and attachments written (by an older version of the
  * plugin, or by 1.7.1 before this migration ran once) with `#`, `^`, `[` or
@@ -111,6 +118,7 @@ export class WikilinkCharMigrator {
             label: "note" | "attachment"
         ) => {
             const oldPath = file.path;
+            const oldBasename = file.basename;
             const folder = oldPath.slice(0, oldPath.lastIndexOf("/"));
             const newBaseName = substituteWikilinkStructuralChars(
                 file.basename
@@ -127,7 +135,14 @@ export class WikilinkCharMigrator {
                 await vault.rename(file, uniquePath);
                 into.push({ oldPath, newPath: uniquePath });
                 renamed++;
-                details.push(`${label}: ${oldPath} → ${uniquePath}`);
+                // The old name is a dead reference (nothing lives there any
+                // more), so only the new one is a clickable wikilink — the
+                // pipe is escaped so it survives sitting in a bullet list.
+                details.push(
+                    `${label}: **${oldBasename}** → [[${uniquePath}\\|${basenameOf(
+                        uniquePath
+                    )}]]`
+                );
             } catch (error) {
                 failed++;
                 const message =
@@ -209,12 +224,16 @@ export class WikilinkCharMigrator {
         }
 
         if (fixedReportPaths.size > 0) {
-            details.push(`Links fixed in: ${[...fixedReportPaths].join(", ")}`);
+            details.push("Links fixed in:");
+            for (const path of fixedReportPaths) {
+                details.push(`[[${path}\\|${basenameOf(path)}]]`);
+            }
         }
         if (fixedNotePaths.size > 0) {
-            details.push(
-                `Attachment embeds fixed in: ${[...fixedNotePaths].join(", ")}`
-            );
+            details.push("Attachment embeds fixed in:");
+            for (const path of fixedNotePaths) {
+                details.push(`[[${path}\\|${basenameOf(path)}]]`);
+            }
         }
 
         const summary =
