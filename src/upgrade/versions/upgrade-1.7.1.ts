@@ -27,6 +27,7 @@ import {
     OversizedNotesRepairer,
     BACKUP_SUFFIX,
 } from "../shared/oversized-notes-repairer";
+import { WikilinkCharMigrator } from "../shared/wikilink-char-migrator";
 
 /**
  * Renames the `.md` backups the 1.7.0 repair wrote before it moved to
@@ -143,6 +144,46 @@ class RepairOversizedNotesOperation extends UpgradeOperation {
 }
 
 /**
+ * Renames notes and attachments written with `#`, `^`, `[` or `]` in their
+ * filename — characters Obsidian cannot resolve inside a wikilink, so every
+ * `[[path]]` pointing at one of these files is permanently broken — and
+ * repairs the links in index reports, Claude artifact frontmatter, and
+ * attachment embeds inside conversation notes that pointed at the old name.
+ *
+ * The character is substituted, not deleted (`C#` stays distinguishable
+ * from `C`, unlike a blanket strip), and only the physical filename
+ * changes: a conversation's displayed title (`aliases:`, the `# Title:`
+ * heading) is untouched, since link generation never reads it. See
+ * issue #83.
+ */
+class MigrateWikilinkStructuralCharsOperation extends UpgradeOperation {
+    readonly id = "migrate-wikilink-structural-chars";
+    readonly name = "Fix notes and attachments with broken wikilinks";
+    readonly description =
+        "Renames notes and attachments containing #, ^, [ or ] and repairs the links that pointed at them.";
+    readonly type = "automatic" as const;
+
+    private readonly migrator = new WikilinkCharMigrator();
+
+    async execute(context: UpgradeContext): Promise<OperationResult> {
+        const scanResult = await this.migrator.scan(context);
+
+        if (
+            scanResult.conversationFiles.length === 0 &&
+            scanResult.attachmentFiles.length === 0
+        ) {
+            return {
+                success: true,
+                message:
+                    "No note or attachment name holds a wikilink-structural character.",
+            };
+        }
+
+        return this.migrator.migrate(context, scanResult);
+    }
+}
+
+/**
  * Version 1.7.1 Upgrade Definition
  *
  * Operation order matters: the backup rename must run before the repair
@@ -154,6 +195,7 @@ export class Upgrade171 extends VersionUpgrade {
     readonly automaticOperations: UpgradeOperation[] = [
         new RenameOldBackupsOperation(),
         new RepairOversizedNotesOperation(),
+        new MigrateWikilinkStructuralCharsOperation(),
     ];
 
     readonly manualOperations: UpgradeOperation[] = [];
