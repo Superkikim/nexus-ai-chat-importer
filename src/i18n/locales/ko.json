@@ -553,16 +553,17 @@
     },
     "donation_dialog": {
         "title": "Nexus 후원하기",
-        "message_emphasis": "후원이 이 플러그인을 살아있게 합니다.",
+        "message_emphasis": "후원은 정말 중요합니다.",
         "message": "저는 현재 실직 상태로 수입이 없습니다. 이 플러그인에 많은 시간을 투자하고 있으며, 실제 내보내기를 테스트하고 정확성을 유지하기 위해 지원하는 AI 플랫폼의 구독료를 자비로 부담하고 있습니다.",
-        "cta": "Nexus가 유용하다면, 함께하는 것이 다음 버전도 가능하게 만듭니다.",
+        "gratitude_note": "지금까지 사용하신 모든 버전은 이미 프로젝트를 후원하기로 선택한 소수의 사용자 덕분에 존재합니다.",
+        "cta": "이 플러그인이 유용하다면, 후원은 큰 도움이 됩니다.",
         "button_donate": "프로젝트 후원하기",
         "button_later": "나중에"
     },
     "support_box": {
         "header": "이 플러그인 후원하기",
         "header_highlight": "이 플러그인 후원하기",
-        "default_message_emphasis": "Nexus는 이를 지원하는 사용자들 덕분에 계속 발전하고 있습니다.",
+        "default_message_emphasis": "Nexus의 다운로드가 15,000회를 넘었습니다. 여러분의 후원이 개발을 이어가게 하고 도구와 구독 비용을 충당합니다.",
         "default_message": "현재 실직 상태라 작은 후원도 큰 힘이 됩니다.",
         "button_alt": "내 작업 후원하기"
     }

@@ -553,16 +553,17 @@
     },
     "donation_dialog": {
         "title": "Soutenir Nexus",
-        "message_emphasis": "Les dons font vivre ce plugin.",
+        "message_emphasis": "Les dons font vraiment la différence.",
         "message": "Je suis actuellement sans emploi et sans revenus. Je consacre beaucoup de temps à ce plugin et je paye de ma poche les abonnements aux plateformes d'IA qu'il supporte, afin de tester les exports réels et maintenir une prise en charge précise.",
-        "cta": "Si Nexus vous est utile, les rejoindre rend la prochaine version possible aussi.",
+        "gratitude_note": "Chaque version que vous avez utilisée existe parce qu'une poignée d'utilisateurs a choisi de soutenir le projet.",
+        "cta": "Si ce plugin vous est utile, un don fait vraiment la différence.",
         "button_donate": "Soutenir le projet",
         "button_later": "Peut-être plus tard"
     },
     "support_box": {
         "header": "Soutenir ce plugin",
         "header_highlight": "Soutenir ce plugin",
-        "default_message_emphasis": "Nexus continue de progresser grâce aux utilisateurs qui le soutiennent.",
+        "default_message_emphasis": "Nexus a dépassé les 15 000 téléchargements. Votre soutien fait avancer le développement et couvre mes frais d'outils et d'abonnements.",
         "default_message": "Je suis actuellement sans emploi, chaque contribution compte vraiment.",
         "button_alt": "Soutenir mon travail"
     }

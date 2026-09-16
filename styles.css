@@ -721,6 +721,18 @@
     font-size: 1.05em;
 }
 
+.nexus-support-gratitude-note {
+    background: rgba(255, 215, 0, 0.15);
+    border: 1px solid rgba(255, 215, 0, 0.3);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    text-align: center;
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.5;
+}
+
 .nexus-support-button-container {
     text-align: center;
     margin: 0px 0;
