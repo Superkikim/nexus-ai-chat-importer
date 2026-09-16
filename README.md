@@ -33,7 +33,7 @@ import report. Everything runs locally in your vault.
 
 - **Oversized-note repair is now mandatory, and actually works** — the 1.7.0
   fix's own backup file was still being indexed, quietly reintroducing the
-  slowdown it was meant to fix.
+  performance impact it was meant to fix.
 - **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these
   characters break wikilinks, so they're now substituted rather than
   dropped, for new imports and existing notes alike.
