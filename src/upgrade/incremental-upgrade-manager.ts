@@ -717,25 +717,50 @@ export class IncrementalUpgradeManager {
     }
 
     /**
-     * One-line summary of the oversized-notes repair, for the completion
-     * dialog — undefined when the operation did not run or repaired nothing.
+     * One-line summary of the oversized-notes cleanup (repaired notes,
+     * renamed old backups, or both), for the completion dialog — undefined
+     * when neither operation did anything this run.
      */
     private summarizeRepairs(
         result: IncrementalUpgradeResult
     ): string | undefined {
+        let repaired = 0;
+        let renamed = 0;
+
         for (const entry of result.results) {
-            const opRes = entry.automaticResults?.results?.find(
+            const ops = entry.automaticResults?.results || [];
+
+            const repairMsg = ops.find(
                 (r) => r.operationId === "repair-oversized-notes"
-            );
-            const match = opRes?.result?.message?.match(/^Repaired (\d+) note/);
-            const count = match ? Number(match[1]) : 0;
-            if (count > 0) {
-                return `Nexus repaired ${count} note${
-                    count === 1 ? "" : "s"
-                } that were slowing your vault down. A backup of each was made beside it.`;
-            }
+            )?.result?.message;
+            const repairMatch = repairMsg?.match(/^Repaired (\d+) note/);
+            if (repairMatch) repaired += Number(repairMatch[1]);
+
+            const renameMsg = ops.find(
+                (r) => r.operationId === "rename-oversized-backups"
+            )?.result?.message;
+            const renameMatch = renameMsg?.match(/^Renamed (\d+) backup/);
+            if (renameMatch) renamed += Number(renameMatch[1]);
         }
-        return undefined;
+
+        const parts: string[] = [];
+        if (repaired > 0) {
+            parts.push(
+                `repaired ${repaired} note${
+                    repaired === 1 ? "" : "s"
+                } that were slowing your vault down`
+            );
+        }
+        if (renamed > 0) {
+            parts.push(
+                `renamed ${renamed} old backup${
+                    renamed === 1 ? "" : "s"
+                } Obsidian was still indexing`
+            );
+        }
+
+        if (parts.length === 0) return undefined;
+        return `Nexus ${parts.join(" and ")}.`;
     }
 
     /**
