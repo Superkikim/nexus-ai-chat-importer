@@ -71,8 +71,11 @@ export class DonationDialog extends Modal {
             cls: "nexus-donation-btn-primary mod-cta",
         });
         donateBtn.addEventListener("click", () => {
-            window.open(getLocalizedSupportUrl(), "_blank");
-            this.close();
+            try {
+                window.open(getLocalizedSupportUrl(), "_blank");
+            } finally {
+                this.close();
+            }
         });
 
         const laterBtn = actions.createEl("button", {
