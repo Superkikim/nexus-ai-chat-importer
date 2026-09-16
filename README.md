@@ -100,6 +100,7 @@ provide their source. See [LICENSE](LICENSE) for the full text.
   - [@chuckfs](https://github.com/chuckfs) — iOS support (PR #15)
   - [@baron](https://github.com/baron) — Large archive handling research (PR #27)
   - [@lstsavr](https://github.com/lstsavr) — Unicode filename preservation (PR #70)
+  - [@nelsonlove](https://github.com/nelsonlove) — Identified, diagnosed, and proposed a fix for notes named with wikilink-breaking characters (PR #80)
 - **Special Thanks**: To all users who report issues and suggest improvements
 
 ## Links
