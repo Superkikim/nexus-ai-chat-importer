@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { App, Component, Modal, MarkdownRenderer } from "obsidian";
+import { App, Component, Modal, MarkdownRenderer, TFile } from "obsidian";
 import type NexusAiChatImporterPlugin from "../main";
 import { createSupportBox } from "../ui/components/support-box";
 import { createResourceLinks } from "../ui/components/resource-links";
@@ -30,11 +30,21 @@ import { t } from "../i18n";
 export class UpgradeCompleteModal extends Modal {
     private plugin: NexusAiChatImporterPlugin;
     private version: string;
+    private reportPath?: string;
+    private repairSummary?: string;
 
-    constructor(app: App, plugin: NexusAiChatImporterPlugin, version: string) {
+    constructor(
+        app: App,
+        plugin: NexusAiChatImporterPlugin,
+        version: string,
+        reportPath?: string,
+        repairSummary?: string
+    ) {
         super(app);
         this.plugin = plugin;
         this.version = version;
+        this.reportPath = reportPath;
+        this.repairSummary = repairSummary;
     }
 
     onOpen(): void {
@@ -62,6 +72,9 @@ export class UpgradeCompleteModal extends Modal {
         // Support section (using reusable component)
         createSupportBox(contentEl);
 
+        // What actually changed in your vault this run, if anything did
+        this.addRepairSummary();
+
         // Release notes content
         await this.addReleaseNotes();
 
@@ -70,6 +83,42 @@ export class UpgradeCompleteModal extends Modal {
 
         // Resource links grid
         createResourceLinks(contentEl);
+    }
+
+    private addRepairSummary(): void {
+        if (!this.repairSummary) return;
+
+        const summaryEl = this.contentEl.createDiv({
+            cls: "nexus-upgrade-repair-summary",
+        });
+        summaryEl.createSpan({ text: this.repairSummary });
+
+        if (this.reportPath) {
+            summaryEl.appendText(" ");
+            const link = summaryEl.createEl("a", {
+                text: t("import_completion.buttons.view_report"),
+                cls: "external-link",
+                href: "#",
+            });
+            link.addEventListener("click", (event) => {
+                event.preventDefault();
+                void this.openReport();
+            });
+        }
+    }
+
+    /** Matches ImportCompletionDialog's own report-opening behaviour. */
+    private async openReport(): Promise<void> {
+        try {
+            const file = this.app.vault.getAbstractFileByPath(
+                this.reportPath as string
+            );
+            if (file instanceof TFile) {
+                await this.app.workspace.getLeaf(false).openFile(file);
+            }
+        } finally {
+            this.close();
+        }
     }
 
     private async addReleaseNotes() {

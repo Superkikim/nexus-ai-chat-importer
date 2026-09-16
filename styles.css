@@ -1566,6 +1566,18 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     max-height: calc(85vh - 100px);
 }
 
+.nexus-upgrade-repair-summary {
+    padding: 0.85em 1em;
+    margin: 0 1em 1.5em;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-left: 4px solid var(--text-accent);
+    border-radius: var(--radius-m);
+    color: var(--text-normal);
+    font-size: 0.95em;
+    line-height: 1.5;
+}
+
 .nexus-upgrade-notes {
     padding: 0 1em;
     margin-bottom: 2em;

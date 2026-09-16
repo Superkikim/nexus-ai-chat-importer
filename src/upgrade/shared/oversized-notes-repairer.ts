@@ -157,13 +157,17 @@ export class OversizedNotesRepairer {
                     continue;
                 }
 
-                await this.backup(context, note, original);
+                const backupPath = await this.backup(context, note, original);
                 await plugin.app.vault.modify(note.file, rewritten.content);
 
                 repaired++;
                 filesWritten += rewritten.written;
+                const noteTitle = note.file.basename.replace(/\|/g, "\\|");
+                const backupName = backupPath.slice(
+                    backupPath.lastIndexOf("/") + 1
+                );
                 details.push(
-                    `Repaired: ${note.file.path} (${rewritten.written} file(s))`
+                    `Repaired: [[${note.file.path}\\|${noteTitle}]] — moved ${rewritten.written} file(s), backup: [[${backupPath}\\|${backupName}]]`
                 );
             } catch (error) {
                 failed++;
@@ -264,17 +268,22 @@ export class OversizedNotesRepairer {
      * Its conversation id is suffixed so the plugin never mistakes the copy
      * for the conversation: two notes claiming one id would collide on the
      * next import, and the backup is meant to be forgettable, not dangerous.
+     *
+     * Written as `.md.bak`, not `.md`: the backup still holds the very line
+     * that made the original note slow to index. As a `.md` file it would be
+     * indexed too, quietly re-introducing the problem the repair just fixed.
+     * `.bak` is not a note extension, so Obsidian never scans it.
      */
     private async backup(
         context: UpgradeContext,
         note: HeavyNote,
         original: string
-    ): Promise<void> {
+    ): Promise<string> {
         const { plugin } = context;
         const folder = note.file.path.slice(0, note.file.path.lastIndexOf("/"));
-        const path = `${folder}/${note.file.basename}${BACKUP_SUFFIX}.md`;
+        const path = `${folder}/${note.file.basename}${BACKUP_SUFFIX}.md.bak`;
 
-        if (plugin.app.vault.getAbstractFileByPath(path)) return;
+        if (plugin.app.vault.getAbstractFileByPath(path)) return path;
 
         const content = note.conversationId
             ? original.replace(
@@ -284,5 +293,6 @@ export class OversizedNotesRepairer {
             : original;
 
         await plugin.app.vault.create(path, content);
+        return path;
     }
 }

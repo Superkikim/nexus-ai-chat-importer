@@ -56,6 +56,10 @@ export interface IncrementalUpgradeResult {
     isFreshInstall?: boolean;
     showCompletionDialog?: boolean;
     upgradedToVersion?: string;
+    /** Vault path of the consolidated report written for this run, if any. */
+    reportPath?: string;
+    /** One-line summary of the oversized-notes repair, if it did anything. */
+    repairSummary?: string;
     results: Array<{
         version: string;
         automaticResults: OperationProgressResult;
@@ -191,8 +195,9 @@ export class IncrementalUpgradeManager {
             await this.markUpgradeComplete(currentVersion);
 
             // Write consolidated upgrade report
+            let reportPath: string | undefined;
             try {
-                await this.writeUpgradeReport(
+                reportPath = await this.writeUpgradeReport(
                     previousVersion,
                     currentVersion,
                     upgradeChain,
@@ -209,6 +214,8 @@ export class IncrementalUpgradeManager {
                 ...result,
                 showCompletionDialog: true,
                 upgradedToVersion: currentVersion,
+                reportPath,
+                repairSummary: this.summarizeRepairs(result),
             };
         } catch (error) {
             logger.error("Incremental upgrade failed:", error);
@@ -606,14 +613,14 @@ export class IncrementalUpgradeManager {
     }
 
     /**
-     * Write a consolidated upgrade report per run
+     * Write a consolidated upgrade report per run. Returns the path it wrote.
      */
     private async writeUpgradeReport(
         fromVersion: string,
         toVersion: string,
         upgradeChain: VersionUpgrade[],
         result: IncrementalUpgradeResult
-    ): Promise<void> {
+    ): Promise<string> {
         const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
 
         const upgradesFolder = `${reportRoot}/Upgrades`;
@@ -683,6 +690,14 @@ export class IncrementalUpgradeManager {
                 const msg = opRes.result?.message || "";
                 md += `### ${opName} ${status}\n\n`;
                 if (msg) md += `${msg}\n\n`;
+
+                const details = opRes.result?.details;
+                if (Array.isArray(details) && details.length > 0) {
+                    for (const line of details) {
+                        md += `- ${String(line)}\n`;
+                    }
+                    md += `\n`;
+                }
             }
         }
 
@@ -697,6 +712,30 @@ export class IncrementalUpgradeManager {
             });
             throw error;
         }
+
+        return filePath;
+    }
+
+    /**
+     * One-line summary of the oversized-notes repair, for the completion
+     * dialog — undefined when the operation did not run or repaired nothing.
+     */
+    private summarizeRepairs(
+        result: IncrementalUpgradeResult
+    ): string | undefined {
+        for (const entry of result.results) {
+            const opRes = entry.automaticResults?.results?.find(
+                (r) => r.operationId === "repair-oversized-notes"
+            );
+            const match = opRes?.result?.message?.match(/^Repaired (\d+) note/);
+            const count = match ? Number(match[1]) : 0;
+            if (count > 0) {
+                return `Nexus repaired ${count} note${
+                    count === 1 ? "" : "s"
+                } that were slowing your vault down. A backup of each was made beside it.`;
+            }
+        }
+        return undefined;
     }
 
     /**
@@ -708,7 +747,11 @@ export class IncrementalUpgradeManager {
      * PUBLIC method - called from main.ts after checkAndPerformUpgrade() returns
      * This ensures styles.css is fully loaded by Obsidian
      */
-    async showUpgradeCompleteDialog(version: string): Promise<void> {
+    async showUpgradeCompleteDialog(
+        version: string,
+        reportPath?: string,
+        repairSummary?: string
+    ): Promise<void> {
         try {
             // Check if this is v1.3.0 or later - use new completion modal
             const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
@@ -720,7 +763,9 @@ export class IncrementalUpgradeManager {
                 new UpgradeCompleteModal(
                     this.plugin.app,
                     this.plugin,
-                    version
+                    version,
+                    reportPath,
+                    repairSummary
                 ).open();
             } else {
                 // For older versions, just show a simple notice

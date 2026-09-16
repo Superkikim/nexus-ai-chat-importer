@@ -148,7 +148,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 upgradeResult?.upgradedToVersion
             ) {
                 await this.upgradeManager.showUpgradeCompleteDialog(
-                    upgradeResult.upgradedToVersion
+                    upgradeResult.upgradedToVersion,
+                    upgradeResult.reportPath,
+                    upgradeResult.repairSummary
                 );
             }
 
