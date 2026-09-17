@@ -233,9 +233,9 @@
         "frontmatter": {
             "section_title": "🔑 Frontmatter",
             "conversation_id_field": {
-                "name": "Conversation ID field",
-                "desc": "Frontmatter key holding each conversation's id. Set this to your vault's own identifier — commonly 'uid' — so imported notes join that scheme. Notes already written under 'conversation_id' keep being recognised, so changing this does not duplicate them.",
-                "invalid": "\"{{value}}\" cannot be used: it must start with a letter or underscore, contain only letters, digits, underscore or hyphen, and must not be a key the importer already writes. Keeping the previous value."
+                "name": "Campo de ID de conversación",
+                "desc": "Clave del frontmatter que contiene el id de cada conversación. Configúralo con el identificador propio de tu bóveda —normalmente «uid»— para que las notas importadas se integren en ese esquema. Las notas ya escritas bajo «conversation_id» se siguen reconociendo, así que cambiar esto no las duplica.",
+                "invalid": "«{{value}}» no se puede usar: debe empezar con una letra o guion bajo, contener solo letras, dígitos, guion bajo o guiones, y no puede ser una clave que el importador ya escriba. Se mantiene el valor anterior."
             }
         },
         "timestamps": {

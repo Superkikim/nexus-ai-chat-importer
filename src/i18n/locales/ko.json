@@ -233,9 +233,9 @@
         "frontmatter": {
             "section_title": "🔑 Frontmatter",
             "conversation_id_field": {
-                "name": "Conversation ID field",
-                "desc": "Frontmatter key holding each conversation's id. Set this to your vault's own identifier — commonly 'uid' — so imported notes join that scheme. Notes already written under 'conversation_id' keep being recognised, so changing this does not duplicate them.",
-                "invalid": "\"{{value}}\" cannot be used: it must start with a letter or underscore, contain only letters, digits, underscore or hyphen, and must not be a key the importer already writes. Keeping the previous value."
+                "name": "대화 ID 필드",
+                "desc": "각 대화의 id를 담는 frontmatter 키입니다. 보관함 고유의 식별자(일반적으로 'uid')로 설정하면 가져온 노트가 해당 체계에 합류합니다. 이미 'conversation_id'로 작성된 노트도 계속 인식되므로, 이 값을 변경해도 노트가 중복되지 않습니다.",
+                "invalid": "\"{{value}}\" 값은 사용할 수 없습니다: 문자나 밑줄로 시작해야 하고, 문자·숫자·밑줄·하이픈만 포함해야 하며, 가져오기 도구가 이미 사용 중인 키가 아니어야 합니다. 이전 값을 유지합니다."
             }
         },
         "timestamps": {

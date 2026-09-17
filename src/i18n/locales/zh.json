@@ -233,9 +233,9 @@
         "frontmatter": {
             "section_title": "🔑 Frontmatter",
             "conversation_id_field": {
-                "name": "Conversation ID field",
-                "desc": "Frontmatter key holding each conversation's id. Set this to your vault's own identifier — commonly 'uid' — so imported notes join that scheme. Notes already written under 'conversation_id' keep being recognised, so changing this does not duplicate them.",
-                "invalid": "\"{{value}}\" cannot be used: it must start with a letter or underscore, contain only letters, digits, underscore or hyphen, and must not be a key the importer already writes. Keeping the previous value."
+                "name": "对话 ID 字段",
+                "desc": "保存每个对话 id 的 frontmatter 键。将其设置为您 Vault 自己的标识符（通常是“uid”），以便导入的笔记加入该体系。已使用“conversation_id”写入的笔记仍会被识别，因此更改此设置不会导致重复。",
+                "invalid": "\"{{value}}\" 不能使用：必须以字母或下划线开头，只能包含字母、数字、下划线或连字符，且不能是导入器已经写入的键。将保留之前的值。"
             }
         },
         "timestamps": {
