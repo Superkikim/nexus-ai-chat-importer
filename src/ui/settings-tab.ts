@@ -56,6 +56,12 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
         void this.renderSections(containerEl);
     }
 
+    hide(): void {
+        for (const section of this.sections) {
+            section.onHide();
+        }
+    }
+
     private async renderSections(containerEl: HTMLElement): Promise<void> {
         for (const section of this.sections) {
             // The heading carried an empty name, so every section title —

@@ -48,7 +48,8 @@ name in effect:
 - Properties the plugin already writes: `nexus`, `plugin_version`, `provider`,
   `conversation_id`, `create_time`, `update_time`, `mode`, `models`.
 
-The name is applied when you leave the field. From then on, every import,
+The name is applied when you press Enter, leave the field, or close Settings —
+not while you type. From then on, every import,
 update and rebuild writes the property, right after `conversation_id`. What
 happens to notes you already have depends on the change:
 

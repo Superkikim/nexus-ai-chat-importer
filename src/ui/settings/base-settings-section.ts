@@ -38,6 +38,12 @@ export abstract class BaseSettingsSection {
     readonly order: number = 100;
 
     /**
+     * Called when the settings tab closes, for a section holding input that
+     * is committed on blur: closing the tab removes the field without one.
+     */
+    onHide(): void {}
+
+    /**
      * Callback to trigger full redraw when needed (for conditional sections)
      */
     protected redrawCallback?: () => void;

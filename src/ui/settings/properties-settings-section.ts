@@ -47,6 +47,7 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
     readonly order = 12;
 
     private committing = false;
+    private pendingCommit?: () => void;
 
     render(containerEl: HTMLElement): void {
         const plugin = this.plugin;
@@ -89,6 +90,15 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             text.inputEl.addEventListener("blur", () => {
                 void this.commit(controller, text.inputEl, warning);
             });
+            this.pendingCommit = () =>
+                void this.commit(controller, text.inputEl, warning);
+            // Enter commits too, through the same path.
+            text.inputEl.addEventListener("keydown", (event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    void this.commit(controller, text.inputEl, warning);
+                }
+            });
         });
 
         new Setting(containerEl)
@@ -102,6 +112,12 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
                         await plugin.saveSettings();
                     })
             );
+    }
+
+    /** A name typed just before the tab closed is committed, not dropped. */
+    onHide(): void {
+        this.pendingCommit?.();
+        this.pendingCommit = undefined;
     }
 
     private async commit(
