@@ -93,11 +93,11 @@ export class CustomIdPropertyController {
     }
 
     private async enable(name: string): Promise<CommitResult> {
-        const files = this.service.findConversationNotes();
+        const files = await this.service.findConversationNotes();
         const overwrite = this.store.overwrite;
 
         if (files.length > 0) {
-            const existing = this.service.countWithProperty(files, name);
+            const existing = await this.service.countWithProperty(files, name);
             const confirmed = await this.ui.confirmEnable(
                 name,
                 files.length,
@@ -117,7 +117,7 @@ export class CustomIdPropertyController {
     }
 
     private async rename(from: string, to: string): Promise<CommitResult> {
-        const files = this.service.findConversationNotes();
+        const files = await this.service.findConversationNotes();
 
         if (files.length > 0) {
             const confirmed = await this.ui.confirmRename(from, to);
@@ -137,9 +137,11 @@ export class CustomIdPropertyController {
     }
 
     private async clear(name: string): Promise<CommitResult> {
-        const files = this.service.findConversationNotes();
+        const files = await this.service.findConversationNotes();
         const withProperty =
-            files.length > 0 ? this.service.countWithProperty(files, name) : 0;
+            files.length > 0
+                ? await this.service.countWithProperty(files, name)
+                : 0;
 
         let choice: ClearChoice = "keep";
         if (withProperty > 0) {

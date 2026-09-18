@@ -25,8 +25,8 @@ function setup(
     };
     const files = Array.from({ length: options.notes ?? 3 }, () => new TFile());
     const service = {
-        findConversationNotes: vi.fn(() => files),
-        countWithProperty: vi.fn(() => options.existing ?? 0),
+        findConversationNotes: vi.fn(async () => files),
+        countWithProperty: vi.fn(async () => options.existing ?? 0),
     };
     const ui = {
         confirmEnable: vi.fn(async () => options.confirm ?? true),

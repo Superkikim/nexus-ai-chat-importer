@@ -3,6 +3,7 @@ import {
     NoteEditError,
     checkCustomIdPropertyName,
     customIdPropertyLine,
+    readFrontmatterValue,
     removeCustomIdProperty,
     renameCustomIdProperty,
     resolveCustomIdProperty,
@@ -350,5 +351,20 @@ describe("renameCustomIdProperty", () => {
         const result = renameCustomIdProperty(note(), "uid", "note_id", false);
         expect(result.outcome).toBe("added");
         expect(result.content).toContain(`note_id: ${ID}\n`);
+    });
+});
+
+describe("readFrontmatterValue", () => {
+    it("reads a scalar, unquoted", () => {
+        expect(readFrontmatterValue(note('uid: "x"'), "uid")).toBe("x");
+        expect(readFrontmatterValue(note(), "conversation_id")).toBe(ID);
+    });
+
+    it("tells an absent key from a non-scalar value", () => {
+        expect(readFrontmatterValue(note(), "uid")).toBeUndefined();
+        expect(readFrontmatterValue(note("uid:", "  - a"), "uid")).toBeNull();
+        expect(
+            readFrontmatterValue("# no frontmatter\n", "uid")
+        ).toBeUndefined();
     });
 });

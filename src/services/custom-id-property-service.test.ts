@@ -15,7 +15,7 @@ function conversation(extra = ""): string {
 }
 
 function createVault(
-    entries: Record<string, { content: string; fm?: object }>
+    entries: Record<string, { content: string; fm?: object; unindexed?: true }>
 ) {
     const contents = new Map(
         Object.entries(entries).map(([path, e]) => [path, e.content])
@@ -30,12 +30,14 @@ function createVault(
         vault: {
             getMarkdownFiles: () => files,
             read: async (f: TFile) => contents.get(f.path) ?? "",
+            cachedRead: async (f: TFile) => contents.get(f.path) ?? "",
             process,
         },
         metadataCache: {
             getFileCache: (f: TFile) => {
-                const fm = entries[f.path].fm;
-                return fm ? { frontmatter: fm } : null;
+                const entry = entries[f.path];
+                if (entry.unindexed) return null;
+                return entry.fm ? { frontmatter: entry.fm } : {};
             },
         },
     };
@@ -51,7 +53,7 @@ function createVault(
 }
 
 describe("CustomIdPropertyService", () => {
-    it("finds conversation notes, not artifacts or other notes", () => {
+    it("finds conversation notes, not artifacts or other notes", async () => {
         const nexus = "nexus-ai-chat-importer";
         const { service } = createVault({
             "a.md": { content: "", fm: { nexus, conversation_id: ID } },
@@ -67,19 +69,33 @@ describe("CustomIdPropertyService", () => {
             "plain.md": { content: "" },
         });
 
-        expect(service.findConversationNotes().map((f) => f.path)).toEqual([
-            "a.md",
-        ]);
+        const notes = await service.findConversationNotes();
+        expect(notes.map((f) => f.path)).toEqual(["a.md"]);
     });
 
-    it("counts the notes that already have the property", () => {
+    it("reads notes the metadata cache has not indexed yet", async () => {
+        const { service, files } = createVault({
+            "fresh.md": { content: conversation("uid: 1\n"), unindexed: true },
+            "fresh-artifact.md": {
+                content: conversation("artifact_id: x\n"),
+                unindexed: true,
+            },
+            "fresh-plain.md": { content: "# text\n", unindexed: true },
+        });
+
+        const notes = await service.findConversationNotes();
+        expect(notes.map((f) => f.path)).toEqual(["fresh.md"]);
+        expect(await service.countWithProperty(files, "uid")).toBe(1);
+    });
+
+    it("counts the notes that already have the property", async () => {
         const { service, files } = createVault({
             "a.md": { content: "", fm: { uid: "x" } },
             "b.md": { content: "", fm: { uid: null } },
             "c.md": { content: "", fm: { other: 1 } },
         });
 
-        expect(service.countWithProperty(files, "uid")).toBe(2);
+        expect(await service.countWithProperty(files, "uid")).toBe(2);
     });
 
     it("processes every note, counting each outcome", async () => {

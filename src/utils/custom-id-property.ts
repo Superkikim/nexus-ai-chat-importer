@@ -219,6 +219,21 @@ function rawConversationId(fm: Frontmatter): string | null {
         : raw.replace(/[ \t]+#.*$/, "");
 }
 
+/**
+ * Read one frontmatter property from raw content, for notes the metadata
+ * cache has not indexed yet. `undefined`: no frontmatter, or no such key.
+ * `null`: the key exists but holds no single-line scalar.
+ */
+export function readFrontmatterValue(
+    content: string,
+    key: string
+): string | null | undefined {
+    const fm = parseFrontmatter(content);
+    if (!fm) return undefined;
+    const block = findProperty(fm, key);
+    return block ? scalarValue(fm, block) : undefined;
+}
+
 function conversationIdOf(fm: Frontmatter): string | null {
     const block = findProperty(fm, "conversation_id");
     return block ? scalarValue(fm, block) : null;

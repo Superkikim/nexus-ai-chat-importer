@@ -21,6 +21,7 @@ import type { App, TFile } from "obsidian";
 import {
     NoteEditOutcome,
     NoteEditResult,
+    readFrontmatterValue,
     removeCustomIdProperty,
     renameCustomIdProperty,
     setCustomIdProperty,
@@ -99,31 +100,55 @@ export class CustomIdPropertyService {
     /**
      * Notes carrying `nexus: <plugin id>` and a `conversation_id`. Claude
      * artifact notes carry both too, and are not conversation notes.
+     *
+     * Right after notes are written (an import, or a previous run of this
+     * service) the metadata cache has no entry for them until Obsidian
+     * re-indexes them; those notes are read from disk instead of missed.
      */
-    findConversationNotes(): TFile[] {
-        return this.app.vault.getMarkdownFiles().filter((file) => {
+    async findConversationNotes(): Promise<TFile[]> {
+        const notes: TFile[] = [];
+        for (const file of this.app.vault.getMarkdownFiles()) {
             const frontmatter =
                 this.app.metadataCache.getFileCache(file)?.frontmatter;
-            return (
-                !!frontmatter &&
-                frontmatter.nexus === this.pluginId &&
-                frontmatter.conversation_id !== undefined &&
-                frontmatter.conversation_id !== null &&
-                frontmatter.artifact_id === undefined
-            );
-        });
+            if (frontmatter) {
+                if (
+                    frontmatter.nexus === this.pluginId &&
+                    frontmatter.conversation_id !== undefined &&
+                    frontmatter.conversation_id !== null &&
+                    frontmatter.artifact_id === undefined
+                ) {
+                    notes.push(file);
+                }
+            } else if (!this.app.metadataCache.getFileCache(file)) {
+                const content = await this.app.vault.cachedRead(file);
+                if (
+                    readFrontmatterValue(content, "nexus") === this.pluginId &&
+                    readFrontmatterValue(content, "conversation_id") !==
+                        undefined &&
+                    readFrontmatterValue(content, "artifact_id") === undefined
+                ) {
+                    notes.push(file);
+                }
+            }
+        }
+        return notes;
     }
 
     /** How many of `files` already have a property called `name`. */
-    countWithProperty(files: TFile[], name: string): number {
-        return files.filter((file) => {
-            const frontmatter =
-                this.app.metadataCache.getFileCache(file)?.frontmatter;
-            return (
-                !!frontmatter &&
-                Object.prototype.hasOwnProperty.call(frontmatter, name)
-            );
-        }).length;
+    async countWithProperty(files: TFile[], name: string): Promise<number> {
+        let count = 0;
+        for (const file of files) {
+            const cache = this.app.metadataCache.getFileCache(file);
+            const has = cache
+                ? !!cache.frontmatter &&
+                  Object.prototype.hasOwnProperty.call(cache.frontmatter, name)
+                : readFrontmatterValue(
+                      await this.app.vault.cachedRead(file),
+                      name
+                  ) !== undefined;
+            if (has) count++;
+        }
+        return count;
     }
 
     /**
