@@ -39,7 +39,10 @@ type ProcessorUnderTest = Record<string, unknown> & {
     updateExistingNote: (...args: unknown[]) => Promise<void>;
 };
 
-function createProcessor(noteContent: string) {
+function createProcessor(
+    noteContent: string,
+    settings: Record<string, unknown> = {}
+) {
     const logger = createLogger();
     const writeToFile = vi.fn(async (_path: string, _content: string) => {});
     const file = new TFile();
@@ -47,7 +50,7 @@ function createProcessor(noteContent: string) {
     const plugin: Record<string, unknown> = {
         logger,
         manifest: { id: "nexus-ai-chat-importer", version: "1.7.0" },
-        settings: { conversationFolder: "Nexus/Conversations" },
+        settings: { conversationFolder: "Nexus/Conversations", ...settings },
         app: {
             vault: {
                 getAbstractFileByPath: vi.fn(() => file),
@@ -343,5 +346,84 @@ describe("ConversationProcessor reconciliation", () => {
         expect(logger.warn).toHaveBeenCalled();
         expect(writeToFile).toHaveBeenCalledTimes(1);
         expect(writeToFile.mock.calls[0][1]).toContain("<!-- UID: m2 -->");
+    });
+
+    describe("custom ID property on update", () => {
+        const stampOnly = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            convertChat: vi.fn(),
+            getProviderName: () => "chatgpt",
+            processMessageAttachments: vi.fn(),
+        };
+
+        async function update(note: string, settings: Record<string, unknown>) {
+            const { processor, writeToFile, logger } = createProcessor(
+                note,
+                settings
+            );
+            const importReport = new ImportReport();
+            importReport.startFileSection("chatgpt_export.zip");
+            await processor.updateExistingNote(
+                stampOnly,
+                conversationOf([...EXISTING_MESSAGES]),
+                "note.md",
+                2,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return { written: writeToFile.mock.calls[0][1], logger };
+        }
+
+        const withId = (...extra: string[]) =>
+            [
+                "---",
+                "conversation_id: thread-1",
+                ...extra,
+                "update_time: 2026-01-01T00:00:00.000Z",
+                "---",
+                "<!-- UID: m1 -->",
+                "<!-- UID: m2 -->",
+            ].join("\n");
+
+        it("adds the property to a note that lacks it", async () => {
+            const { written } = await update(withId(), {
+                customIdProperty: "uid",
+            });
+            expect(written).toContain(
+                "conversation_id: thread-1\nuid: thread-1\n"
+            );
+        });
+
+        it("follows the overwrite toggle for an existing value", async () => {
+            const kept = await update(withId("uid: mine"), {
+                customIdProperty: "uid",
+                customIdPropertyOverwrite: false,
+            });
+            expect(kept.written).toContain("uid: mine\n");
+
+            const replaced = await update(withId("uid: mine"), {
+                customIdProperty: "uid",
+                customIdPropertyOverwrite: true,
+            });
+            expect(replaced.written).toContain("uid: thread-1\n");
+            expect(replaced.written).not.toContain("uid: mine");
+        });
+
+        it("still updates a note the property cannot be written to", async () => {
+            const { written, logger } = await update(noteWith(["m1", "m2"]), {
+                customIdProperty: "uid",
+            });
+            expect(written).not.toContain("uid:");
+            expect(logger.warn).toHaveBeenCalled();
+        });
+
+        it("writes nothing when the feature is off", async () => {
+            const { written } = await update(withId(), {});
+            expect(written).not.toContain("uid:");
+        });
     });
 });

@@ -36,6 +36,14 @@ export interface PluginSettings {
     messageTimestampFormat: MessageTimestampFormat;
 
     // ========================================
+    // 🏷️ PROPERTIES
+    // ========================================
+    // Extra property holding the conversation ID (e.g. `uid`). Empty = off.
+    customIdProperty: string;
+    // Whether an existing value under that name is replaced.
+    customIdPropertyOverwrite: boolean;
+
+    // ========================================
     // 🔧 INTERNAL SETTINGS (not shown in UI)
     // ========================================
     lastConversationsPerPage: number;

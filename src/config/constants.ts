@@ -38,6 +38,12 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     messageTimestampFormat: "locale",
 
     // ========================================
+    // 🏷️ PROPERTIES
+    // ========================================
+    customIdProperty: "",
+    customIdPropertyOverwrite: false,
+
+    // ========================================
     // 🔧 INTERNAL SETTINGS
     // ========================================
     lastConversationsPerPage: 50,

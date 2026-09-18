@@ -42,6 +42,10 @@ import {
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 import { ZipArchiveReader } from "../utils/zip-loader";
+import {
+    resolveCustomIdProperty,
+    setCustomIdProperty,
+} from "../utils/custom-id-property";
 
 export class ConversationProcessor {
     private messageFormatter: MessageFormatter;
@@ -1056,6 +1060,8 @@ export class ConversationProcessor {
             `Last Updated: ${updateTimeStr}`
         );
 
+        content = this.ensureCustomIdProperty(content);
+
         if (!conversation) {
             return content;
         }
@@ -1067,6 +1073,32 @@ export class ConversationProcessor {
         const models = this.collectConversationModels(conversation);
 
         return this.updateFrontmatterModeAndModels(content, mode, models);
+    }
+
+    /**
+     * Give an updated note the custom ID property, as a new note gets it.
+     * A note the property cannot be written to is still updated.
+     */
+    private ensureCustomIdProperty(content: string): string {
+        const key = resolveCustomIdProperty(
+            this.plugin.settings.customIdProperty
+        );
+        if (!key) {
+            return content;
+        }
+        try {
+            return setCustomIdProperty(
+                content,
+                key,
+                this.plugin.settings.customIdPropertyOverwrite
+            ).content;
+        } catch (error: unknown) {
+            this.plugin.logger.warn(
+                "Custom ID property not written on update",
+                { property: key, message: getErrorMessage(error) }
+            );
+            return content;
+        }
     }
 
     private collectConversationModels(

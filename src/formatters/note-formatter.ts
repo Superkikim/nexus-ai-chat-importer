@@ -19,6 +19,10 @@
 // src/formatters/note-formatter.ts
 import { StandardConversation } from "../types/standard";
 import { formatTimestamp, generateSafeAlias } from "../utils";
+import {
+    customIdPropertyLine,
+    resolveCustomIdProperty,
+} from "../utils/custom-id-property";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
 import { URL_GENERATORS } from "../types/standard";
@@ -100,6 +104,11 @@ export class NoteFormatter {
                       .join("\n")}\n`
                 : "";
 
+        const customIdLine = customIdPropertyLine(
+            resolveCustomIdProperty(this.plugin.settings.customIdProperty),
+            conversationId
+        );
+
         // Build frontmatter with plugin_version after nexus
         // Timestamps in ISO 8601 format (v1.3.0+)
         let frontmatter = `---
@@ -108,7 +117,7 @@ plugin_version: "${this.pluginVersion}"
 provider: ${conversation.provider}
 aliases: ${title}
 conversation_id: ${conversationId}
-create_time: ${createTimeStr}
+${customIdLine}create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
 ${modeLine}${modelsBlock}---
 `;
