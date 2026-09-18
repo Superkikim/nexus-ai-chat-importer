@@ -837,8 +837,6 @@
 .nexus-donation-btn-primary {
     width: 100%;
     padding: 12px 0;
-    background-color: #FF5E5B !important;
-    color: #ffffff !important;
     font-size: 1.05em;
     font-weight: 600;
     border-radius: 8px;
@@ -846,8 +844,22 @@
     transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.nexus-donation-btn-primary:hover {
-    background-color: #e04a47 !important;
+/*
+ * The button also carries Obsidian's own `.mod-cta` class (for baseline
+ * button behaviour), whose background-color otherwise wins the cascade.
+ * Same fix as `.nexus-ai-chat-importer-modal button.mod-cta` above:
+ * out-specificity it (ancestor class + element + two classes) instead of
+ * reaching for !important. The coral is a deliberate brand color — it
+ * matches the support-box link — not meant to follow the theme accent,
+ * so this doesn't use --interactive-accent the way that rule does.
+ */
+.nexus-donation-dialog button.nexus-donation-btn-primary.mod-cta {
+    background-color: #FF5E5B;
+    color: #ffffff;
+}
+
+.nexus-donation-dialog button.nexus-donation-btn-primary.mod-cta:hover {
+    background-color: #e04a47;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
