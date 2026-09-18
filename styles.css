@@ -368,6 +368,18 @@
     font-weight: 600;
 }
 
+/* Info variant: reassurance / recommendation, not a warning */
+.nexus-ai-chat-importer-modal .modal-note.modal-note-info {
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    color: var(--text-normal);
+    border-left: 4px solid var(--text-accent);
+}
+
+.nexus-ai-chat-importer-modal .modal-note.modal-note-info strong {
+    color: var(--text-accent);
+}
+
 /* Upgrade dialog specific styles */
 .nexus-ai-chat-importer-modal .upgrade-overview {
     margin-bottom: 1.5em;
@@ -709,7 +721,7 @@
     font-size: 1.05em;
 }
 
-.nexus-support-reality-check {
+.nexus-support-gratitude-note {
     background: rgba(255, 215, 0, 0.15);
     border: 1px solid rgba(255, 215, 0, 0.3);
     border-radius: 8px;
@@ -719,11 +731,6 @@
     font-size: 0.95em;
     color: rgba(255, 255, 255, 0.95);
     line-height: 1.5;
-}
-
-.nexus-support-reality-check strong {
-    color: #FFD700;
-    font-weight: 600;
 }
 
 .nexus-support-button-container {
@@ -834,10 +841,25 @@
     font-weight: 600;
     border-radius: 8px;
     cursor: pointer;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
-.nexus-donation-btn-primary:hover {
+/*
+ * The button also carries Obsidian's own `.mod-cta` class (for baseline
+ * button behaviour), whose background-color otherwise wins the cascade.
+ * Same fix as `.nexus-ai-chat-importer-modal button.mod-cta` above:
+ * out-specificity it (ancestor class + element + two classes) instead of
+ * reaching for !important. The coral is a deliberate brand color — it
+ * matches the support-box link — not meant to follow the theme accent,
+ * so this doesn't use --interactive-accent the way that rule does.
+ */
+.nexus-donation-dialog button.nexus-donation-btn-primary.mod-cta {
+    background-color: #FF5E5B;
+    color: #ffffff;
+}
+
+.nexus-donation-dialog button.nexus-donation-btn-primary.mod-cta:hover {
+    background-color: #e04a47;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -1552,6 +1574,18 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     padding: 20px 24px;
     overflow-y: auto;
     max-height: calc(85vh - 100px);
+}
+
+.nexus-upgrade-repair-summary {
+    padding: 0.85em 1em;
+    margin: 0 1em 1.5em;
+    background: var(--background-secondary);
+    border: 1px solid var(--background-modifier-border);
+    border-left: 4px solid var(--text-accent);
+    border-radius: var(--radius-m);
+    color: var(--text-normal);
+    font-size: 0.95em;
+    line-height: 1.5;
 }
 
 .nexus-upgrade-notes {

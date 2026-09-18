@@ -339,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade Complete - v{{version}}",
-            "fallback_content": "## ✨ What's New in v{{version}}\n\n### ✨ New\n- **ChatGPT** — Generated images and documents are imported again when the export includes them\n- **ChatGPT** — Privacy Portal archives import as-is; no need to extract the account-level ZIP first\n- **Rebuild existing notes** so older imports pick up current features — manual edits to a rebuilt note are lost\n- **Filter the conversation list by status** — New, Updated, Unchanged\n- **Large pasted Claude content** is extracted into linked files instead of bloating the note\n\n### 🔧 Improved\n- **Reports and the completion dialog** were rebuilt around what actually happened to your notes; several counters were wrong\n- Filenames, deduplication and attachment counts\n\n### 🐛 Fixed\n- **Claude imports work again** (1.6.9) — Anthropic's new split export was read as a ChatGPT one and imported nothing\n- **Callout colours restored on Obsidian 1.13+** (1.6.9)\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ What's New in v{{version}}\n\n### 🐛 Fixed\n- **Oversized-note repair now actually works** — 1.7.0's fix was optional, and its backup file was still indexed by Obsidian either way; the repair is now mandatory, and old backups are renamed too\n- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike\n- **The upgrade dialog no longer hangs** when dismissed without clicking a button\n- **Content with bare CR line endings** (older Mac tooling, AppleScript) now stays inside its callout and code fence\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Got it!"
             }
@@ -367,7 +367,7 @@
             "intro": "{{count}} conversation(s) hold pasted content on a single enormous line. Obsidian reads a line whole, so these slow indexing across your whole vault.",
             "and_more": "…and {{count}} more",
             "what_happens": "Nexus can move that content into files beside each conversation and leave a collapsed link in its place — the same thing it now does when importing.",
-            "backup_note": "Each note is copied beside itself before being touched, so nothing is lost. You can delete the copies once you are satisfied.",
+            "backup_note": "**Recommended.** Each note is copied beside itself before anything changes, so nothing is lost — delete the copies once you're happy with the result.",
             "buttons": {
                 "repair": "Repair them",
                 "ignore": "Leave them alone"
@@ -555,7 +555,7 @@
         "title": "Support Nexus",
         "message_emphasis": "Donations really matter.",
         "message": "I'm currently unemployed, with no income. I spend a significant amount of time on this plugin, and I pay out of pocket for subscriptions to the AI platforms it supports, so I can test real exports and keep everything accurate.",
-        "reality_check": "Last month, only three users made a donation, for a total of 20€ / $23.",
+        "gratitude_note": "Every release you've used exists because a handful of users already chose to support the project.",
         "cta": "If this plugin is useful to you, a donation makes a real difference.",
         "button_donate": "Support the project",
         "button_later": "Maybe later"

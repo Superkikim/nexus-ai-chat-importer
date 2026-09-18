@@ -39,6 +39,7 @@ import { Upgrade130 } from "./versions/upgrade-1.3.0";
 import { Upgrade140 } from "./versions/upgrade-1.4.0";
 import { Upgrade167 } from "./versions/upgrade-1.6.7";
 import { Upgrade170 } from "./versions/upgrade-1.7.0";
+import { Upgrade171 } from "./versions/upgrade-1.7.1";
 
 const logger = new Logger();
 
@@ -55,6 +56,10 @@ export interface IncrementalUpgradeResult {
     isFreshInstall?: boolean;
     showCompletionDialog?: boolean;
     upgradedToVersion?: string;
+    /** Vault path of the consolidated report written for this run, if any. */
+    reportPath?: string;
+    /** One-line summary of the oversized-notes repair, if it did anything. */
+    repairSummary?: string;
     results: Array<{
         version: string;
         automaticResults: OperationProgressResult;
@@ -82,6 +87,7 @@ export class IncrementalUpgradeManager {
             new Upgrade140(),
             new Upgrade167(),
             new Upgrade170(),
+            new Upgrade171(),
         ];
 
         // Sort by version for incremental execution
@@ -189,8 +195,9 @@ export class IncrementalUpgradeManager {
             await this.markUpgradeComplete(currentVersion);
 
             // Write consolidated upgrade report
+            let reportPath: string | undefined;
             try {
-                await this.writeUpgradeReport(
+                reportPath = await this.writeUpgradeReport(
                     previousVersion,
                     currentVersion,
                     upgradeChain,
@@ -207,6 +214,8 @@ export class IncrementalUpgradeManager {
                 ...result,
                 showCompletionDialog: true,
                 upgradedToVersion: currentVersion,
+                reportPath,
+                repairSummary: this.summarizeRepairs(result),
             };
         } catch (error) {
             logger.error("Incremental upgrade failed:", error);
@@ -379,10 +388,9 @@ export class IncrementalUpgradeManager {
             progressModal.markComplete(
                 `All operations completed successfully!`
             );
-            // Laisser apparaître le message "Completed!" brièvement avant de fermer automatiquement
-            await new Promise((resolve) => window.setTimeout(resolve, 450));
-            progressModal.close();
-            // No Notice here - completion dialog will be shown after
+            // Stays open until the user dismisses it (OK button or ×) — only
+            // then does the caller move on to the "upgrade complete" dialog.
+            await progressModal.waitForClose();
 
             return {
                 success: overallSuccess,
@@ -394,6 +402,7 @@ export class IncrementalUpgradeManager {
         } catch (error) {
             logger.error("Modal upgrade execution failed:", error);
             progressModal.showError(`Upgrade failed: ${error}`);
+            await progressModal.waitForClose();
             throw error;
         }
     }
@@ -604,14 +613,14 @@ export class IncrementalUpgradeManager {
     }
 
     /**
-     * Write a consolidated upgrade report per run
+     * Write a consolidated upgrade report per run. Returns the path it wrote.
      */
     private async writeUpgradeReport(
         fromVersion: string,
         toVersion: string,
         upgradeChain: VersionUpgrade[],
         result: IncrementalUpgradeResult
-    ): Promise<void> {
+    ): Promise<string> {
         const reportRoot = this.plugin.settings.reportFolder || "Nexus/Reports";
 
         const upgradesFolder = `${reportRoot}/Upgrades`;
@@ -681,6 +690,14 @@ export class IncrementalUpgradeManager {
                 const msg = opRes.result?.message || "";
                 md += `### ${opName} ${status}\n\n`;
                 if (msg) md += `${msg}\n\n`;
+
+                const details = opRes.result?.details;
+                if (Array.isArray(details) && details.length > 0) {
+                    for (const line of details) {
+                        md += `- ${String(line)}\n`;
+                    }
+                    md += `\n`;
+                }
             }
         }
 
@@ -695,6 +712,79 @@ export class IncrementalUpgradeManager {
             });
             throw error;
         }
+
+        return filePath;
+    }
+
+    /**
+     * One-line summary of the oversized-notes cleanup (repaired notes,
+     * renamed old backups, or both), for the completion dialog — undefined
+     * when neither operation did anything this run.
+     */
+    private summarizeRepairs(
+        result: IncrementalUpgradeResult
+    ): string | undefined {
+        let repaired = 0;
+        let renamed = 0;
+        let wikilinkFixed = 0;
+
+        for (const entry of result.results) {
+            const ops = entry.automaticResults?.results || [];
+
+            const repairMsg = ops.find(
+                (r) => r.operationId === "repair-oversized-notes"
+            )?.result?.message;
+            const repairMatch = repairMsg?.match(/^Repaired (\d+) note/);
+            if (repairMatch) repaired += Number(repairMatch[1]);
+
+            const renameMsg = ops.find(
+                (r) => r.operationId === "rename-oversized-backups"
+            )?.result?.message;
+            const renameMatch = renameMsg?.match(/^Renamed (\d+) backup/);
+            if (renameMatch) renamed += Number(renameMatch[1]);
+
+            // TODO(#85): this per-ID regex approach doesn't scale — #85
+            // tracks a generic, i18n-driven replacement that reads every
+            // operation's result instead of a hardcoded list of three.
+            const wikilinkMsg = ops.find(
+                (r) => r.operationId === "migrate-wikilink-structural-chars"
+            )?.result?.message;
+            const wikilinkMatch = wikilinkMsg?.match(
+                /^Renamed (\d+) note\(s\) and (\d+) attachment\(s\)/
+            );
+            if (wikilinkMatch) {
+                wikilinkFixed +=
+                    Number(wikilinkMatch[1]) + Number(wikilinkMatch[2]);
+            }
+        }
+
+        const parts: string[] = [];
+        if (repaired > 0) {
+            parts.push(
+                `repaired ${repaired} note${
+                    repaired === 1 ? "" : "s"
+                } that were slowing your vault down`
+            );
+        }
+        if (renamed > 0) {
+            parts.push(
+                `renamed ${renamed} old backup${
+                    renamed === 1 ? "" : "s"
+                } Obsidian was still indexing`
+            );
+        }
+        if (wikilinkFixed > 0) {
+            parts.push(
+                `fixed ${wikilinkFixed} note${
+                    wikilinkFixed === 1 ? "" : "s"
+                } and attachment${
+                    wikilinkFixed === 1 ? "" : "s"
+                } whose name broke a link`
+            );
+        }
+
+        if (parts.length === 0) return undefined;
+        return `Nexus ${parts.join(" and ")}.`;
     }
 
     /**
@@ -706,7 +796,11 @@ export class IncrementalUpgradeManager {
      * PUBLIC method - called from main.ts after checkAndPerformUpgrade() returns
      * This ensures styles.css is fully loaded by Obsidian
      */
-    async showUpgradeCompleteDialog(version: string): Promise<void> {
+    async showUpgradeCompleteDialog(
+        version: string,
+        reportPath?: string,
+        repairSummary?: string
+    ): Promise<void> {
         try {
             // Check if this is v1.3.0 or later - use new completion modal
             const isV130OrLater = this.compareVersions(version, "1.3.0") >= 0;
@@ -718,7 +812,9 @@ export class IncrementalUpgradeManager {
                 new UpgradeCompleteModal(
                     this.plugin.app,
                     this.plugin,
-                    version
+                    version,
+                    reportPath,
+                    repairSummary
                 ).open();
             } else {
                 // For older versions, just show a simple notice

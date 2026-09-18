@@ -29,24 +29,12 @@ import report. Everything runs locally in your vault.
   folders, and a detailed import report.
 - **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and an optional desktop [CLI](docs/user/cli.md).
 
-## What's new in 1.7.0
+## What's new in 1.7.1
 
-- **ChatGPT generated images and documents are imported again** when the export
-  includes them.
-- **ChatGPT Privacy Portal archives import as-is** — no need to extract the
-  account-level ZIP first.
-- **Rebuild existing notes** so older imports pick up current features. Manual
-  edits to a rebuilt note are lost.
-- **Filter the conversation list by status** — New / Updated / Unchanged.
-- **Large Claude inline content (pasted) is extracted into linked files** instead
-  of bloating the note.
-- **Reports and the completion dialog were rebuilt** around what actually happened
-  to your notes; several counters were wrong.
-- Plus fixes to filenames, deduplication and attachment counts.
-- **Claude imports work again** — Anthropic's new split export was read as a
-  ChatGPT one and imported nothing. *(patched in 1.6.9)*
-- **Callout colours restored on Obsidian 1.13+** — Obsidian changed the colour
-  format and Nexus callouts lost their colour and border. *(patched in 1.6.9)*
+- **Oversized-note repair is now mandatory, and actually works** — the 1.7.0 fix's own backup file was still being indexed, quietly reintroducing the performance impact it was meant to fix.
+- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike.
+- The upgrade dialog no longer hangs when dismissed without clicking a button.
+- Content with bare CR line endings (older Mac tooling, AppleScript) now stays inside its callout and code fence instead of leaking out.
 
 [Full release notes →](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
 
@@ -100,6 +88,7 @@ provide their source. See [LICENSE](LICENSE) for the full text.
   - [@chuckfs](https://github.com/chuckfs) — iOS support (PR #15)
   - [@baron](https://github.com/baron) — Large archive handling research (PR #27)
   - [@lstsavr](https://github.com/lstsavr) — Unicode filename preservation (PR #70)
+  - [@nelsonlove](https://github.com/nelsonlove) — Line-ending handling fix, so pasted content with bare CR line endings stays inside its callout and code fence (PR #80); also identified, diagnosed, and proposed a fix for notes named with wikilink-structural characters (PR #80, fixed differently in #83)
 - **Special Thanks**: To all users who report issues and suggest improvements
 
 ## Links

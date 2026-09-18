@@ -339,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade abgeschlossen – v{{version}}",
-            "fallback_content": "## ✨ Neu in v{{version}}\n\n### ✨ Neu\n- **ChatGPT** — Generierte Bilder und Dokumente werden wieder importiert, wenn der Export sie enthält\n- **ChatGPT** — Privacy-Portal-Archive werden unverändert importiert; das Konto-ZIP muss nicht mehr zuerst entpackt werden\n- **Vorhandene Notizen neu aufbauen**, damit ältere Importe aktuelle Funktionen erhalten — manuelle Änderungen an einer neu aufgebauten Notiz gehen verloren\n- **Gesprächsliste nach Status filtern** — Neu, Aktualisiert, Unverändert\n- **Große eingefügte Claude-Inhalte** werden in verknüpfte Dateien ausgelagert, statt die Notiz aufzublähen\n\n### 🔧 Verbessert\n- **Berichte und der Abschlussdialog** wurden daran ausgerichtet, was tatsächlich mit deinen Notizen geschah; mehrere Zähler waren falsch\n- Dateinamen, Deduplizierung und Anhang-Zählungen\n\n### 🐛 Behoben\n- **Claude-Importe funktionieren wieder** (1.6.9) — Anthropics neuer geteilter Export wurde als ChatGPT-Export gelesen und importierte nichts\n- **Callout-Farben unter Obsidian 1.13+ wiederhergestellt** (1.6.9)\n\n[Vollständige Release Notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ Neuigkeiten in v{{version}}\n\n### 🐛 Behoben\n- **Die Reparatur überdimensionierter Notizen funktioniert jetzt wirklich** — die Korrektur in 1.7.0 war optional, und die Sicherungsdatei wurde trotzdem weiterhin von Obsidian indiziert; die Reparatur ist jetzt verpflichtend, und alte Sicherungen werden ebenfalls umbenannt\n- **Dateinamen mit `#`, `^`, `[` oder `]` werden korrigiert, nicht nur vermieden** — diese Zeichen brechen Wikilinks, daher werden sie jetzt ersetzt statt entfernt, sowohl bei neuen Importen als auch bei bestehenden Notizen\n- **Der Upgrade-Dialog hängt sich nicht mehr auf**, wenn er ohne Klick auf eine Schaltfläche geschlossen wird\n- **Inhalte mit reinen CR-Zeilenumbrüchen** (ältere Mac-Tools, AppleScript) bleiben jetzt innerhalb ihres Callouts und Codeblocks\n\n[Vollständige Versionshinweise](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Verstanden!"
             }
@@ -367,7 +367,7 @@
             "intro": "{{count}} Konversation(en) enthalten eingefügten Inhalt in einer einzigen riesigen Zeile. Obsidian liest eine Zeile am Stück, was die Indizierung des gesamten Tresors verlangsamt.",
             "and_more": "… und {{count}} weitere",
             "what_happens": "Nexus kann diesen Inhalt in Dateien neben der Konversation auslagern und an seiner Stelle einen eingeklappten Link hinterlassen — genau wie beim Import.",
-            "backup_note": "Jede Notiz wird vorher daneben kopiert, es geht nichts verloren. Die Kopien können Sie später löschen.",
+            "backup_note": "**Empfohlen.** Jede Notiz wird vor jeder Änderung daneben kopiert, es geht nichts verloren — die Kopien können Sie löschen, sobald Sie zufrieden sind.",
             "buttons": {
                 "repair": "Reparieren",
                 "ignore": "Unverändert lassen"
@@ -555,7 +555,7 @@
         "title": "Nexus unterstützen",
         "message_emphasis": "Spenden sind wirklich wichtig.",
         "message": "Ich bin derzeit arbeitslos und habe kein Einkommen. Ich investiere viel Zeit in dieses Plugin und bezahle aus eigener Tasche Abonnements für die KI-Plattformen, die es unterstützt, um echte Exporte testen und alles akkurat halten zu können.",
-        "reality_check": "Letzten Monat haben nur drei Nutzer gespendet, insgesamt 20 € / 23 $.",
+        "gratitude_note": "Jede Version, die Sie genutzt haben, existiert, weil eine Handvoll Nutzer sich entschieden hat, das Projekt zu unterstützen.",
         "cta": "Wenn dieses Plugin nützlich für Sie ist, macht eine Spende wirklich einen Unterschied.",
         "button_donate": "Projekt unterstützen",
         "button_later": "Vielleicht später"

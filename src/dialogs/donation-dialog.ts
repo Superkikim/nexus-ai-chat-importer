@@ -53,11 +53,11 @@ export class DonationDialog extends Modal {
         const msgRow = box.createDiv({ cls: "nexus-support-message" });
         msgRow.createEl("p", { text: t("donation_dialog.message") });
 
-        // Reality check box (gold tint)
-        const realityCheck = box.createDiv({
-            cls: "nexus-support-reality-check",
+        // Gratitude note (gold tint)
+        const gratitudeNote = box.createDiv({
+            cls: "nexus-support-gratitude-note",
         });
-        realityCheck.setText(t("donation_dialog.reality_check"));
+        gratitudeNote.setText(t("donation_dialog.gratitude_note"));
 
         // CTA
         const ctaRow = box.createDiv({ cls: "nexus-support-message" });
@@ -71,8 +71,11 @@ export class DonationDialog extends Modal {
             cls: "nexus-donation-btn-primary mod-cta",
         });
         donateBtn.addEventListener("click", () => {
-            window.open(getLocalizedSupportUrl(), "_blank");
-            this.close();
+            try {
+                window.open(getLocalizedSupportUrl(), "_blank");
+            } finally {
+                this.close();
+            }
         });
 
         const laterBtn = actions.createEl("button", {

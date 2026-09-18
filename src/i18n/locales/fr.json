@@ -339,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ Mise à niveau terminée - v{{version}}",
-            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### ✨ Nouveau\n- **ChatGPT** — Les images et documents générés sont à nouveau importés quand l'export les contient\n- **ChatGPT** — Les archives Privacy Portal s'importent telles quelles ; pas besoin d'extraire d'abord le ZIP niveau compte\n- **Reconstruire les notes existantes** pour que les anciens imports profitent des nouveautés — les modifications manuelles d'une note reconstruite sont perdues\n- **Filtrer la liste des conversations par statut** — Nouvelles, Mises à jour, Inchangées\n- **Le contenu Claude collé volumineux** est extrait dans des fichiers liés au lieu d'alourdir la note\n\n### 🔧 Amélioré\n- **Les rapports et la boîte de dialogue de fin** ont été refaits autour de ce qui est réellement arrivé à vos notes ; plusieurs compteurs étaient faux\n- Noms de fichiers, déduplication et comptes de pièces jointes\n\n### 🐛 Corrigé\n- **Les imports Claude fonctionnent à nouveau** (1.6.9) — le nouvel export scindé d'Anthropic était lu comme un export ChatGPT et n'importait rien\n- **Couleurs des encadrés rétablies sur Obsidian 1.13+** (1.6.9)\n\n[Notes de version complètes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ Nouveautés de la v{{version}}\n\n### 🐛 Corrections\n- **La réparation des notes trop volumineuses fonctionne enfin** — le correctif de 1.7.0 était optionnel, et sa sauvegarde restait indexée par Obsidian de toute façon ; la réparation est maintenant obligatoire, et les anciennes sauvegardes sont aussi renommées\n- **Les noms de fichiers contenant `#`, `^`, `[` ou `]` sont corrigés, pas seulement évités** — ces caractères cassent les wikilinks, ils sont maintenant remplacés plutôt que supprimés, pour les nouveaux imports comme pour les notes existantes\n- **La boîte de dialogue de mise à jour ne se bloque plus** en cas de fermeture sans cliquer sur un bouton\n- **Le contenu avec des fins de ligne CR seules** (anciens outils Mac, AppleScript) reste maintenant à l'intérieur de son callout et de son bloc de code\n\n[Notes de version complètes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Compris !"
             }
@@ -367,7 +367,7 @@
             "intro": "{{count}} conversation(s) contiennent du contenu collé sur une seule ligne démesurée. Obsidian lit une ligne d'un bloc, ce qui ralentit l'indexation de tout votre coffre.",
             "and_more": "… et {{count}} de plus",
             "what_happens": "Nexus peut déplacer ce contenu dans des fichiers à côté de chaque conversation et laisser un lien replié à sa place — ce qu'il fait désormais à l'import.",
-            "backup_note": "Chaque note est copiée à côté d'elle-même avant modification, rien n'est perdu. Vous pourrez supprimer les copies une fois rassuré.",
+            "backup_note": "**Recommandé.** Chaque note est copiée à côté d'elle-même avant toute modification, rien n'est perdu — supprimez les copies une fois satisfait du résultat.",
             "buttons": {
                 "repair": "Réparer",
                 "ignore": "Ne rien faire"
@@ -555,7 +555,7 @@
         "title": "Soutenir Nexus",
         "message_emphasis": "Les dons font vraiment la différence.",
         "message": "Je suis actuellement sans emploi et sans revenus. Je consacre beaucoup de temps à ce plugin et je paye de ma poche les abonnements aux plateformes d'IA qu'il supporte, afin de tester les exports réels et maintenir une prise en charge précise.",
-        "reality_check": "Le mois dernier, seulement trois utilisateurs ont fait un don, pour un total de 20 € / 23 $.",
+        "gratitude_note": "Chaque version que vous avez utilisée existe parce qu'une poignée d'utilisateurs a choisi de soutenir le projet.",
         "cta": "Si ce plugin vous est utile, un don fait vraiment la différence.",
         "button_donate": "Soutenir le projet",
         "button_later": "Peut-être plus tard"

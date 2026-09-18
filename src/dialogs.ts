@@ -25,7 +25,8 @@ function displayModal(
     app: App,
     title: string,
     paragraphs: string[],
-    note?: string
+    note?: string,
+    noteStyle: "warning" | "info" = "warning"
 ): Modal {
     const modal = new Modal(app);
     modal.contentEl.addClass("nexus-ai-chat-importer-modal");
@@ -105,7 +106,12 @@ function displayModal(
         // Add spacing before note
         contentContainer.createDiv({ cls: "modal-major-break" });
 
-        const noteDiv = contentContainer.createDiv({ cls: "modal-note" });
+        const noteDiv = contentContainer.createDiv({
+            cls:
+                noteStyle === "info"
+                    ? "modal-note modal-note-info"
+                    : "modal-note",
+        });
 
         // Process note content with same formatting
         let noteContent = note
@@ -140,8 +146,11 @@ function addButtons(
             cls: "mod-cta", // Obsidian's primary button class
         });
         button.addEventListener("click", () => {
-            modal.close();
+            // Resolve before close(): close() triggers onClose(), which also
+            // resolves (with the dismiss default) unless the real answer is
+            // already settled.
             resolve(true);
+            modal.close();
         });
     } else {
         // "confirmation"
@@ -154,8 +163,8 @@ function addButtons(
             cls: "mod-muted", // Obsidian's secondary button class
         });
         noButton.addEventListener("click", () => {
-            modal.close();
             resolve(false);
+            modal.close();
         });
 
         // Yes button (primary)
@@ -164,8 +173,8 @@ function addButtons(
             cls: "mod-cta", // Obsidian's primary button class
         });
         yesButton.addEventListener("click", () => {
-            modal.close();
             resolve(true);
+            modal.close();
         });
     }
 }
@@ -177,11 +186,27 @@ export async function showDialog(
     title: string,
     paragraphs: string[],
     note?: string,
-    customLabels?: { button1?: string; button2?: string }
+    customLabels?: { button1?: string; button2?: string },
+    noteStyle: "warning" | "info" = "warning"
 ): Promise<boolean> {
     return new Promise((resolve) => {
-        const modal = displayModal(app, title, paragraphs, note);
-        addButtons(modal, type, resolve, customLabels);
+        let settled = false;
+        // A click on a button always resolves first, then calls modal.close(),
+        // which would otherwise re-run this and resolve a second time.
+        const resolveOnce = (value: boolean) => {
+            if (settled) return;
+            settled = true;
+            resolve(value);
+        };
+
+        const modal = displayModal(app, title, paragraphs, note, noteStyle);
+        // Dismissing via the × button, Escape, or a click outside the modal
+        // does not run either button's handler. Without this, the caller's
+        // `await showDialog(...)` would hang forever instead of treating the
+        // dismissal as "no" (or, for a single-button dialog, "acknowledged").
+        const defaultOnDismiss = type === "information";
+        modal.onClose = () => resolveOnce(defaultOnDismiss);
+        addButtons(modal, type, resolveOnce, customLabels);
         modal.open();
     });
 }

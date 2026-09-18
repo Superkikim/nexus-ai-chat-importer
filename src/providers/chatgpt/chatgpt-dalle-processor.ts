@@ -19,6 +19,7 @@
 // src/providers/chatgpt/chatgpt-dalle-processor.ts
 import { Chat, ChatMapping, ChatMessage, ContentPart } from "./chatgpt-types";
 import { StandardMessage, StandardAttachment } from "../../types/standard";
+import { splitLines } from "../../utils";
 
 /**
  * Centralized processor for ChatGPT DALL-E image generation handling
@@ -250,7 +251,7 @@ export class ChatGPTDalleProcessor {
 
         if (prompt) {
             // Format prompt in code block with nested callout
-            const formattedPrompt = prompt.split("\n").join("\n>> ");
+            const formattedPrompt = splitLines(prompt).join("\n>> ");
             extractedContent = `>>[!nexus_prompt] **Image prompt**
 >> \`\`\`
 >> ${formattedPrompt}
@@ -355,7 +356,7 @@ export class ChatGPTDalleProcessor {
         prompt: string
     ): StandardMessage {
         // Format prompt with nested callouts (provider-formatted)
-        const formattedPrompt = prompt.split("\n").join("\n>> ");
+        const formattedPrompt = splitLines(prompt).join("\n>> ");
 
         // Create a phantom attachment with prompt and warning
         const phantomAttachment: StandardAttachment = {

@@ -91,6 +91,9 @@ export default defineConfig([
             "depend/ban-dependencies": "off",
             // Mocks and fixtures use `any` for partial stand-ins of plugin types.
             "@typescript-eslint/no-explicit-any": "off",
+            // A fake vault's plain objects can't pass `instanceof TFile` —
+            // Obsidian's TFile isn't constructible outside a real vault.
+            "obsidianmd/no-tfile-tfolder-cast": "off",
         },
     },
 

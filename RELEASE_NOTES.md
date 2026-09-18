@@ -1,5 +1,16 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.7.1 — Forbidden characters, oversized notes and hanging upgrade dialog
+
+![Version](https://img.shields.io/badge/version-1.7.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🐛 Fixed
+
+- **Oversized-note repair now actually works.** 1.7.0's fix was optional, and its backup file was still indexed by Obsidian either way — the performance impact it was meant to fix persisted. The repair is now mandatory, and every backup (new or left over from 1.7.0) is renamed to `.bak` so it's excluded from indexing.
+- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided.** These characters break wikilinks, so they're now substituted rather than dropped. An automatic migration fixes files and links already affected. *(Nelson Love — [@nelsonlove](https://github.com/nelsonlove) — identified and diagnosed this one.)*
+- The upgrade dialog could hang indefinitely if dismissed via Escape, the × icon, or a click outside it.
+- **Content with bare CR line endings escaped its callout and code fence.** Splitting only on `\n` left a CR-separated run as one line, so only its first physical line got the `>`/`>>` prefix while the rest rendered outside the block. Affected pasted AppleScript and other older-Mac-tooling content, plus image-generation prompts. *(Nelson Love — [@nelsonlove](https://github.com/nelsonlove) — found and fixed this one, PR #80.)*
+
 ## Version 1.7.0 — ChatGPT images, selective import rebuilt, honest reports
 
 ![Version](https://img.shields.io/badge/version-1.7.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)

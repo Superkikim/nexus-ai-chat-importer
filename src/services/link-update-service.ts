@@ -27,6 +27,13 @@ export interface LinkUpdateStats {
     conversationLinksUpdated: number;
     filesModified: number;
     errors: number;
+    /**
+     * Paths of the files actually modified. Optional and only populated by
+     * callers that need to name the files afterward (e.g. an upgrade report
+     * listing which reports had a link fixed) — `filesModified` alone only
+     * gives a count.
+     */
+    modifiedFilePaths?: string[];
 }
 
 export interface LinkUpdateProgress {
@@ -151,6 +158,7 @@ export class LinkUpdateService {
             conversationLinksUpdated: 0,
             filesModified: 0,
             errors: 0,
+            modifiedFilePaths: [],
         };
 
         try {
@@ -191,6 +199,7 @@ export class LinkUpdateService {
                         stats.conversationLinksUpdated += result.linksUpdated;
                         if (result.fileModified) {
                             stats.filesModified++;
+                            stats.modifiedFilePaths?.push(file.path);
                         }
                     } catch (error) {
                         stats.errors++;
@@ -236,6 +245,7 @@ export class LinkUpdateService {
                         }
                         if (result.fileModified) {
                             stats.filesModified++;
+                            stats.modifiedFilePaths?.push(file.path);
                         }
                     } catch (error) {
                         stats.errors++;
@@ -444,6 +454,190 @@ export class LinkUpdateService {
     }
 
     /**
+     * Fix links for multiple old→new path mappings where each mapping is a
+     * single renamed *file*, not a folder — scanned across a caller-supplied
+     * file set rather than a fixed one, so the same method serves both
+     * "fix attachment embeds inside conversation notes" and "fix conversation
+     * links inside index reports / Claude artifacts".
+     *
+     * `updateAttachmentLinksBatch` and `updateConversationLinks` both match
+     * `oldPath` as a folder prefix (they require a `/...` remainder after
+     * it) — right for a folder rename, wrong here: an individually renamed
+     * file has nothing after it in the link. This matches the whole link
+     * target exactly instead, in every shape the plugin (or a hand edit)
+     * might have written it: a plain wikilink, one with a `|alias`, the
+     * `\|`-escaped alias form used inside report tables, and the Markdown
+     * link/embed forms.
+     *
+     * `countField` picks which counter in the returned stats absorbs the
+     * link count — `"attachment"` (default) for attachment embeds,
+     * `"conversation"` for conversation-note links — so a caller mixing both
+     * kinds of rename in one report can tell them apart.
+     */
+    async updateExactPathLinksBatch(
+        pathMappings: Array<{ oldPath: string; newPath: string }>,
+        files: TFile[],
+        progressCallback?: (progress: LinkUpdateProgress) => void,
+        pluginVersion?: string,
+        countField: "attachment" | "conversation" = "attachment"
+    ): Promise<LinkUpdateStats> {
+        const stats: LinkUpdateStats = {
+            conversationsScanned: 0,
+            reportsScanned: 0,
+            attachmentLinksUpdated: 0,
+            conversationLinksUpdated: 0,
+            filesModified: 0,
+            errors: 0,
+            modifiedFilePaths: [],
+        };
+
+        if (pathMappings.length === 0 || files.length === 0) {
+            return stats;
+        }
+
+        try {
+            progressCallback?.({
+                phase: "scanning",
+                current: 0,
+                total: files.length,
+                detail: `Checking links: ${pathMappings.length} renamed file(s) across ${files.length} file(s)`,
+            });
+
+            const mappingPatterns = pathMappings.map(({ oldPath, newPath }) => {
+                const escaped = this.escapeRegExp(oldPath);
+                return {
+                    patterns: [
+                        {
+                            // ![alt](oldPath)
+                            regex: new RegExp(
+                                `(!\\[[^\\]]*\\]\\()${escaped}(\\))`,
+                                "g"
+                            ),
+                            replacement: `$1${newPath}$2`,
+                        },
+                        {
+                            // [text](oldPath)
+                            regex: new RegExp(
+                                `(\\[[^\\]]*\\]\\()${escaped}(\\))`,
+                                "g"
+                            ),
+                            replacement: `$1${newPath}$2`,
+                        },
+                        {
+                            // ![[oldPath]], ![[oldPath|alias]] or ![[oldPath\|alias]]
+                            regex: new RegExp(
+                                `(!\\[\\[)${escaped}(\\\\?\\||\\]\\])`,
+                                "g"
+                            ),
+                            replacement: `$1${newPath}$2`,
+                        },
+                        {
+                            // [[oldPath]], [[oldPath|alias]] or [[oldPath\|alias]]
+                            // (the escaped-pipe form report tables use)
+                            regex: new RegExp(
+                                `(\\[\\[)${escaped}(\\\\?\\||\\]\\])`,
+                                "g"
+                            ),
+                            replacement: `$1${newPath}$2`,
+                        },
+                    ],
+                };
+            });
+
+            const batchSize = 10;
+            for (let i = 0; i < files.length; i += batchSize) {
+                const batch = files.slice(i, i + batchSize);
+
+                if (i % 50 === 0 || i + batchSize >= files.length) {
+                    progressCallback?.({
+                        phase: "updating-attachments",
+                        current: i,
+                        total: files.length,
+                        detail: `Checking links: ${i}/${files.length} files`,
+                    });
+                }
+
+                for (const file of batch) {
+                    try {
+                        const content = await this.plugin.app.vault.read(file);
+                        let updatedContent = content;
+                        let fileLinksUpdated = 0;
+
+                        for (const mapping of mappingPatterns) {
+                            for (const {
+                                regex,
+                                replacement,
+                            } of mapping.patterns) {
+                                regex.lastIndex = 0;
+                                const before = updatedContent;
+                                updatedContent = updatedContent.replace(
+                                    regex,
+                                    replacement
+                                );
+                                if (updatedContent !== before) {
+                                    regex.lastIndex = 0;
+                                    const matches = before.match(regex);
+                                    fileLinksUpdated += matches
+                                        ? matches.length
+                                        : 1;
+                                }
+                            }
+                        }
+
+                        if (countField === "conversation") {
+                            stats.conversationLinksUpdated += fileLinksUpdated;
+                        } else {
+                            stats.attachmentLinksUpdated += fileLinksUpdated;
+                        }
+                        if (content !== updatedContent) {
+                            if (pluginVersion) {
+                                updatedContent = this.updatePluginVersion(
+                                    updatedContent,
+                                    pluginVersion
+                                );
+                            }
+                            await this.plugin.app.vault.modify(
+                                file,
+                                updatedContent
+                            );
+                            stats.filesModified++;
+                            stats.modifiedFilePaths?.push(file.path);
+                        }
+                    } catch (error) {
+                        stats.errors++;
+                        this.plugin.logger.error(
+                            `Error updating links in ${file.path}:`,
+                            error
+                        );
+                    }
+                }
+
+                if (i + batchSize < files.length) {
+                    await new Promise((resolve) =>
+                        window.setTimeout(resolve, 10)
+                    );
+                }
+            }
+
+            const totalUpdated =
+                countField === "conversation"
+                    ? stats.conversationLinksUpdated
+                    : stats.attachmentLinksUpdated;
+            progressCallback?.({
+                phase: "complete",
+                current: files.length,
+                total: files.length,
+                detail: `Fixed ${totalUpdated} stale link(s) in ${stats.filesModified} file(s)`,
+            });
+
+            return stats;
+        } catch (error) {
+            this.plugin.logger.error("Error in exact-path link update:", error);
+            throw error;
+        }
+    }
+
+    /**
      * Estimate time for link updates based on file count
      */
     async estimateUpdateTime(
@@ -468,7 +662,7 @@ export class LinkUpdateService {
     /**
      * Get all conversation files from the vault
      */
-    private async getConversationFiles(): Promise<TFile[]> {
+    async getConversationFiles(): Promise<TFile[]> {
         const conversationFolder = this.plugin.settings.conversationFolder;
         const allFiles = this.plugin.app.vault
             .getMarkdownFiles()
@@ -497,7 +691,7 @@ export class LinkUpdateService {
     /**
      * Get all report files from the vault
      */
-    private async getReportFiles(): Promise<TFile[]> {
+    async getReportFiles(): Promise<TFile[]> {
         const reportFolder = this.plugin.settings.reportFolder;
         return this.plugin.app.vault
             .getMarkdownFiles()
@@ -507,7 +701,7 @@ export class LinkUpdateService {
     /**
      * Get all Claude artifact files from the vault
      */
-    private async getClaudeArtifactFiles(): Promise<TFile[]> {
+    async getClaudeArtifactFiles(): Promise<TFile[]> {
         const attachmentFolder = this.plugin.settings.attachmentFolder;
         const claudeArtifactsPath = `${attachmentFolder}/claude/artifacts`;
         return this.plugin.app.vault

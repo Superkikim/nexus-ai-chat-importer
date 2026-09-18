@@ -33,6 +33,7 @@ import {
 import { isExportableClaudeMessage } from "./claude-message-filter";
 import { generateSafeAlias, generateConversationFileName } from "../../utils";
 import type NexusAiChatImporterPlugin from "../../main";
+import { splitLines } from "../../utils";
 
 type ArtifactInput = {
     _format?: string;
@@ -1108,12 +1109,11 @@ export class ClaudeConverter {
             if (codeLanguage) {
                 contentBlock = [
                     `>> \`\`\`${codeLanguage}`,
-                    ...att.extracted_content.split("\n").map((l) => `>> ${l}`),
+                    ...splitLines(att.extracted_content).map((l) => `>> ${l}`),
                     ">> ```",
                 ].join("\n");
             } else {
-                contentBlock = att.extracted_content
-                    .split("\n")
+                contentBlock = splitLines(att.extracted_content)
                     .map((line) => (line === "" ? ">>" : `>> ${line}`))
                     .join("\n");
             }

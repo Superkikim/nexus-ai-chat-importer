@@ -38,11 +38,24 @@ export class MultiOperationProgressModal extends Modal {
     private operationsContainer!: HTMLElement;
     private overallProgressEl!: HTMLElement;
     private closeButtonEl?: HTMLElement;
+    private closeResolvers: Array<() => void> = [];
 
     constructor(app: App, title: string, operations: OperationStatus[]) {
         super(app);
         this.title = title;
         this.operations = [...operations]; // Copy array
+    }
+
+    /**
+     * Resolves once this modal actually closes (the user dismissing it via
+     * the OK/Close button, the × icon, or Escape — all gated on `canClose`).
+     * Callers await this instead of closing the modal themselves, so the
+     * summary stays on screen until the user has actually seen it.
+     */
+    waitForClose(): Promise<void> {
+        return new Promise((resolve) => {
+            this.closeResolvers.push(resolve);
+        });
     }
 
     onOpen() {
@@ -129,7 +142,7 @@ export class MultiOperationProgressModal extends Modal {
                 cls: "modal-button-container",
             });
             this.closeButtonEl = buttonContainer.createEl("button", {
-                text: t("upgrade.multi_operation_modal.buttons.complete"),
+                text: t("common.buttons.ok"),
                 cls: "mod-cta",
             });
             this.closeButtonEl.addEventListener("click", () => this.close());
@@ -348,5 +361,8 @@ export class MultiOperationProgressModal extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
+        const resolvers = this.closeResolvers;
+        this.closeResolvers = [];
+        resolvers.forEach((resolve) => resolve());
     }
 }

@@ -229,6 +229,13 @@ describe("sanitizeFileName", () => {
     it("should handle already clean filenames", () => {
         expect(sanitizeFileName("test_file_123.txt")).toBe("test_file_123.txt");
     });
+
+    it("substitutes wikilink-structural characters instead of dropping them", () => {
+        // Obsidian reads # ^ [ ] as wikilink structure — an attachment named
+        // with one can never be resolved by a [[path]] / ![[path]] embed.
+        expect(sanitizeFileName("Invoice #12.pdf")).toBe("Invoice_＃12.pdf");
+        expect(sanitizeFileName("Draft [WIP].docx")).toBe("Draft_(WIP).docx");
+    });
 });
 
 describe("getFileCategory", () => {

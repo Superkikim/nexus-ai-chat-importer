@@ -339,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### ✨ 新功能\n- **ChatGPT** — 只要导出中包含，生成的图片和文档会再次被导入\n- **ChatGPT** — Privacy Portal 存档可直接导入；无需先解压账户级 ZIP\n- **重建现有笔记**，让旧的导入也能用上当前功能 — 对重建笔记的手动修改会丢失\n- **按状态筛选对话列表** — 新增、已更新、无变化\n- **粘贴的大段 Claude 内容** 会被提取到链接文件中，而不会让笔记变得臃肿\n\n### 🔧 改进\n- **报告和完成对话框** 已围绕笔记的实际处理结果重做；此前多个计数有误\n- 文件名、去重和附件计数\n\n### 🐛 修复\n- **Claude 导入恢复正常**（1.6.9）— Anthropic 新的分卷导出曾被当作 ChatGPT 导出读取，导致什么都没导入\n- **在 Obsidian 1.13+ 上恢复标注颜色**（1.6.9）\n\n[完整发布说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 🐛 修复\n- **超大笔记修复功能现在真正生效** — 1.7.0 的修复是可选的，即使执行了修复，备份文件依然会被 Obsidian 继续索引；现在修复变为强制执行，旧的备份文件也会被重命名\n- **包含 `#`、`^`、`[` 或 `]` 的文件名现在会被修正，而不仅仅是避免** — 这些字符会破坏 wikilink，因此现在会被替换而不是删除，无论是新导入还是已有笔记都适用\n- **升级对话框在未点击按钮关闭时不再卡死**\n- **仅含 CR 换行符的内容**（较旧的 Mac 工具、AppleScript）现在会保留在其标注框和代码块内\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "知道了！"
             }
@@ -367,7 +367,7 @@
             "intro": "{{count}} 个会话把粘贴的内容放在了一行里。Obsidian 会整行读取，因此整个保险库的索引都被拖慢。",
             "and_more": "… 还有 {{count}} 个",
             "what_happens": "Nexus 可以把这些内容移到会话旁边的文件中，并在原处留下一个折叠链接——和现在导入时的做法一样。",
-            "backup_note": "修改前会在原处复制一份笔记，不会丢失任何内容。确认无误后可以删除这些副本。",
+            "backup_note": "**推荐执行。** 修改前会在原处复制一份笔记，不会丢失任何内容 — 对结果满意后可以删除这些副本。",
             "buttons": {
                 "repair": "修复",
                 "ignore": "保持不变"
@@ -555,7 +555,7 @@
         "title": "支持 Nexus",
         "message_emphasis": "捐款真的很重要。",
         "message": "我目前失业，没有收入。我花大量时间在这个插件上，并自掏腰包订阅它所支持的 AI 平台，以便测试真实的导出并保持一切准确。",
-        "reality_check": "上个月，只有三位用户捐款，总计 20 € / 23 $。",
+        "gratitude_note": "您用过的每一个版本，都是因为已经有一小部分用户选择支持这个项目才得以存在。",
         "cta": "如果这个插件对您有用，您的捐款将产生真正的影响。",
         "button_donate": "支持项目",
         "button_later": "也许以后"
