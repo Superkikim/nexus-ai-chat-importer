@@ -247,7 +247,7 @@
             "custom_id": {
                 "name": "自定义 ID 属性",
                 "desc": "为 Nexus AI Chat Importer 创建的每条对话笔记添加一个保存对话 ID 的属性。留空则不添加。\n如果你的仓库依赖 `uid` 之类的属性，这会很有用。",
-                "invalid_format": "“{{value}}”不是有效的属性名。请以字母或 _ 开头，之后只使用字母、数字、_ 或 -。",
+                "invalid_format": "“{{value}}”不是有效的属性名。请以拉丁字母（A–Z、a–z）或 _ 开头，之后只使用拉丁字母、数字、_ 或 -。",
                 "invalid_reserved": "不能使用“{{value}}”：Obsidian 或 Nexus AI Chat Importer 已在使用同名属性。"
             },
             "overwrite": {
@@ -290,7 +290,13 @@
                 "skipped": "保持不变：{{count}}",
                 "failed": "失败：{{count}}",
                 "failures": "Nexus AI Chat Importer 无法更新以下笔记中的属性。它们的属性保持不变：",
-                "more_failures": "……以及另外 {{count}} 条。完整列表见开发者控制台。"
+                "more_failures": "……以及另外 {{count}} 条。完整列表见开发者控制台。",
+                "reasons": {
+                    "no_frontmatter": "没有 frontmatter",
+                    "no_conversation_id": "frontmatter 中没有 conversation_id",
+                    "ambiguous_value": "该属性的值跨越多行，无法安全编辑",
+                    "other": "无法读取或写入"
+                }
             }
         },
         "attachments": {

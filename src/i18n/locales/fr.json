@@ -247,7 +247,7 @@
             "custom_id": {
                 "name": "Propriété d'identifiant personnalisée",
                 "desc": "Ajoute à chaque note de conversation créée par Nexus AI Chat Importer une propriété contenant l'identifiant de la conversation. Laissez vide pour ne rien ajouter.\nUtile si votre coffre s'appuie sur une propriété comme `uid`.",
-                "invalid_format": "« {{value}} » n'est pas un nom de propriété valide. Commencez par une lettre ou _, puis utilisez uniquement des lettres, des chiffres, _ ou -.",
+                "invalid_format": "« {{value}} » n'est pas un nom de propriété valide. Commencez par une lettre latine (A–Z, a–z) ou _, puis utilisez uniquement des lettres latines, des chiffres, _ ou -.",
                 "invalid_reserved": "« {{value}} » ne peut pas être utilisé : Obsidian ou Nexus AI Chat Importer utilise déjà une propriété portant ce nom."
             },
             "overwrite": {
@@ -290,7 +290,13 @@
                 "skipped": "Laissées inchangées : {{count}}",
                 "failed": "Échecs : {{count}}",
                 "failures": "Nexus AI Chat Importer n'a pas pu mettre à jour la propriété de ces notes. Leur propriété est inchangée :",
-                "more_failures": "…et {{count}} autres. La liste complète est dans la console développeur."
+                "more_failures": "…et {{count}} autres. La liste complète est dans la console développeur.",
+                "reasons": {
+                    "no_frontmatter": "pas de frontmatter",
+                    "no_conversation_id": "pas de conversation_id dans le frontmatter",
+                    "ambiguous_value": "la valeur de la propriété s'étend sur plusieurs lignes d'une façon qui ne permet pas de la modifier sans risque",
+                    "other": "lecture ou écriture impossible"
+                }
             }
         },
         "attachments": {

@@ -247,7 +247,7 @@
             "custom_id": {
                 "name": "Eigene ID-Eigenschaft",
                 "desc": "Fügt jeder Unterhaltungsnotiz, die Nexus AI Chat Importer erstellt, eine Eigenschaft mit der Unterhaltungs-ID hinzu. Leer lassen, um nichts hinzuzufügen.\nNützlich, wenn dein Vault auf eine Eigenschaft wie `uid` angewiesen ist.",
-                "invalid_format": "„{{value}}“ ist kein gültiger Eigenschaftsname. Beginne mit einem Buchstaben oder _, danach nur Buchstaben, Ziffern, _ oder -.",
+                "invalid_format": "„{{value}}“ ist kein gültiger Eigenschaftsname. Beginne mit einem lateinischen Buchstaben (A–Z, a–z) oder _, danach nur lateinische Buchstaben, Ziffern, _ oder -.",
                 "invalid_reserved": "„{{value}}“ kann nicht verwendet werden: Obsidian oder Nexus AI Chat Importer verwendet bereits eine Eigenschaft mit diesem Namen."
             },
             "overwrite": {
@@ -290,7 +290,13 @@
                 "skipped": "Unverändert gelassen: {{count}}",
                 "failed": "Fehlgeschlagen: {{count}}",
                 "failures": "Nexus AI Chat Importer konnte die Eigenschaft in diesen Notizen nicht aktualisieren. Ihre Eigenschaft ist unverändert:",
-                "more_failures": "…und {{count}} weitere. Die vollständige Liste steht in der Entwicklerkonsole."
+                "more_failures": "…und {{count}} weitere. Die vollständige Liste steht in der Entwicklerkonsole.",
+                "reasons": {
+                    "no_frontmatter": "kein Frontmatter",
+                    "no_conversation_id": "keine conversation_id im Frontmatter",
+                    "ambiguous_value": "der Wert der Eigenschaft erstreckt sich so über mehrere Zeilen, dass er nicht sicher bearbeitet werden kann",
+                    "other": "konnte nicht gelesen oder geschrieben werden"
+                }
             }
         },
         "attachments": {

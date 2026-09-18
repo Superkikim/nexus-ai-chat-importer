@@ -120,7 +120,11 @@ describe("CustomIdPropertyService", () => {
             failed: 1,
         });
         expect(summary.failures).toEqual([
-            { path: "broken.md", message: "Frontmatter not found" },
+            {
+                path: "broken.md",
+                reason: "no_frontmatter",
+                message: "Frontmatter not found",
+            },
         ]);
         expect(contents.get("new.md")).toContain(`uid: ${ID}\n`);
         expect(contents.get("foreign.md")).toContain(`uid: ${ID}\n`);

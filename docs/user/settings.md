@@ -37,8 +37,8 @@ own, such as `uid`. Empty by default, which adds nothing.
 `conversation_id` itself always stays: the plugin relies on it to recognise its
 notes. The custom property is a copy, never a replacement.
 
-The name must start with a letter or `_`, followed by letters, digits, `_` or
-`-`. These names are refused, in any capitalisation, and the field keeps the
+The name must start with a Latin letter (`A`–`Z`, `a`–`z`) or `_`, followed by
+Latin letters, digits, `_` or `-`. These names are refused, in any capitalisation, and the field keeps the
 name in effect:
 
 - Obsidian's own properties: `tags`, `aliases`, `cssclasses`, `tag`, `alias`,
@@ -63,7 +63,9 @@ changes nothing. When there is nothing to update (no conversation notes yet, or
 no note carrying the property you clear), the plugin saves the change without
 asking. Each run ends with a summary: notes added, renamed, overwritten,
 removed, left unchanged, and failed. A note that cannot be updated is listed
-and left as it was; the others are still processed.
+with the reason and left as it was; the others are still processed. A property
+whose value spans several lines in an unusual layout (for example a list with a
+comment between its items) is never cut short: that note is reported instead.
 
 Only the property is ever changed: no note is deleted, renamed or moved, and
 every other line of the frontmatter stays exactly as it was, comments, quotes

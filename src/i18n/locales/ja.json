@@ -247,7 +247,7 @@
             "custom_id": {
                 "name": "カスタム ID プロパティ",
                 "desc": "Nexus AI Chat Importer が作成するすべての会話ノートに、会話 ID を持つプロパティを追加します。空欄の場合は何も追加しません。\n保管庫が `uid` のようなプロパティに依存している場合に便利です。",
-                "invalid_format": "「{{value}}」は有効なプロパティ名ではありません。英字または _ で始め、その後は英字、数字、_、- のみを使用してください。",
+                "invalid_format": "「{{value}}」は有効なプロパティ名ではありません。ラテン文字（A–Z、a–z）または _ で始め、その後はラテン文字、数字、_、- のみを使用してください。",
                 "invalid_reserved": "「{{value}}」は使用できません。Obsidian または Nexus AI Chat Importer がすでにこの名前のプロパティを使用しています。"
             },
             "overwrite": {
@@ -290,7 +290,13 @@
                 "skipped": "変更なし：{{count}}",
                 "failed": "失敗：{{count}}",
                 "failures": "Nexus AI Chat Importer は次のノートのプロパティを更新できませんでした。これらのプロパティは変更されていません：",
-                "more_failures": "…ほか {{count}} 件。完全な一覧は開発者コンソールにあります。"
+                "more_failures": "…ほか {{count}} 件。完全な一覧は開発者コンソールにあります。",
+                "reasons": {
+                    "no_frontmatter": "frontmatter がありません",
+                    "no_conversation_id": "frontmatter に conversation_id がありません",
+                    "ambiguous_value": "プロパティの値が複数行にまたがっており、安全に編集できません",
+                    "other": "読み書きできませんでした"
+                }
             }
         },
         "attachments": {

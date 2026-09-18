@@ -19,6 +19,7 @@
 // src/services/custom-id-property-service.ts
 import type { App, TFile } from "obsidian";
 import {
+    NoteEditError,
     NoteEditOutcome,
     NoteEditResult,
     readFrontmatterValue,
@@ -41,7 +42,12 @@ export interface CustomIdPropertySummary {
     removed: number;
     skipped: number;
     failed: number;
-    failures: Array<{ path: string; message: string }>;
+    failures: Array<{
+        path: string;
+        /** Why, when the note itself is the problem; absent for I/O errors. */
+        reason?: NoteEditError["reason"];
+        message: string;
+    }>;
 }
 
 export type ProgressCallback = (
@@ -190,6 +196,10 @@ export class CustomIdPropertyService {
                 summary.failed++;
                 summary.failures.push({
                     path: file.path,
+                    reason:
+                        error instanceof NoteEditError
+                            ? error.reason
+                            : undefined,
                     message: getErrorMessage(error),
                 });
             }

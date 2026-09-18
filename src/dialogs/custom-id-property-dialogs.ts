@@ -306,7 +306,14 @@ export class CustomIdPropertyDialogs implements CustomIdPropertyUi {
 
         const listed = summary.failures
             .slice(0, LISTED_FAILURES)
-            .map((failure) => `${failure.path}: ${failure.message}`);
+            .map(
+                (failure) =>
+                    `${failure.path}: ${t(
+                        `settings.properties.summary.reasons.${
+                            failure.reason ?? "other"
+                        }`
+                    )}`
+            );
         const paragraphs = summaryLines(summary);
         if (listed.length > 0) {
             paragraphs.push(t("settings.properties.summary.failures"));

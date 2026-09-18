@@ -247,7 +247,7 @@
             "custom_id": {
                 "name": "사용자 지정 ID 속성",
                 "desc": "Nexus AI Chat Importer가 만드는 모든 대화 노트에 대화 ID를 담은 속성을 추가합니다. 비워 두면 아무것도 추가하지 않습니다.\n보관소가 `uid` 같은 속성에 의존한다면 유용합니다.",
-                "invalid_format": "\"{{value}}\"은(는) 유효한 속성 이름이 아닙니다. 문자 또는 _로 시작하고, 그 뒤에는 문자, 숫자, _ 또는 -만 사용하세요.",
+                "invalid_format": "\"{{value}}\"은(는) 유효한 속성 이름이 아닙니다. 라틴 문자(A–Z, a–z) 또는 _로 시작하고, 그 뒤에는 라틴 문자, 숫자, _ 또는 -만 사용하세요.",
                 "invalid_reserved": "\"{{value}}\"은(는) 사용할 수 없습니다. Obsidian 또는 Nexus AI Chat Importer가 이미 이 이름의 속성을 사용합니다."
             },
             "overwrite": {
@@ -290,7 +290,13 @@
                 "skipped": "변경 안 함: {{count}}",
                 "failed": "실패: {{count}}",
                 "failures": "Nexus AI Chat Importer가 다음 노트의 속성을 업데이트하지 못했습니다. 해당 속성은 변경되지 않았습니다:",
-                "more_failures": "…외 {{count}}개. 전체 목록은 개발자 콘솔에 있습니다."
+                "more_failures": "…외 {{count}}개. 전체 목록은 개발자 콘솔에 있습니다.",
+                "reasons": {
+                    "no_frontmatter": "frontmatter 없음",
+                    "no_conversation_id": "frontmatter에 conversation_id 없음",
+                    "ambiguous_value": "속성 값이 여러 줄에 걸쳐 있어 안전하게 편집할 수 없습니다",
+                    "other": "읽거나 쓸 수 없습니다"
+                }
             }
         },
         "attachments": {
