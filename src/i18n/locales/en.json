@@ -339,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade Complete - v{{version}}",
-            "fallback_content": "## ✨ What's New in v{{version}}\n\n### 🐛 Fixed\n- **Oversized-note repair now actually works** — 1.7.0's fix was optional, and its backup file was still indexed by Obsidian either way; the repair is now mandatory, and old backups are renamed too\n- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike\n- **The upgrade dialog no longer hangs** when dismissed without clicking a button\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ What's New in v{{version}}\n\n### 🐛 Fixed\n- **Oversized-note repair now actually works** — 1.7.0's fix was optional, and its backup file was still indexed by Obsidian either way; the repair is now mandatory, and old backups are renamed too\n- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike\n- **The upgrade dialog no longer hangs** when dismissed without clicking a button\n- **Content with bare CR line endings** (older Mac tooling, AppleScript) now stays inside its callout and code fence\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Got it!"
             }

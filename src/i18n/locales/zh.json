@@ -339,7 +339,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 🐛 修复\n- **超大笔记修复功能现在真正生效** — 1.7.0 的修复是可选的，即使执行了修复，备份文件依然会被 Obsidian 继续索引；现在修复变为强制执行，旧的备份文件也会被重命名\n- **包含 `#`、`^`、`[` 或 `]` 的文件名现在会被修正，而不仅仅是避免** — 这些字符会破坏 wikilink，因此现在会被替换而不是删除，无论是新导入还是已有笔记都适用\n- **升级对话框在未点击按钮关闭时不再卡死**\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 🐛 修复\n- **超大笔记修复功能现在真正生效** — 1.7.0 的修复是可选的，即使执行了修复，备份文件依然会被 Obsidian 继续索引；现在修复变为强制执行，旧的备份文件也会被重命名\n- **包含 `#`、`^`、`[` 或 `]` 的文件名现在会被修正，而不仅仅是避免** — 这些字符会破坏 wikilink，因此现在会被替换而不是删除，无论是新导入还是已有笔记都适用\n- **升级对话框在未点击按钮关闭时不再卡死**\n- **仅含 CR 换行符的内容**（较旧的 Mac 工具、AppleScript）现在会保留在其标注框和代码块内\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "知道了！"
             }

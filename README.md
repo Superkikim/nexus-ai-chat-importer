@@ -34,6 +34,7 @@ import report. Everything runs locally in your vault.
 - **Oversized-note repair is now mandatory, and actually works** — the 1.7.0 fix's own backup file was still being indexed, quietly reintroducing the performance impact it was meant to fix.
 - **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike.
 - The upgrade dialog no longer hangs when dismissed without clicking a button.
+- Content with bare CR line endings (older Mac tooling, AppleScript) now stays inside its callout and code fence instead of leaking out.
 
 [Full release notes →](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
 
@@ -87,7 +88,7 @@ provide their source. See [LICENSE](LICENSE) for the full text.
   - [@chuckfs](https://github.com/chuckfs) — iOS support (PR #15)
   - [@baron](https://github.com/baron) — Large archive handling research (PR #27)
   - [@lstsavr](https://github.com/lstsavr) — Unicode filename preservation (PR #70)
-  - [@nelsonlove](https://github.com/nelsonlove) — Identified, diagnosed, and proposed a fix for notes named with wikilink-structural characters (PR #80)
+  - [@nelsonlove](https://github.com/nelsonlove) — Line-ending handling fix, so pasted content with bare CR line endings stays inside its callout and code fence (PR #80); also identified, diagnosed, and proposed a fix for notes named with wikilink-structural characters (PR #80, fixed differently in #83)
 - **Special Thanks**: To all users who report issues and suggest improvements
 
 ## Links
