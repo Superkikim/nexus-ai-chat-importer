@@ -2566,3 +2566,31 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 .nexus-folder-migration-desc {
     margin-bottom: 20px;
 }
+
+/* Custom ID property setting (issue #86) */
+.nexus-setting-warning {
+    margin-top: -6px;
+    margin-bottom: 12px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: var(--text-warning, var(--text-muted));
+    font-weight: 500;
+}
+
+.nexus-ai-chat-importer-modal .modal-button-container.nexus-custom-id-choices {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.nexus-ai-chat-importer-modal .nexus-custom-id-footnote {
+    margin-top: 1em;
+    color: var(--text-muted);
+    font-size: 0.9em;
+}
+
+.nexus-ai-chat-importer-modal .nexus-custom-id-failures {
+    max-height: 12em;
+    overflow-y: auto;
+    font-size: 0.85em;
+    word-break: break-all;
+}
