@@ -242,6 +242,57 @@
             },
             "preview_label": "Vorschau: "
         },
+        "properties": {
+            "section_title": "🏷️ Eigenschaften",
+            "custom_id": {
+                "name": "Eigene ID-Eigenschaft",
+                "desc": "Fügt jeder Unterhaltungsnotiz, die Nexus AI Chat Importer erstellt, eine Eigenschaft mit der Unterhaltungs-ID hinzu. Leer lassen, um nichts hinzuzufügen.\nNützlich, wenn dein Vault auf eine Eigenschaft wie `uid` angewiesen ist.",
+                "invalid_format": "„{{value}}“ ist kein gültiger Eigenschaftsname. Beginne mit einem Buchstaben oder _, danach nur Buchstaben, Ziffern, _ oder -.",
+                "invalid_reserved": "„{{value}}“ kann nicht verwendet werden: Obsidian oder Nexus AI Chat Importer verwendet bereits eine Eigenschaft mit diesem Namen."
+            },
+            "overwrite": {
+                "name": "Vorhandene Werte überschreiben",
+                "desc": "Aus: Hat eine Notiz diese Eigenschaft bereits, lässt Nexus AI Chat Importer diese Eigenschaft unverändert.\nEin: Nexus AI Chat Importer ersetzt den Wert dieser Eigenschaft durch die Unterhaltungs-ID."
+            },
+            "enable": {
+                "title": "Die Eigenschaft „{{name}}“ zu vorhandenen Notizen hinzufügen?",
+                "body": "Nexus AI Chat Importer fügt die Eigenschaft „{{name}}“ zu {{count}} Notizen hinzu.",
+                "existing_keep": "{{existing}} davon haben bereits eine Eigenschaft „{{name}}“: Nexus AI Chat Importer lässt diese Eigenschaft unverändert.",
+                "existing_overwrite": "{{existing}} davon haben bereits eine Eigenschaft „{{name}}“: Nexus AI Chat Importer ersetzt den Wert dieser Eigenschaft durch die Unterhaltungs-ID.",
+                "confirm": "Eigenschaft hinzufügen"
+            },
+            "rename": {
+                "title": "Die Eigenschaft „{{oldName}}“ in vorhandenen Notizen in „{{newName}}“ umbenennen?",
+                "body": "Nur der Name der Eigenschaft ändert sich. Die Notizen bleiben unberührt.",
+                "confirm": "Eigenschaft umbenennen"
+            },
+            "clear": {
+                "title": "Die Eigenschaft „{{name}}“ aus vorhandenen Notizen entfernen?",
+                "body_stop": "Nexus AI Chat Importer fügt die Eigenschaft „{{name}}“ nicht mehr hinzu.",
+                "body_scope": "Nur die Eigenschaft ist betroffen: Keine Notiz wird gelöscht.",
+                "remove_plugin": "Entfernen, wo der Wert eine ID von Nexus AI Chat Importer ist",
+                "recommended": "(empfohlen)",
+                "remove_all": "Aus allen Notizen entfernen, unabhängig vom Wert",
+                "keep": "In vorhandenen Notizen behalten",
+                "note": "Das Behalten ist nicht dauerhaft: Eine neu aufgebaute Notiz wird ohne die Eigenschaft erzeugt."
+            },
+            "progress": {
+                "add": "Eigenschaft „{{name}}“ wird hinzugefügt",
+                "rename": "Eigenschaft „{{oldName}}“ wird in „{{newName}}“ umbenannt",
+                "remove": "Eigenschaft „{{name}}“ wird entfernt"
+            },
+            "summary": {
+                "title": "Aktualisierung der Eigenschaft abgeschlossen",
+                "added": "Hinzugefügt: {{count}}",
+                "overwritten": "Überschrieben: {{count}}",
+                "renamed": "Umbenannt: {{count}}",
+                "removed": "Entfernt: {{count}}",
+                "skipped": "Unverändert gelassen: {{count}}",
+                "failed": "Fehlgeschlagen: {{count}}",
+                "failures": "Nexus AI Chat Importer konnte die Eigenschaft in diesen Notizen nicht aktualisieren. Ihre Eigenschaft ist unverändert:",
+                "more_failures": "…und {{count}} weitere. Die vollständige Liste steht in der Entwicklerkonsole."
+            }
+        },
         "attachments": {
             "section_title": "Anhangseinstellungen",
             "import_attachments": {

@@ -242,6 +242,57 @@
             },
             "preview_label": "プレビュー："
         },
+        "properties": {
+            "section_title": "🏷️ プロパティ",
+            "custom_id": {
+                "name": "カスタム ID プロパティ",
+                "desc": "Nexus AI Chat Importer が作成するすべての会話ノートに、会話 ID を持つプロパティを追加します。空欄の場合は何も追加しません。\n保管庫が `uid` のようなプロパティに依存している場合に便利です。",
+                "invalid_format": "「{{value}}」は有効なプロパティ名ではありません。英字または _ で始め、その後は英字、数字、_、- のみを使用してください。",
+                "invalid_reserved": "「{{value}}」は使用できません。Obsidian または Nexus AI Chat Importer がすでにこの名前のプロパティを使用しています。"
+            },
+            "overwrite": {
+                "name": "既存の値を上書き",
+                "desc": "オフ：ノートにすでにこのプロパティがある場合、Nexus AI Chat Importer はそのプロパティをそのままにします。\nオン：Nexus AI Chat Importer はそのプロパティの値を会話 ID に置き換えます。"
+            },
+            "enable": {
+                "title": "既存のノートに「{{name}}」プロパティを追加しますか？",
+                "body": "Nexus AI Chat Importer は {{count}} 件のノートに「{{name}}」プロパティを追加します。",
+                "existing_keep": "このうち {{existing}} 件にはすでに「{{name}}」プロパティがあります。Nexus AI Chat Importer はそのプロパティを変更しません。",
+                "existing_overwrite": "このうち {{existing}} 件にはすでに「{{name}}」プロパティがあります。Nexus AI Chat Importer はそのプロパティの値を会話 ID に置き換えます。",
+                "confirm": "プロパティを追加"
+            },
+            "rename": {
+                "title": "既存のノートで「{{oldName}}」プロパティの名前を「{{newName}}」に変更しますか？",
+                "body": "変わるのはプロパティ名だけです。ノートには手を加えません。",
+                "confirm": "プロパティ名を変更"
+            },
+            "clear": {
+                "title": "既存のノートから「{{name}}」プロパティを削除しますか？",
+                "body_stop": "Nexus AI Chat Importer は「{{name}}」プロパティの追加を停止します。",
+                "body_scope": "対象はプロパティのみです。ノートは削除されません。",
+                "remove_plugin": "値が Nexus AI Chat Importer の ID である場合に削除",
+                "recommended": "（推奨）",
+                "remove_all": "値にかかわらず、すべてのノートから削除",
+                "keep": "既存のノートに残す",
+                "note": "残しても永続的ではありません。再構築されたノートはこのプロパティなしで再生成されます。"
+            },
+            "progress": {
+                "add": "「{{name}}」プロパティを追加しています",
+                "rename": "「{{oldName}}」プロパティの名前を「{{newName}}」に変更しています",
+                "remove": "「{{name}}」プロパティを削除しています"
+            },
+            "summary": {
+                "title": "プロパティの更新が完了しました",
+                "added": "追加：{{count}}",
+                "overwritten": "上書き：{{count}}",
+                "renamed": "名前変更：{{count}}",
+                "removed": "削除：{{count}}",
+                "skipped": "変更なし：{{count}}",
+                "failed": "失敗：{{count}}",
+                "failures": "Nexus AI Chat Importer は次のノートのプロパティを更新できませんでした。これらのプロパティは変更されていません：",
+                "more_failures": "…ほか {{count}} 件。完全な一覧は開発者コンソールにあります。"
+            }
+        },
         "attachments": {
             "section_title": "添付ファイルの設定",
             "import_attachments": {

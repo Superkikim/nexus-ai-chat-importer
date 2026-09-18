@@ -242,6 +242,57 @@
             },
             "preview_label": "미리 보기: "
         },
+        "properties": {
+            "section_title": "🏷️ 속성",
+            "custom_id": {
+                "name": "사용자 지정 ID 속성",
+                "desc": "Nexus AI Chat Importer가 만드는 모든 대화 노트에 대화 ID를 담은 속성을 추가합니다. 비워 두면 아무것도 추가하지 않습니다.\n보관소가 `uid` 같은 속성에 의존한다면 유용합니다.",
+                "invalid_format": "\"{{value}}\"은(는) 유효한 속성 이름이 아닙니다. 문자 또는 _로 시작하고, 그 뒤에는 문자, 숫자, _ 또는 -만 사용하세요.",
+                "invalid_reserved": "\"{{value}}\"은(는) 사용할 수 없습니다. Obsidian 또는 Nexus AI Chat Importer가 이미 이 이름의 속성을 사용합니다."
+            },
+            "overwrite": {
+                "name": "기존 값 덮어쓰기",
+                "desc": "끔: 노트에 이미 이 속성이 있으면 Nexus AI Chat Importer는 해당 속성을 그대로 둡니다.\n켬: Nexus AI Chat Importer는 해당 속성의 값을 대화 ID로 바꿉니다."
+            },
+            "enable": {
+                "title": "기존 노트에 \"{{name}}\" 속성을 추가할까요?",
+                "body": "Nexus AI Chat Importer가 노트 {{count}}개에 \"{{name}}\" 속성을 추가합니다.",
+                "existing_keep": "이 중 {{existing}}개에는 이미 \"{{name}}\" 속성이 있습니다. Nexus AI Chat Importer는 해당 속성을 변경하지 않습니다.",
+                "existing_overwrite": "이 중 {{existing}}개에는 이미 \"{{name}}\" 속성이 있습니다. Nexus AI Chat Importer는 해당 속성의 값을 대화 ID로 바꿉니다.",
+                "confirm": "속성 추가"
+            },
+            "rename": {
+                "title": "기존 노트에서 \"{{oldName}}\" 속성의 이름을 \"{{newName}}\"(으)로 바꿀까요?",
+                "body": "속성 이름만 바뀝니다. 노트는 건드리지 않습니다.",
+                "confirm": "속성 이름 바꾸기"
+            },
+            "clear": {
+                "title": "기존 노트에서 \"{{name}}\" 속성을 제거할까요?",
+                "body_stop": "Nexus AI Chat Importer는 더 이상 \"{{name}}\" 속성을 추가하지 않습니다.",
+                "body_scope": "속성만 영향을 받습니다. 어떤 노트도 삭제되지 않습니다.",
+                "remove_plugin": "값이 Nexus AI Chat Importer의 ID인 경우에만 제거",
+                "recommended": "(권장)",
+                "remove_all": "값과 관계없이 모든 노트에서 제거",
+                "keep": "기존 노트에 유지",
+                "note": "유지는 영구적이지 않습니다. 다시 빌드된 노트는 이 속성 없이 다시 생성됩니다."
+            },
+            "progress": {
+                "add": "\"{{name}}\" 속성을 추가하는 중",
+                "rename": "\"{{oldName}}\" 속성의 이름을 \"{{newName}}\"(으)로 바꾸는 중",
+                "remove": "\"{{name}}\" 속성을 제거하는 중"
+            },
+            "summary": {
+                "title": "속성 업데이트 완료",
+                "added": "추가됨: {{count}}",
+                "overwritten": "덮어씀: {{count}}",
+                "renamed": "이름 바뀜: {{count}}",
+                "removed": "제거됨: {{count}}",
+                "skipped": "변경 안 함: {{count}}",
+                "failed": "실패: {{count}}",
+                "failures": "Nexus AI Chat Importer가 다음 노트의 속성을 업데이트하지 못했습니다. 해당 속성은 변경되지 않았습니다:",
+                "more_failures": "…외 {{count}}개. 전체 목록은 개발자 콘솔에 있습니다."
+            }
+        },
         "attachments": {
             "section_title": "첨부 파일 설정",
             "import_attachments": {

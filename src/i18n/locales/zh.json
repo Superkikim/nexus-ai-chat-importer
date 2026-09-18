@@ -242,6 +242,57 @@
             },
             "preview_label": "预览："
         },
+        "properties": {
+            "section_title": "🏷️ 属性",
+            "custom_id": {
+                "name": "自定义 ID 属性",
+                "desc": "为 Nexus AI Chat Importer 创建的每条对话笔记添加一个保存对话 ID 的属性。留空则不添加。\n如果你的仓库依赖 `uid` 之类的属性，这会很有用。",
+                "invalid_format": "“{{value}}”不是有效的属性名。请以字母或 _ 开头，之后只使用字母、数字、_ 或 -。",
+                "invalid_reserved": "不能使用“{{value}}”：Obsidian 或 Nexus AI Chat Importer 已在使用同名属性。"
+            },
+            "overwrite": {
+                "name": "覆盖已有值",
+                "desc": "关闭：如果笔记已有此属性，Nexus AI Chat Importer 保持该属性不变。\n开启：Nexus AI Chat Importer 将该属性的值替换为对话 ID。"
+            },
+            "enable": {
+                "title": "要为现有笔记添加“{{name}}”属性吗？",
+                "body": "Nexus AI Chat Importer 将为 {{count}} 条笔记添加“{{name}}”属性。",
+                "existing_keep": "其中 {{existing}} 条已有“{{name}}”属性：Nexus AI Chat Importer 将保持该属性不变。",
+                "existing_overwrite": "其中 {{existing}} 条已有“{{name}}”属性：Nexus AI Chat Importer 将把该属性的值替换为对话 ID。",
+                "confirm": "添加属性"
+            },
+            "rename": {
+                "title": "要在现有笔记中将“{{oldName}}”属性重命名为“{{newName}}”吗？",
+                "body": "只更改属性名。笔记本身不受影响。",
+                "confirm": "重命名属性"
+            },
+            "clear": {
+                "title": "要从现有笔记中移除“{{name}}”属性吗？",
+                "body_stop": "Nexus AI Chat Importer 将不再添加“{{name}}”属性。",
+                "body_scope": "只影响该属性：不会删除任何笔记。",
+                "remove_plugin": "仅在值为 Nexus AI Chat Importer 生成的 ID 时移除",
+                "recommended": "（推荐）",
+                "remove_all": "从所有笔记中移除，无论值为何",
+                "keep": "在现有笔记中保留",
+                "note": "保留并非永久：重建的笔记会重新生成，不再包含该属性。"
+            },
+            "progress": {
+                "add": "正在添加“{{name}}”属性",
+                "rename": "正在将“{{oldName}}”属性重命名为“{{newName}}”",
+                "remove": "正在移除“{{name}}”属性"
+            },
+            "summary": {
+                "title": "属性更新完成",
+                "added": "已添加：{{count}}",
+                "overwritten": "已覆盖：{{count}}",
+                "renamed": "已重命名：{{count}}",
+                "removed": "已移除：{{count}}",
+                "skipped": "保持不变：{{count}}",
+                "failed": "失败：{{count}}",
+                "failures": "Nexus AI Chat Importer 无法更新以下笔记中的属性。它们的属性保持不变：",
+                "more_failures": "……以及另外 {{count}} 条。完整列表见开发者控制台。"
+            }
+        },
         "attachments": {
             "section_title": "附件设置",
             "import_attachments": {

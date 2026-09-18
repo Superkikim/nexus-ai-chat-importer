@@ -242,6 +242,57 @@
             },
             "preview_label": "Aperçu : "
         },
+        "properties": {
+            "section_title": "🏷️ Propriétés",
+            "custom_id": {
+                "name": "Propriété d'identifiant personnalisée",
+                "desc": "Ajoute à chaque note de conversation créée par Nexus AI Chat Importer une propriété contenant l'identifiant de la conversation. Laissez vide pour ne rien ajouter.\nUtile si votre coffre s'appuie sur une propriété comme `uid`.",
+                "invalid_format": "« {{value}} » n'est pas un nom de propriété valide. Commencez par une lettre ou _, puis utilisez uniquement des lettres, des chiffres, _ ou -.",
+                "invalid_reserved": "« {{value}} » ne peut pas être utilisé : Obsidian ou Nexus AI Chat Importer utilise déjà une propriété portant ce nom."
+            },
+            "overwrite": {
+                "name": "Remplacer les valeurs existantes",
+                "desc": "Désactivé : si une note possède déjà cette propriété, Nexus AI Chat Importer laisse cette propriété telle quelle.\nActivé : Nexus AI Chat Importer remplace la valeur de cette propriété par l'identifiant de la conversation."
+            },
+            "enable": {
+                "title": "Ajouter la propriété « {{name}} » aux notes existantes ?",
+                "body": "Nexus AI Chat Importer va ajouter la propriété « {{name}} » à {{count}} notes.",
+                "existing_keep": "{{existing}} d'entre elles ont déjà une propriété « {{name}} » : Nexus AI Chat Importer laissera cette propriété inchangée.",
+                "existing_overwrite": "{{existing}} d'entre elles ont déjà une propriété « {{name}} » : Nexus AI Chat Importer remplacera la valeur de cette propriété par l'identifiant de la conversation.",
+                "confirm": "Ajouter la propriété"
+            },
+            "rename": {
+                "title": "Renommer la propriété « {{oldName}} » en « {{newName}} » dans les notes existantes ?",
+                "body": "Seul le nom de la propriété change. Les notes ne sont pas touchées.",
+                "confirm": "Renommer la propriété"
+            },
+            "clear": {
+                "title": "Retirer la propriété « {{name}} » des notes existantes ?",
+                "body_stop": "Nexus AI Chat Importer n'ajoutera plus la propriété « {{name}} ».",
+                "body_scope": "Seule la propriété est concernée : aucune note n'est supprimée.",
+                "remove_plugin": "Retirer là où la valeur est un identifiant de Nexus AI Chat Importer",
+                "recommended": "(recommandé)",
+                "remove_all": "Retirer de toutes les notes, quelle que soit la valeur",
+                "keep": "Conserver dans les notes existantes",
+                "note": "Conserver la propriété n'est pas définitif : une note reconstruite est régénérée sans elle."
+            },
+            "progress": {
+                "add": "Ajout de la propriété « {{name}} »",
+                "rename": "Renommage de la propriété « {{oldName}} » en « {{newName}} »",
+                "remove": "Retrait de la propriété « {{name}} »"
+            },
+            "summary": {
+                "title": "Mise à jour de la propriété terminée",
+                "added": "Ajoutées : {{count}}",
+                "overwritten": "Remplacées : {{count}}",
+                "renamed": "Renommées : {{count}}",
+                "removed": "Retirées : {{count}}",
+                "skipped": "Laissées inchangées : {{count}}",
+                "failed": "Échecs : {{count}}",
+                "failures": "Nexus AI Chat Importer n'a pas pu mettre à jour la propriété de ces notes. Leur propriété est inchangée :",
+                "more_failures": "…et {{count}} autres. La liste complète est dans la console développeur."
+            }
+        },
         "attachments": {
             "section_title": "Paramètres des pièces jointes",
             "import_attachments": {

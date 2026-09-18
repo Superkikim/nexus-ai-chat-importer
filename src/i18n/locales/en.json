@@ -242,6 +242,57 @@
             },
             "preview_label": "Preview: "
         },
+        "properties": {
+            "section_title": "🏷️ Properties",
+            "custom_id": {
+                "name": "Custom ID property",
+                "desc": "Adds a property to every conversation note that Nexus AI Chat Importer creates, holding the conversation ID. Leave empty to add nothing.\nUseful if your vault relies on a property such as `uid`.",
+                "invalid_format": "\"{{value}}\" is not a valid property name. Start with a letter or _, then use only letters, digits, _ or -.",
+                "invalid_reserved": "\"{{value}}\" cannot be used: Obsidian or Nexus AI Chat Importer already uses a property with this name."
+            },
+            "overwrite": {
+                "name": "Overwrite existing values",
+                "desc": "Off: if a note already has this property, Nexus AI Chat Importer leaves that property as is.\nOn: Nexus AI Chat Importer replaces the value of that property with the conversation ID."
+            },
+            "enable": {
+                "title": "Add the \"{{name}}\" property to existing notes?",
+                "body": "Nexus AI Chat Importer will add the \"{{name}}\" property to {{count}} notes.",
+                "existing_keep": "{{existing}} of these already have a \"{{name}}\" property: Nexus AI Chat Importer will leave that property unchanged.",
+                "existing_overwrite": "{{existing}} of these already have a \"{{name}}\" property: Nexus AI Chat Importer will replace the value of that property with the conversation ID.",
+                "confirm": "Add property"
+            },
+            "rename": {
+                "title": "Rename the \"{{oldName}}\" property to \"{{newName}}\" on existing notes?",
+                "body": "Only the property name changes. Notes are not touched.",
+                "confirm": "Rename property"
+            },
+            "clear": {
+                "title": "Remove the \"{{name}}\" property from existing notes?",
+                "body_stop": "Nexus AI Chat Importer will stop adding the \"{{name}}\" property.",
+                "body_scope": "Only the property is affected: no note is deleted.",
+                "remove_plugin": "Remove where the value is an ID from Nexus AI Chat Importer",
+                "recommended": "(recommended)",
+                "remove_all": "Remove from all notes, whatever the value",
+                "keep": "Keep on existing notes",
+                "note": "Keeping the property is not permanent: a rebuilt note is regenerated without it."
+            },
+            "progress": {
+                "add": "Adding the \"{{name}}\" property",
+                "rename": "Renaming the \"{{oldName}}\" property to \"{{newName}}\"",
+                "remove": "Removing the \"{{name}}\" property"
+            },
+            "summary": {
+                "title": "Property update finished",
+                "added": "Added: {{count}}",
+                "overwritten": "Overwritten: {{count}}",
+                "renamed": "Renamed: {{count}}",
+                "removed": "Removed: {{count}}",
+                "skipped": "Left unchanged: {{count}}",
+                "failed": "Failed: {{count}}",
+                "failures": "Nexus AI Chat Importer could not update the property on these notes. Their property is unchanged:",
+                "more_failures": "…and {{count}} more. The full list is in the developer console."
+            }
+        },
         "attachments": {
             "section_title": "Attachment Settings",
             "import_attachments": {
