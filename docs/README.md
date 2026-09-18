@@ -38,7 +38,8 @@ workflow](development/release-workflow.md).
 How the plugin is built: the [import pipeline](architecture/import-pipeline.md),
 the [archive pipeline](architecture/archive-pipeline.md), [attachment
 handling](architecture/attachment-handling.md), [link
-updates](architecture/link-updates.md), and the observed export formats for
+updates](architecture/link-updates.md), the [custom ID
+property](architecture/custom-id-property.md), and the observed export formats for
 [ChatGPT](architecture/providers/chatgpt-export-format.md) and
 [Claude](architecture/providers/claude-export-format.md).
 

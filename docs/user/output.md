@@ -57,6 +57,11 @@ Added only when the export provides them:
 - `mode:` — the provider's conversation mode, when it has one.
 - `models:` — a list of the model(s) used in the conversation.
 
+Added when you set one in [Settings → Properties](settings.md#custom-id-property):
+
+- a property of your choice (for example `uid:`) holding the same value as
+  `conversation_id`, written right after it.
+
 Timestamps in frontmatter are **always ISO 8601 UTC**.
 
 ### Body
