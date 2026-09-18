@@ -280,11 +280,52 @@ export interface NoteEditResult {
 /** Why a note could not be edited. */
 export class NoteEditError extends Error {
     constructor(
-        readonly reason: "no_frontmatter" | "no_conversation_id",
+        readonly reason:
+            | "no_frontmatter"
+            | "no_conversation_id"
+            | "ambiguous_value",
         message: string
     ) {
         super(message);
         this.name = "NoteEditError";
+    }
+}
+
+/** A top-level `key:` line, quoted key or not. */
+const TOP_LEVEL_KEY =
+    /^(?:"[^"]*"|'[^']*'|[^\s#'"\-[\]{}][^:]*?)[ \t]*:(?:[ \t]|$)/;
+
+/**
+ * Refuse to replace or delete a value whose extent is not certain. YAML lets
+ * a flow collection or a quoted string continue on unindented lines, and a
+ * comment sit between the items of a column-0 list; cutting such a value
+ * short would leave the rest behind and break the whole frontmatter.
+ */
+function requireClearExtent(fm: Frontmatter, block: PropertyBlock): void {
+    const ambiguous = () =>
+        new NoteEditError(
+            "ambiguous_value",
+            "The property's value spans lines in a way that cannot be edited safely"
+        );
+
+    const raw = valueText(stripEol(fm.lines[block.start]));
+    if (block.end - block.start === 1) {
+        const bare = raw.replace(/[ \t]+#.*$/, "");
+        if (
+            (raw.startsWith("[") && !bare.endsWith("]")) ||
+            (raw.startsWith("{") && !bare.endsWith("}")) ||
+            (raw.startsWith('"') && !/^"(?:[^"\\]|\\.)*"/.test(raw)) ||
+            (raw.startsWith("'") && !/^'(?:[^']|'')*'/.test(raw))
+        ) {
+            throw ambiguous();
+        }
+    }
+
+    for (let i = block.end; i < fm.close; i++) {
+        const text = stripEol(fm.lines[i]);
+        if (text.trim() === "" || text.startsWith("#")) continue;
+        if (!TOP_LEVEL_KEY.test(text)) throw ambiguous();
+        return;
     }
 }
 
@@ -335,6 +376,7 @@ export function setCustomIdProperty(
         return { content, outcome: "skipped" };
     }
 
+    requireClearExtent(fm, existing);
     const last = fm.lines[existing.end - 1];
     const eol = last.slice(stripEol(last).length) || fm.eol;
     fm.lines.splice(existing.start, existing.end - existing.start, line(eol));
@@ -361,6 +403,7 @@ export function removeCustomIdProperty(
             return { content, outcome: "skipped" };
         }
     }
+    requireClearExtent(fm, existing);
     fm.lines.splice(existing.start, existing.end - existing.start);
     return { content: join(fm), outcome: "removed" };
 }

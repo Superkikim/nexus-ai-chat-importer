@@ -368,3 +368,41 @@ describe("readFrontmatterValue", () => {
         ).toBeUndefined();
     });
 });
+
+describe("values whose extent is not certain", () => {
+    it.each([
+        ["an unindented flow list", ["uid: [a,", "b]"]],
+        ["an unindented flow map", ["uid: {a: 1,", "b: 2}"]],
+        ["an unindented double-quoted string", ['uid: "a', 'b"']],
+        ["an unindented single-quoted string", ["uid: 'a", "b'"]],
+        [
+            "a comment between column-0 list items",
+            ["uid:", "- a", "# c", "- b"],
+        ],
+    ])("refuses to replace or remove %s", (_label, lines) => {
+        const content = note(...lines, "other: x");
+        expect(() => setCustomIdProperty(content, "uid", true)).toThrow(
+            /cannot be edited safely/
+        );
+        expect(() => removeCustomIdProperty(content, "uid", false)).toThrow(
+            NoteEditError
+        );
+        // Leaving it alone needs no edit, so it is not an error.
+        expect(setCustomIdProperty(content, "uid", false).outcome).toBe(
+            "skipped"
+        );
+    });
+
+    it("still edits values followed by comments and blank lines", () => {
+        const content = note("uid: old # note", "", "# comment", "other: x");
+        expect(setCustomIdProperty(content, "uid", true).content).toBe(
+            note(`uid: ${ID}`, "", "# comment", "other: x")
+        );
+    });
+
+    it("still edits a value at the end of the frontmatter", () => {
+        expect(
+            removeCustomIdProperty(note("uid: [a, b]"), "uid", false).content
+        ).toBe(note());
+    });
+});
