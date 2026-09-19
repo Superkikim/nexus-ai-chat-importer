@@ -22,12 +22,14 @@
  * Lightweight, allocation-friendly parser for huge JSON arrays of objects.
  *
  * Designed specifically for provider exports where conversations are stored as
- * a top-level array (ChatGPT) or in a `conversations` array on the root
- * object (Claude).
+ * a top-level array (ChatGPT) or in a named array on the root object
+ * (`conversations` for Claude; Grok adds `media_posts`).
  *
  * It avoids JSON.parse on the whole payload by scanning the string and
  * extracting each element substring, which is then parsed individually.
  */
+const DEFAULT_ARRAY_KEY = "conversations";
+
 export class StreamingJsonArrayParser {
     /**
      * Stream objects from a JSON payload that contains a conversations array.
@@ -55,14 +57,18 @@ export class StreamingJsonArrayParser {
      *
      * This is primarily used on mobile when a large `conversations.json`
      * could otherwise trigger memory pressure.
+     *
+     * `arrayKey` names the top-level property holding the array; a payload
+     * may carry several (Grok ships `conversations` and `media_posts`).
      */
     static async *streamConversationsFromChunks(
-        chunks: AsyncIterable<string>
+        chunks: AsyncIterable<string>,
+        arrayKey: string = DEFAULT_ARRAY_KEY
     ): AsyncGenerator<unknown> {
-        const arrayState = await this.findConversationsArrayStart(chunks);
+        const arrayState = await this.findArrayStart(chunks, arrayKey);
         if (!arrayState) {
             throw new Error(
-                "Could not find conversations array in chunked JSON payload"
+                `Could not find ${arrayKey} array in chunked JSON payload`
             );
         }
 
@@ -315,8 +321,17 @@ export class StreamingJsonArrayParser {
         }
     }
 
-    private static async findConversationsArrayStart(
-        chunks: AsyncIterable<string>
+    /**
+     * Scan chunks for the start of the target array and return what follows
+     * its opening `[`. Only the chunk being scanned is held in memory, so the
+     * array may sit behind any amount of preceding data.
+     *
+     * A bare top-level array matches only the default `conversations` key
+     * (the ChatGPT shape).
+     */
+    private static async findArrayStart(
+        chunks: AsyncIterable<string>,
+        arrayKey: string
     ): Promise<{
         buffer: string;
         scanIndex: number;
@@ -325,8 +340,6 @@ export class StreamingJsonArrayParser {
     } | null> {
         const iterator = chunks[Symbol.asyncIterator]();
         let done = false;
-        let buffer = "";
-        const maxStartScanBufferChars = 8 * 1024 * 1024;
 
         const pullNextChunk = async (): Promise<string | null> => {
             const next = await iterator.next();
@@ -337,149 +350,93 @@ export class StreamingJsonArrayParser {
             return next.value || "";
         };
 
-        while (true) {
-            const arrayStartIndex =
-                this.findArrayStartIndexInChunkedPayload(buffer);
-            if (arrayStartIndex !== null) {
-                return {
-                    buffer: buffer.slice(arrayStartIndex),
-                    scanIndex: 0,
-                    done,
-                    pullNextChunk,
-                };
-            }
-
-            if (done) {
-                return null;
-            }
-
-            const nextChunk = await pullNextChunk();
-            if (nextChunk === null) {
-                continue;
-            }
-            buffer += nextChunk;
-            if (buffer.length > maxStartScanBufferChars) {
-                throw new Error(
-                    "Could not find conversations array in chunked JSON payload"
-                );
-            }
-        }
-    }
-
-    private static findArrayStartIndexInChunkedPayload(
-        buffer: string
-    ): number | null {
-        const firstTokenIndex = this.findFirstNonWhitespaceOrBomIndex(buffer);
-        if (firstTokenIndex === -1) {
-            return null;
-        }
-
-        const firstToken = buffer[firstTokenIndex];
-        if (firstToken === "[") {
-            return firstTokenIndex + 1;
-        }
-
-        if (firstToken !== "{") {
-            return null;
-        }
-
-        return this.findTopLevelConversationsArrayStartIndex(
-            buffer,
-            firstTokenIndex + 1
-        );
-    }
-
-    private static findFirstNonWhitespaceOrBomIndex(source: string): number {
-        for (let i = 0; i < source.length; i++) {
-            const ch = source[i];
-            if (ch === "\uFEFF" || /\s/.test(ch)) {
-                continue;
-            }
-            return i;
-        }
-        return -1;
-    }
-
-    private static findTopLevelConversationsArrayStartIndex(
-        source: string,
-        start: number
-    ): number | null {
-        let i = start;
-        let depth = 1;
+        let started = false;
+        let depth = 0;
         let inString = false;
         let escape = false;
-        let stringStart = -1;
+        let expectingKey = false;
+        let capturingKey = false;
+        let key = "";
+        // 0: no match, 1: matched key awaiting ':', 2: awaiting the value
+        let matchState = 0;
 
-        while (i < source.length) {
-            const ch = source[i];
+        while (true) {
+            const chunk = await pullNextChunk();
+            if (chunk === null) return null;
 
-            if (inString) {
-                if (escape) {
-                    escape = false;
-                } else if (ch === "\\") {
-                    escape = true;
-                } else if (ch === '"') {
-                    const isTopLevelKey =
-                        depth === 1 &&
-                        this.isLikelyObjectKeyPosition(source, stringStart);
-                    if (isTopLevelKey) {
-                        const key = source.slice(stringStart, i);
-                        if (key === "conversations") {
-                            let j = i + 1;
-                            while (j < source.length && /\s/.test(source[j]))
-                                j++;
-                            if (j >= source.length) return null;
-                            if (source[j] !== ":") {
-                                inString = false;
-                                stringStart = -1;
-                                i++;
-                                continue;
-                            }
+            for (let i = 0; i < chunk.length; i++) {
+                const ch = chunk[i];
 
-                            j++;
-                            while (j < source.length && /\s/.test(source[j]))
-                                j++;
-                            if (j >= source.length) return null;
-                            if (source[j] === "[") {
-                                return j + 1;
-                            }
-                        }
+                if (!started) {
+                    if (ch === "\uFEFF" || /\s/.test(ch)) continue;
+                    if (ch === "[" && arrayKey === DEFAULT_ARRAY_KEY) {
+                        return {
+                            buffer: chunk.slice(i + 1),
+                            scanIndex: 0,
+                            done,
+                            pullNextChunk,
+                        };
                     }
-                    inString = false;
-                    stringStart = -1;
+                    if (ch !== "{") return null;
+                    started = true;
+                    depth = 1;
+                    expectingKey = true;
+                    continue;
                 }
-                i++;
-                continue;
-            }
 
-            if (ch === '"') {
-                inString = true;
-                stringStart = i + 1;
-            } else if (ch === "{" || ch === "[") {
-                depth++;
-            } else if (ch === "}" || ch === "]") {
-                depth--;
-                if (depth <= 0) {
-                    return null;
+                if (inString) {
+                    if (escape) {
+                        escape = false;
+                        if (capturingKey) key += ch;
+                    } else if (ch === "\\") {
+                        escape = true;
+                        if (capturingKey) key += ch;
+                    } else if (ch === '"') {
+                        inString = false;
+                        if (capturingKey) {
+                            capturingKey = false;
+                            expectingKey = false;
+                            if (key === arrayKey) matchState = 1;
+                        }
+                    } else if (capturingKey) {
+                        key += ch;
+                    }
+                    continue;
+                }
+
+                if (matchState === 1) {
+                    if (/\s/.test(ch)) continue;
+                    matchState = ch === ":" ? 2 : 0;
+                    if (matchState === 2) continue;
+                } else if (matchState === 2) {
+                    if (/\s/.test(ch)) continue;
+                    if (ch === "[") {
+                        return {
+                            buffer: chunk.slice(i + 1),
+                            scanIndex: 0,
+                            done,
+                            pullNextChunk,
+                        };
+                    }
+                    matchState = 0;
+                }
+
+                if (ch === '"') {
+                    inString = true;
+                    if (depth === 1 && expectingKey) {
+                        capturingKey = true;
+                        key = "";
+                    }
+                } else if (ch === "{" || ch === "[") {
+                    depth++;
+                } else if (ch === "}" || ch === "]") {
+                    depth--;
+                    if (depth <= 0) return null;
+                } else if (ch === "," && depth === 1) {
+                    expectingKey = true;
                 }
             }
-
-            i++;
         }
-
-        return null;
-    }
-
-    private static isLikelyObjectKeyPosition(
-        source: string,
-        quoteStart: number
-    ): boolean {
-        let i = quoteStart - 2;
-        while (i >= 0 && /\s/.test(source[i])) i--;
-        if (i < 0) {
-            return false;
-        }
-        return source[i] === "{" || source[i] === ",";
     }
 
     /**
