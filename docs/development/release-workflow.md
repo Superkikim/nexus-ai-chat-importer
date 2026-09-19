@@ -163,10 +163,9 @@ This push is the sole trigger for `release.yml`. `ci.yml` ignores all tags.
 
 ## Phase 7 — Post-release
 
-For each issue labelled `target: X.Y.Z` (open or already closed as
-`fixed-in-dev` + `pending-release`), follow the [Issue workflow](issue-workflow.md):
-replace those labels with `status: released`, add `fixed` for bugs, and close any
-still open.
+For each issue labelled `target: X.Y.Z` (most are already closed with
+`status: pending release`), follow the [Issue workflow](issue-workflow.md): replace
+the status with `status: released`, add `fixed` for bugs, and close any still open.
 
 The Obsidian registry monitors GitHub releases and picks up the new version with no
 manual action.
