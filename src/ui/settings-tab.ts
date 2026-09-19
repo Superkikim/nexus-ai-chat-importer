@@ -30,6 +30,8 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
     private sections: BaseSettingsSection[] = [];
     /** Bumped by every display(), so an older, still-running render stops. */
     private renderGeneration = 0;
+    /** Scroll position to restore once a section-triggered redraw is done. */
+    private pendingScrollTop?: number;
 
     constructor(app: App, private plugin: NexusAiChatImporterPlugin) {
         super(app, plugin);
@@ -47,7 +49,7 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
 
         // Set redraw callback for each section
         this.sections.forEach((section) => {
-            section.setRedrawCallback(() => this.display());
+            section.setRedrawCallback(() => this.redraw());
         });
     }
 
@@ -56,6 +58,16 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
         containerEl.empty();
 
         void this.renderSections(containerEl, ++this.renderGeneration);
+    }
+
+    /**
+     * Re-render in place, for a section that shows or hides a control (the
+     * date prefix format, the timestamp format). display() empties the tab,
+     * which sent the view back to the top at every toggle.
+     */
+    private redraw(): void {
+        this.pendingScrollTop = this.containerEl.scrollTop;
+        this.display();
     }
 
     hide(): void {
@@ -82,6 +94,14 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
             }
 
             await section.render(containerEl);
+        }
+
+        if (
+            generation === this.renderGeneration &&
+            this.pendingScrollTop !== undefined
+        ) {
+            containerEl.scrollTop = this.pendingScrollTop;
+            this.pendingScrollTop = undefined;
         }
     }
 }
