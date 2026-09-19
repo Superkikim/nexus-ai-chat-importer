@@ -9,8 +9,8 @@ automatically.
 
 ## Scope
 
-- Providers: **ChatGPT, Claude, Mistral Vibe** only. Perplexity is not available
-  in the CLI, and there is no auto-detection — you pass `--provider` explicitly.
+- Providers: **ChatGPT, Claude, Mistral Vibe** only. Perplexity and Grok are not
+  available in the CLI, and there is no auto-detection — you pass `--provider` explicitly.
 - No Select Specific, no conversation preview. It imports every new and updated
   conversation, like Import All.
 - No dialogs, no report files (it prints a short summary to the terminal).
@@ -79,5 +79,5 @@ These are current behaviours of the CLI — plan around them:
 
 The process exits non-zero when an import hits an error or a conversation fails.
 
-For anything interactive — choosing conversations, Perplexity, mobile — use the
+For anything interactive — choosing conversations, Perplexity, Grok, mobile — use the
 plugin. See [Importing conversations](importing.md).

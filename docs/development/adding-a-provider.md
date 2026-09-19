@@ -59,6 +59,16 @@ Optional members:
   attachment extraction.
 - `shouldIncludeZipEntry(entryName, uncompressedSize)` — skip entries during ZIP
   indexing (e.g. large media on mobile).
+- `getItemCategory(chat)` — for an export that mixes several kinds of item
+  (Grok: conversations and Imagine posts), the label of this item's kind. The
+  report gives each kind its own column. Without it, every item counts as
+  `DEFAULT_ITEM_CATEGORY` ("Conversations") and the report is unchanged.
+- `getExclusionReason(chat)` — a short reason when an item is not imported at
+  all (Grok: `"empty prompt"`), `null` otherwise. Excluded items are counted in
+  the report under that reason, by both the archive analysis and the import.
+  When the analysis reads metadata through the adapter (see Grok in
+  [`conversation-metadata-extractor.ts`](../../src/services/conversation-metadata-extractor.ts)),
+  both phases apply the same rule.
 
 All ZIP access goes through
 [`ZipArchiveReader`](../../src/utils/zip/types.ts) — never Node `fs`. See
@@ -92,4 +102,4 @@ npm run build
 
 Add a user page under `docs/user/providers/` and link it from
 `docs/user/README.md`. Keep provider pages to provider-specific behaviour and link
-back to the shared workflow pages (see the existing four).
+back to the shared workflow pages (see the existing ones).

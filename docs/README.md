@@ -23,7 +23,8 @@ navigation.
 - **Per provider:** [ChatGPT](user/providers/chatgpt.md),
   [Claude](user/providers/claude.md),
   [Mistral Vibe](user/providers/mistral-vibe.md),
-  [Perplexity](user/providers/perplexity.md) — each covers only provider-specific
+  [Perplexity](user/providers/perplexity.md),
+  [Grok](user/providers/grok.md) — each covers only provider-specific
   behaviour and links back to the common pages.
 
 ## Development — [`development/`](development/README.md)

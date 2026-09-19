@@ -15,7 +15,7 @@ tree, file names, note structure, and the parts of a conversation it leaves out.
 
 The folders default to `Nexus/Conversations`, `Nexus/Attachments`, and
 `Nexus/Reports`, and are configurable in [Settings](settings.md). `<provider>` is
-one of `chatgpt`, `claude`, `vibe`, `perplexity`. The year and month come from the
+one of `chatgpt`, `claude`, `vibe`, `perplexity`, `grok`. The year and month come from the
 conversation's creation date **in your computer's local timezone**.
 
 ## File names
