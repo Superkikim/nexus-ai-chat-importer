@@ -809,4 +809,15 @@ describe("import report — an export that mixes kinds of item", () => {
             report.getConversationLedger().categories.map((c) => c.category)
         ).toEqual(["Imagine"]);
     });
+
+    it("names the only kind of item in the outcome header", () => {
+        const report = new ImportReport();
+        report.startFileSection("x.zip");
+        report.setCurrentCategory("Imagine");
+        report.addCreated("I1", "i/1.md", 1_700_000_000, 1_700_000_000, 2);
+
+        expect(tableLines(summaryOf(report), "### Notes")[0]).toBe(
+            "| Outcome | Imagine |"
+        );
+    });
 });

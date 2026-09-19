@@ -1303,9 +1303,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Archive counters come from the analysis phase, which the mobile
         // flow skips. Omitted rather than written as zeros nobody can tell
         // apart from a real count.
+        // Written only when a provider declined items, so every other report
+        // keeps its keys: found, minus ignored, minus duplicates, gives kept.
+        const ignoredFrontmatter =
+            ledger.excluded > 0 ? `totalIgnored: ${ledger.excluded}\n` : "";
         const archiveFrontmatter = ledger.analysisAvailable
             ? `totalConversationsFound: ${ledger.totalFound}
-totalDuplicatesRemoved: ${ledger.duplicates}
+${ignoredFrontmatter}totalDuplicatesRemoved: ${ledger.duplicates}
 totalConversationsKept: ${ledger.uniqueKept}
 totalSelected: ${ledger.selected}
 `
@@ -1320,7 +1324,9 @@ importMode: ${isSelectiveImport ? "selective" : "all"}
 totalFilesAnalyzed: ${files.length}
 totalFilesProcessed: ${processedFiles.length}
 totalFilesNotProcessed: ${skippedFiles.length}
-${archiveFrontmatter}totalEmpty: ${ledger.empty}
+${archiveFrontmatter}${
+            ledger.analysisAvailable ? "" : ignoredFrontmatter
+        }totalEmpty: ${ledger.empty}
 totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
 totalRecreated: ${stats.recreated}
