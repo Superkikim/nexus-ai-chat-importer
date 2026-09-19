@@ -28,6 +28,8 @@ import { PropertiesSettingsSection } from "./settings/properties-settings-sectio
 
 export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
     private sections: BaseSettingsSection[] = [];
+    /** Bumped by every display(), so an older, still-running render stops. */
+    private renderGeneration = 0;
 
     constructor(app: App, private plugin: NexusAiChatImporterPlugin) {
         super(app, plugin);
@@ -53,7 +55,7 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        void this.renderSections(containerEl);
+        void this.renderSections(containerEl, ++this.renderGeneration);
     }
 
     hide(): void {
@@ -62,8 +64,16 @@ export class NexusAiChatImporterPluginSettingTab extends PluginSettingTab {
         }
     }
 
-    private async renderSections(containerEl: HTMLElement): Promise<void> {
+    private async renderSections(
+        containerEl: HTMLElement,
+        generation: number
+    ): Promise<void> {
         for (const section of this.sections) {
+            // Opening Settings and selecting this tab each call display().
+            // Sections render asynchronously, so without this check the first
+            // render resumed after the second had emptied the container, and
+            // every section after the first async one appeared twice.
+            if (generation !== this.renderGeneration) return;
             // The heading carried an empty name, so every section title —
             // translated, and sitting in the locale files all along — rendered
             // as a blank separator instead.

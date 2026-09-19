@@ -2626,6 +2626,7 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     flex-wrap: wrap;
     align-items: center;
     column-gap: 16px;
+    row-gap: 4px;
 }
 
 .nexus-setting-full-width-desc .setting-item-info {
@@ -2633,28 +2634,36 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     margin-inline-end: 0;
 }
 
+/* Controls sit right after the name and wrap under it when room runs out. */
 .nexus-setting-full-width-desc .setting-item-control {
     flex: 1 1 auto;
-}
-
-.nexus-setting-full-width-desc .nexus-setting-desc-row {
-    flex: 0 0 100%;
-    margin: 8px 0 0;
-}
-
-/* Custom ID property: field, overwrite switch and its label follow the name. */
-.nexus-custom-id-setting .setting-item-control {
     justify-content: flex-start;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.nexus-custom-id-overwrite {
+/* A control and its label (switch + label, label + dropdown) wrap as one. */
+.nexus-control-group {
     display: inline-flex;
     align-items: center;
     gap: 8px;
     min-width: 0;
 }
+
+.nexus-control-label {
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+}
+
+.nexus-control-label-clickable {
+    cursor: pointer;
+}
+
+.nexus-setting-full-width-desc .nexus-setting-desc-row {
+    flex: 0 0 100%;
+    margin: 0;
+}
+
 
 .nexus-custom-id-setting .setting-item-control input[type="text"] {
     flex: 1 1 10em;
@@ -2664,10 +2673,4 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 .nexus-custom-id-setting .nexus-setting-warning {
     flex: 0 0 100%;
     margin: 8px 0 0;
-}
-
-.nexus-custom-id-overwrite-label {
-    cursor: pointer;
-    font-size: var(--font-ui-small);
-    color: var(--text-muted);
 }

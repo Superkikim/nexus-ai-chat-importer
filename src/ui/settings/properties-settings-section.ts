@@ -113,12 +113,12 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
                 });
             // Switch and label wrap together when the row runs out of room.
             const group = nameSetting.controlEl.createSpan({
-                cls: "nexus-custom-id-overwrite",
+                cls: "nexus-control-group",
             });
             group.appendChild(toggle.toggleEl);
             const label = group.createSpan({
                 text: t("settings.properties.overwrite.name"),
-                cls: "nexus-custom-id-overwrite-label",
+                cls: "nexus-control-label nexus-control-label-clickable",
             });
             label.addEventListener("click", () => toggle.toggleEl.click());
         });
