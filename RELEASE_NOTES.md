@@ -8,8 +8,11 @@
 
 - **Grok — conversations and Imagine posts.** Import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer in order, citations become links to their source, and artifacts show inline. Each Imagine post with a prompt becomes a note titled *Imagine - …* with the images the export carries — including the variants found through Grok's signature in the image metadata — and a link to the post for the rest. See [Grok](docs/user/providers/grok.md).
 
+- **Custom ID property.** Settings → Properties adds a property of your choice (for example `uid`) to every conversation note, holding the conversation ID, so imported notes fit a vault that identifies notes by a property of its own. Enabling, renaming or clearing it asks first, updates your existing notes with progress and a summary, and touches nothing else in them — comments, quotes and line endings stay exactly as they were. **Overwrite existing values** decides what happens when a note already has a property with that name. See [Settings](docs/user/settings.md#custom-id-property).
+
 ### 🔧 Improved
 
+- **Settings are laid out consistently.** The date prefix, message timestamp format and custom ID property settings put their controls beside the name and their description across the full width, and wrap cleanly on narrow panes. The two date settings now share one **Date Format** section, and switching one of them no longer scrolls Settings back to the top.
 - **Reports say what was left out, and why.** Items a provider does not import are listed under their reason (for example *Ignored — empty prompt*), and an export holding more than one kind of item gets one column per kind.
 
 ## Version 1.7.1 — Forbidden characters, oversized notes and hanging upgrade dialog
