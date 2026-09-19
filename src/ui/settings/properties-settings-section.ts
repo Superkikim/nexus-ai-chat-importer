@@ -72,22 +72,15 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             new CustomIdPropertyDialogs(plugin.app, service, plugin.logger)
         );
 
-        // One setting: the name field, then the overwrite toggle with its
-        // label, and both explained in a single description.
-        const nameSetting = new Setting(containerEl)
-            .setName(t("settings.properties.custom_id.name"))
-            .setDesc(
-                describe(
-                    `${t("settings.properties.custom_id.desc")}\n${t(
-                        "settings.properties.overwrite.desc"
-                    )}`
-                )
-            );
+        // One setting on two rows: name, field, overwrite switch and its
+        // label on the first; the description, which covers both, spans the
+        // full width under them, followed by the invalid-name warning.
+        const nameSetting = new Setting(containerEl).setName(
+            t("settings.properties.custom_id.name")
+        );
         nameSetting.settingEl.addClass("nexus-custom-id-setting");
 
-        const warning = containerEl.createDiv({
-            cls: "nexus-setting-warning",
-        });
+        const warning = createDiv({ cls: "nexus-setting-warning" });
         warning.hide();
 
         nameSetting.addText((text) => {
@@ -123,6 +116,19 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             });
             label.addEventListener("click", () => toggle.toggleEl.click());
         });
+
+        nameSetting.settingEl
+            .createDiv({
+                cls: "setting-item-description nexus-custom-id-description",
+            })
+            .append(
+                describe(
+                    `${t("settings.properties.custom_id.desc")}\n${t(
+                        "settings.properties.overwrite.desc"
+                    )}`
+                )
+            );
+        nameSetting.settingEl.appendChild(warning);
     }
 
     /** A name typed just before the tab closed is committed, not dropped. */
