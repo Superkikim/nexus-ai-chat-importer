@@ -624,3 +624,189 @@ describe("import report — a rebuild is a request, not an outcome", () => {
         expect(markdown).not.toContain("Unchanged (rebuilt)");
     });
 });
+
+/** Every line of a table under `heading`, up to the blank line ending it. */
+function tableLines(markdown: string, heading: string): string[] {
+    const start = markdown.indexOf(heading);
+    expect(start).toBeGreaterThan(-1);
+    const lines = markdown.slice(start).split("\n").slice(2);
+    const end = lines.indexOf("");
+    return end === -1 ? lines : lines.slice(0, end);
+}
+
+function summaryOf(report: ImportReport): string {
+    return report.generateSummaryReportContent(
+        [fakeFile("export.zip")],
+        ["export.zip"],
+        [],
+        false,
+        undefined,
+        LINKS
+    );
+}
+
+describe("import report — a provider that exports one kind of item", () => {
+    it("keeps the single-column tables when nothing is excluded", () => {
+        const report = populatedReport();
+        report.setAnalysisInfo(analysis());
+
+        const summary = summaryOf(report);
+
+        expect(tableLines(summary, "### Archive")).toEqual([
+            "| Metric | Value |",
+            "| --- | ---: |",
+            "| Found | 12 |",
+            "| Duplicates removed | 2 |",
+            "| Kept | 10 |",
+            "| Selected | 10 |",
+        ]);
+        expect(tableLines(summary, "### Notes")[0]).toBe(
+            "| Outcome | Conversations |"
+        );
+        expect(summary).not.toContain("Ignored —");
+    });
+
+    it("lists each exclusion between Found and Duplicates", () => {
+        const report = populatedReport();
+        report.setAnalysisInfo(
+            analysis({
+                totalConversationsFound: 15,
+                exclusions: [
+                    {
+                        category: "Conversations",
+                        reason: "no messages",
+                        count: 3,
+                    },
+                ],
+            })
+        );
+
+        const archive = tableLines(summaryOf(report), "### Archive");
+
+        expect(archive.slice(2, 5)).toEqual([
+            "| Found | 15 |",
+            "| Ignored — no messages | 3 |",
+            "| Duplicates removed | 2 |",
+        ]);
+    });
+});
+
+describe("import report — an export that mixes kinds of item", () => {
+    /**
+     * 5 conversations found, 4 kept (1 duplicate); 6 Imagine posts found,
+     * 2 without a prompt, 4 kept. Outcomes: conversations 3 created and 1
+     * unchanged, Imagine 4 created.
+     */
+    function mixedReport(): ImportReport {
+        const report = new ImportReport();
+        report.startFileSection("grok.zip");
+
+        report.setCurrentCategory("Conversations");
+        report.addCreated("C1", "c/1.md", 1_700_000_000, 1_700_000_000, 2);
+        report.addCreated("C2", "c/2.md", 1_700_000_000, 1_700_000_000, 2);
+        report.addCreated("C3", "c/3.md", 1_700_000_000, 1_700_000_000, 2);
+        report.setCurrentCategory("Imagine");
+        for (let i = 1; i <= 4; i++) {
+            report.addCreated(
+                `I${i}`,
+                `i/${i}.md`,
+                1_700_000_000,
+                1_700_000_000,
+                2
+            );
+        }
+
+        report.setAnalysisInfo(
+            analysis({
+                totalConversationsFound: 11,
+                uniqueConversationsKept: 8,
+                duplicatesRemoved: 1,
+                conversationsUnchanged: 1,
+                conversationsDroppedUnchanged: 1,
+                exclusions: [
+                    { category: "Imagine", reason: "empty prompt", count: 2 },
+                ],
+                categories: {
+                    Conversations: {
+                        found: 5,
+                        excluded: 0,
+                        duplicates: 1,
+                        kept: 4,
+                        droppedUnchanged: 1,
+                    },
+                    Imagine: {
+                        found: 6,
+                        excluded: 2,
+                        duplicates: 0,
+                        kept: 4,
+                        droppedUnchanged: 0,
+                    },
+                },
+            })
+        );
+        return report;
+    }
+
+    it("gives each category its own column and a total", () => {
+        const summary = summaryOf(mixedReport());
+
+        expect(tableLines(summary, "### Archive")).toEqual([
+            "| Metric | Conversations | Imagine | Total |",
+            "| --- | ---: | ---: | ---: |",
+            "| Found | 5 | 6 | 11 |",
+            "| Ignored — empty prompt | 0 | 2 | 2 |",
+            "| Duplicates removed | 1 | 0 | 1 |",
+            "| Kept | 4 | 4 | 8 |",
+            "| Selected | 4 | 4 | 8 |",
+        ]);
+        expect(tableLines(summary, "### Notes").slice(0, 6)).toEqual([
+            "| Outcome | Conversations | Imagine | Total |",
+            "| --- | ---: | ---: | ---: |",
+            "| ✨ Created | 3 | 4 | 7 |",
+            "| 🔄 Updated | 0 | 0 | 0 |",
+            "| ♻️ Recreated | 0 | 0 | 0 |",
+            "| ⏭️ Unchanged | 1 | 0 | 1 |",
+        ]);
+    });
+
+    it("balances in every category", () => {
+        for (const c of mixedReport().getConversationLedger().categories) {
+            expect(c.found - c.excluded - c.duplicates).toBe(c.kept);
+        }
+    });
+
+    it("counts exclusions from the writes when no analysis ran", () => {
+        const report = new ImportReport();
+        report.startFileSection("grok.zip");
+        report.setCurrentCategory("Conversations");
+        report.addCreated("C1", "c/1.md", 1_700_000_000, 1_700_000_000, 2);
+        report.setCurrentCategory("Imagine");
+        report.addCreated("I1", "i/1.md", 1_700_000_000, 1_700_000_000, 2);
+        report.addExcluded("Imagine", "empty prompt");
+        report.addExcluded("Imagine", "empty prompt");
+
+        const ledger = report.getConversationLedger();
+        expect(ledger.excluded).toBe(2);
+        expect(tableLines(summaryOf(report), "### Notes")).toContain(
+            "| 🚷 Ignored — empty prompt | 0 | 2 | 2 |"
+        );
+    });
+
+    it("prefers the analysis exclusions over the writes", () => {
+        const report = mixedReport();
+        report.addExcluded("Imagine", "empty prompt");
+
+        expect(report.getConversationLedger().excluded).toBe(2);
+    });
+
+    it("drops an empty default column when every item is of another kind", () => {
+        const report = new ImportReport();
+        report.startFileSection("x.zip");
+        report.setCurrentCategory("Imagine");
+        report.addCreated("I1", "i/1.md", 1_700_000_000, 1_700_000_000, 2);
+
+        expect(
+            report.getConversationLedger().categories.map((c) => c.category)
+        ).toEqual(["Imagine"]);
+    });
+});

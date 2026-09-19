@@ -77,7 +77,19 @@ export interface ProviderAdapter<TChat = unknown> {
         entryName: string,
         uncompressedSize: number
     ): boolean;
+
+    // Optional: the kind of item this raw entry is, when an export mixes
+    // several (Grok: conversations and Imagine posts). The label heads the
+    // report columns. If absent, every item is DEFAULT_ITEM_CATEGORY.
+    getItemCategory?(chat: TChat): string;
+
+    // Optional: why this raw entry is not imported at all, or null to import
+    // it. The reason is shown in the report next to its count.
+    getExclusionReason?(chat: TChat): string | null;
 }
+
+/** Report label for items of a provider that exports a single kind. */
+export const DEFAULT_ITEM_CATEGORY = "Conversations";
 
 export interface ProviderRegistry {
     // Return adapter for a provider name

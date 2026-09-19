@@ -26,6 +26,7 @@ import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
 import { LongContentExtractor } from "./long-content-extractor";
 import {
+    DEFAULT_ITEM_CATEGORY,
     ProviderRegistry,
     ProviderAdapter,
 } from "../providers/provider-adapter";
@@ -320,6 +321,21 @@ export class ConversationProcessor {
         try {
             const isStandardConversation = this.isStandardConversation(chat);
             const std = chat as StandardConversation;
+
+            if (!isStandardConversation) {
+                const category = adapter.getItemCategory?.(chat);
+                importReport.setCurrentCategory(category);
+                const exclusionReason = adapter.getExclusionReason?.(chat);
+                if (exclusionReason) {
+                    importReport.addExcluded(
+                        category || DEFAULT_ITEM_CATEGORY,
+                        exclusionReason
+                    );
+                    return;
+                }
+            } else {
+                importReport.setCurrentCategory();
+            }
 
             const chatId = isStandardConversation
                 ? std.id

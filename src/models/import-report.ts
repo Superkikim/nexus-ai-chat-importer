@@ -19,8 +19,10 @@
 // src/models/import-report.ts
 import { AttachmentStats, MessageTimestampFormat } from "../types/plugin";
 import { formatMessageTimestamp } from "../utils";
+import { DEFAULT_ITEM_CATEGORY } from "../providers/provider-adapter";
 import type {
     AnalysisInfo,
+    ExclusionCount,
     FileAnalysisStats,
 } from "../services/conversation-metadata-extractor";
 
@@ -36,6 +38,7 @@ interface ReportEntry {
     errorMessage?: string;
     attachmentStats?: AttachmentStats;
     sourceFile?: string; // Track which ZIP file this entry came from
+    category?: string; // Item category (see ProviderAdapter.getItemCategory)
 }
 
 interface ProcessingCounters {
@@ -104,6 +107,33 @@ export interface ConversationLedger {
     totalConversations: number;
     /** Duplicate ids collapsed across archives. */
     duplicates: number;
+
+    /** Items the provider declines to import, by category and reason. */
+    exclusions: ExclusionCount[];
+    /** Total of `exclusions`. Part of `totalFound`, of nothing after it. */
+    excluded: number;
+    /**
+     * The same numbers per item category, in display order. A single entry
+     * for every provider that exports one kind of item.
+     */
+    categories: CategoryLedger[];
+}
+
+/** One item category's share of the ledger. */
+export interface CategoryLedger {
+    category: string;
+    found: number;
+    excluded: number;
+    duplicates: number;
+    kept: number;
+    /** What the outcomes of this category add up to. */
+    selected: number;
+    created: number;
+    updated: number;
+    recreated: number;
+    unchangedSkipped: number;
+    empty: number;
+    failed: number;
 }
 
 /** What happened to a note, for the index listings. */
@@ -147,6 +177,8 @@ export class ImportReport {
     private ignoredArchiveDetails: Map<string, IgnoredArchiveDetail> =
         new Map();
     private selection?: { offered: number; selected: number };
+    private currentCategory: string = DEFAULT_ITEM_CATEGORY;
+    private writeExclusions: Map<string, ExclusionCount> = new Map();
 
     /**
      * Start a new file section for multi-file imports
@@ -180,6 +212,29 @@ export class ImportReport {
         if (section) {
             section.counters = counters;
         }
+    }
+
+    /**
+     * Category stamped on every entry added from now on. Conversations are
+     * processed one at a time, like the file sections above.
+     */
+    setCurrentCategory(category?: string) {
+        this.currentCategory = category || DEFAULT_ITEM_CATEGORY;
+    }
+
+    /**
+     * Record an item the provider declined to import. Only read when no
+     * archive analysis ran: the analysis counts the same items first.
+     */
+    addExcluded(category: string, reason: string) {
+        const key = `${category}\u0000${reason}`;
+        const entry = this.writeExclusions.get(key) ?? {
+            category,
+            reason,
+            count: 0,
+        };
+        entry.count++;
+        this.writeExclusions.set(key, entry);
     }
 
     private getCurrentSection(): FileSection | undefined {
@@ -346,6 +401,7 @@ export class ImportReport {
                 attachmentStats,
                 providerSpecificCount,
                 sourceFile: this.currentFileName,
+                category: this.currentCategory,
             });
         }
     }
@@ -370,6 +426,7 @@ export class ImportReport {
                 attachmentStats,
                 providerSpecificCount,
                 sourceFile: this.currentFileName,
+                category: this.currentCategory,
             });
         }
     }
@@ -399,6 +456,7 @@ export class ImportReport {
                 attachmentStats,
                 providerSpecificCount,
                 sourceFile: this.currentFileName,
+                category: this.currentCategory,
             });
         }
     }
@@ -425,6 +483,7 @@ export class ImportReport {
                 attachmentStats,
                 providerSpecificCount,
                 sourceFile: this.currentFileName,
+                category: this.currentCategory,
             });
         }
     }
@@ -443,6 +502,7 @@ export class ImportReport {
                 createTime,
                 updateTime,
                 sourceFile: this.currentFileName,
+                category: this.currentCategory,
             });
         }
     }
@@ -463,6 +523,7 @@ export class ImportReport {
                 updateTime,
                 errorMessage,
                 sourceFile: this.currentFileName,
+                category: this.currentCategory,
             });
         }
     }
@@ -528,31 +589,47 @@ export class ImportReport {
         // Two tables, two questions. The archive one ends on Selected, which
         // is what the outcome table below it adds up to — a reader can check
         // the arithmetic instead of taking nine flat rows on trust.
-        if (ledger.analysisAvailable) {
-            lines.push("### Archive");
-            lines.push("");
-            lines.push("| Metric | Value |");
-            lines.push("| --- | ---: |");
-            lines.push(`| Found | ${ledger.totalFound} |`);
-            lines.push(`| Duplicates removed | ${ledger.duplicates} |`);
-            lines.push(`| Kept | ${ledger.uniqueKept} |`);
-            lines.push(`| Selected | ${ledger.selected} |`);
-            lines.push("");
-        }
+        if (ledger.categories.length > 1) {
+            lines.push(...this.renderCategoryTables(ledger));
+        } else {
+            if (ledger.analysisAvailable) {
+                lines.push("### Archive");
+                lines.push("");
+                lines.push("| Metric | Value |");
+                lines.push("| --- | ---: |");
+                lines.push(`| Found | ${ledger.totalFound} |`);
+                for (const exclusion of ledger.exclusions) {
+                    lines.push(
+                        `| Ignored — ${exclusion.reason} | ${exclusion.count} |`
+                    );
+                }
+                lines.push(`| Duplicates removed | ${ledger.duplicates} |`);
+                lines.push(`| Kept | ${ledger.uniqueKept} |`);
+                lines.push(`| Selected | ${ledger.selected} |`);
+                lines.push("");
+            }
 
-        lines.push("### Notes");
-        lines.push("");
-        lines.push("| Outcome | Conversations |");
-        lines.push("| --- | ---: |");
-        lines.push(`| ✨ Created | ${ledger.created} |`);
-        lines.push(`| 🔄 Updated | ${ledger.updated} |`);
-        lines.push(`| ♻️ Recreated | ${ledger.recreated} |`);
-        lines.push(`| ⏭️ Unchanged | ${ledger.unchangedSkipped} |`);
-        if (ledger.empty > 0) {
-            lines.push(`| 🚫 Empty (no content) | ${ledger.empty} |`);
+            lines.push("### Notes");
+            lines.push("");
+            lines.push("| Outcome | Conversations |");
+            lines.push("| --- | ---: |");
+            lines.push(`| ✨ Created | ${ledger.created} |`);
+            lines.push(`| 🔄 Updated | ${ledger.updated} |`);
+            lines.push(`| ♻️ Recreated | ${ledger.recreated} |`);
+            lines.push(`| ⏭️ Unchanged | ${ledger.unchangedSkipped} |`);
+            if (ledger.empty > 0) {
+                lines.push(`| 🚫 Empty (no content) | ${ledger.empty} |`);
+            }
+            lines.push(`| ❌ Failed | ${ledger.failed} |`);
+            if (!ledger.analysisAvailable) {
+                for (const exclusion of ledger.exclusions) {
+                    lines.push(
+                        `| 🚷 Ignored — ${exclusion.reason} | ${exclusion.count} |`
+                    );
+                }
+            }
+            lines.push("");
         }
-        lines.push(`| ❌ Failed | ${ledger.failed} |`);
-        lines.push("");
 
         lines.push(this.generateAttachmentSummary(totalAttachments));
 
@@ -640,6 +717,96 @@ export class ImportReport {
         }
 
         return lines.join("\n");
+    }
+
+    /**
+     * Archive and Notes tables with one column per item category and a
+     * total, for exports that mix several kinds of item.
+     */
+    private renderCategoryTables(ledger: ConversationLedger): string[] {
+        const categories = ledger.categories;
+        const header = `| Metric | ${categories
+            .map((c) => c.category)
+            .join(" | ")} | Total |`;
+        const align = `| --- | ${categories
+            .map(() => "---:")
+            .join(" | ")} | ---: |`;
+        const row = (
+            label: string,
+            pick: (c: CategoryLedger) => number,
+            total: number
+        ) =>
+            `| ${label} | ${categories
+                .map((c) => pick(c))
+                .join(" | ")} | ${total} |`;
+
+        const lines: string[] = [];
+        if (ledger.analysisAvailable) {
+            lines.push("### Archive");
+            lines.push("");
+            lines.push(header);
+            lines.push(align);
+            lines.push(row("Found", (c) => c.found, ledger.totalFound));
+            for (const exclusion of ledger.exclusions) {
+                lines.push(
+                    row(
+                        `Ignored — ${exclusion.reason}`,
+                        (c) =>
+                            c.category === exclusion.category
+                                ? exclusion.count
+                                : 0,
+                        exclusion.count
+                    )
+                );
+            }
+            lines.push(
+                row(
+                    "Duplicates removed",
+                    (c) => c.duplicates,
+                    ledger.duplicates
+                )
+            );
+            lines.push(row("Kept", (c) => c.kept, ledger.uniqueKept));
+            lines.push(row("Selected", (c) => c.selected, ledger.selected));
+            lines.push("");
+        }
+
+        lines.push("### Notes");
+        lines.push("");
+        lines.push(header.replace("| Metric |", "| Outcome |"));
+        lines.push(align);
+        lines.push(row("✨ Created", (c) => c.created, ledger.created));
+        lines.push(row("🔄 Updated", (c) => c.updated, ledger.updated));
+        lines.push(row("♻️ Recreated", (c) => c.recreated, ledger.recreated));
+        lines.push(
+            row(
+                "⏭️ Unchanged",
+                (c) => c.unchangedSkipped,
+                ledger.unchangedSkipped
+            )
+        );
+        if (ledger.empty > 0) {
+            lines.push(
+                row("🚫 Empty (no content)", (c) => c.empty, ledger.empty)
+            );
+        }
+        lines.push(row("❌ Failed", (c) => c.failed, ledger.failed));
+        if (!ledger.analysisAvailable) {
+            for (const exclusion of ledger.exclusions) {
+                lines.push(
+                    row(
+                        `🚷 Ignored — ${exclusion.reason}`,
+                        (c) =>
+                            c.category === exclusion.category
+                                ? exclusion.count
+                                : 0,
+                        exclusion.count
+                    )
+                );
+            }
+        }
+        lines.push("");
+        return lines;
     }
 
     generateHeavyIndexContent(
@@ -1179,6 +1346,11 @@ export class ImportReport {
     getConversationLedger(): ConversationLedger {
         const writes = this.getGlobalStats();
         const analysis = this.analysisInfo;
+        // The analysis sees every excluded item before the import does; the
+        // write-side record only stands in when no analysis ran.
+        const exclusions = analysis
+            ? analysis.exclusions ?? []
+            : Array.from(this.writeExclusions.values());
 
         return {
             analysisAvailable: analysis !== undefined,
@@ -1221,7 +1393,93 @@ export class ImportReport {
                 analysis?.uniqueConversationsKept ?? writes.totalProcessed,
             duplicates:
                 analysis?.duplicatesRemoved ?? this.getTotalDuplicates(),
+
+            exclusions,
+            excluded: exclusions.reduce((sum, e) => sum + e.count, 0),
+            categories: this.getCategoryLedgers(exclusions),
         };
+    }
+
+    /**
+     * Split the ledger by item category. The archive side comes from the
+     * analysis, the outcomes from the entries each category stamped.
+     */
+    private getCategoryLedgers(exclusions: ExclusionCount[]): CategoryLedger[] {
+        const analysisCategories = this.analysisInfo?.categories ?? {};
+        const order: string[] = [DEFAULT_ITEM_CATEGORY];
+        const note = (category: string) => {
+            if (!order.includes(category)) order.push(category);
+        };
+        Object.keys(analysisCategories).forEach(note);
+        exclusions.forEach((e) => note(e.category));
+        this.fileSections.forEach((section) => {
+            [
+                ...section.created,
+                ...section.updated,
+                ...section.recreated,
+                ...section.skipped,
+                ...section.failed,
+                ...section.ignored,
+            ].forEach((entry) => note(entry.category || DEFAULT_ITEM_CATEGORY));
+        });
+
+        const count = (
+            category: string,
+            pick: (section: FileSection) => ReportEntry[]
+        ): number => {
+            let total = 0;
+            this.fileSections.forEach((section) => {
+                total += pick(section).filter(
+                    (entry) =>
+                        (entry.category || DEFAULT_ITEM_CATEGORY) === category
+                ).length;
+            });
+            return total;
+        };
+
+        const ledgers = order.map((category) => {
+            const archive = analysisCategories[category];
+            const created = count(category, (s) => s.created);
+            const updated = count(category, (s) => s.updated);
+            const recreated = count(category, (s) => s.recreated);
+            const unchangedSkipped =
+                (archive?.droppedUnchanged ?? 0) +
+                count(category, (s) => s.skipped);
+            const empty = count(category, (s) => s.ignored);
+            const failed = count(category, (s) => s.failed);
+            return {
+                category,
+                found: archive?.found ?? 0,
+                excluded: exclusions
+                    .filter((e) => e.category === category)
+                    .reduce((sum, e) => sum + e.count, 0),
+                duplicates: archive?.duplicates ?? 0,
+                kept: archive?.kept ?? 0,
+                selected:
+                    created +
+                    updated +
+                    recreated +
+                    unchangedSkipped +
+                    empty +
+                    failed,
+                created,
+                updated,
+                recreated,
+                unchangedSkipped,
+                empty,
+                failed,
+            };
+        });
+
+        // The default category stays listed only when something landed in it:
+        // an export made solely of another kind would otherwise show an empty
+        // "Conversations" column.
+        return ledgers.filter(
+            (ledger) =>
+                ledger.category !== DEFAULT_ITEM_CATEGORY ||
+                ledgers.length === 1 ||
+                ledger.found + ledger.selected + ledger.excluded > 0
+        );
     }
 
     /**
