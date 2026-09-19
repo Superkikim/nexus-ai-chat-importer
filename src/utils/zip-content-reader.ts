@@ -564,7 +564,7 @@ export async function extractRawConversations(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Grok prod-grok-backend.json file."
         );
     }
 
@@ -790,7 +790,7 @@ export async function* extractConversationsStream(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Grok prod-grok-backend.json file."
         );
     }
 

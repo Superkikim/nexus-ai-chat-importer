@@ -541,7 +541,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "Nexus AI Chat Importer를 설치해 주셔서 감사합니다!",
-        "description": "ChatGPT, Claude, Mistral Vibe, Perplexity 대화를 Obsidian 볼트로 직접 가져오고 관리하세요.",
+        "description": "ChatGPT, Claude, Mistral Vibe, Perplexity, Grok 대화를 Obsidian 볼트로 직접 가져오고 관리하세요.",
         "resources_title": "리소스",
         "resources": {
             "documentation": {
