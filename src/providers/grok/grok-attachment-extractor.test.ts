@@ -3,6 +3,7 @@ import { GrokAttachmentExtractor } from "./grok-attachment-extractor";
 import { StandardAttachment } from "../../types/standard";
 import { ZipArchiveReader, ZipEntryHandle } from "../../utils/zip-loader";
 import type NexusAiChatImporterPlugin from "../../main";
+import { jpegWithTag } from "../../utils/jpeg-exif.fixture";
 
 const JPEG_BYTES = new Uint8Array([
     0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0x00, 0x01,
@@ -196,5 +197,72 @@ describe("GrokAttachmentExtractor", () => {
         expect(result.extractedContent).toContain(
             "this export did not include the generated video"
         );
+    });
+
+    describe("Imagine media", () => {
+        const POST = "b2d2143f-4e28-43fd-9a7a-8698bfd0c76a";
+        const media: StandardAttachment = {
+            fileName: POST,
+            fileId: POST,
+            attachmentType: "generated_image",
+            generationPrompt: "a night street",
+            url: `https://grok.com/imagine/post/${POST}`,
+            providerMetadata: { imaginePost: true, mediaType: "image" },
+        };
+
+        async function resolve(files: Record<string, Uint8Array>) {
+            return extractor.extractAttachments(
+                createZipMock(files),
+                POST,
+                [media],
+                `${POST}-media`
+            );
+        }
+
+        it("uses the asset named after the post", async () => {
+            const results = await resolve({
+                [`${ASSETS}${POST}/content`]: JPEG_BYTES,
+            });
+
+            expect(results).toHaveLength(1);
+            expect(results[0].status?.found).toBe(true);
+            expect(results[0].attachmentType).toBe("generated_image");
+        });
+
+        it("finds the variants signed with the post id", async () => {
+            const results = await resolve({
+                [`${ASSETS}/3a747abd-0000/content`]: jpegWithTag(POST),
+                [`${ASSETS}/b8c56377-0000/content`]: jpegWithTag(POST),
+                [`${ASSETS}/ffffffff-0000/content`]: jpegWithTag("other-post"),
+                [`${ASSETS}/eeeeeeee-0000/content`]: JPEG_BYTES,
+            });
+
+            expect(results.map((r) => r.url)).toEqual([
+                "attachments/grok/images/grok_b2d2143f_b2d2143f_3a747abd.jpg",
+                "attachments/grok/images/grok_b2d2143f_b2d2143f_b8c56377.jpg",
+            ]);
+            expect(results.every((r) => r.generationPrompt)).toBe(true);
+        });
+
+        it("puts the post's own asset before its variants", async () => {
+            const results = await resolve({
+                [`${ASSETS}/00000000-variant/content`]: jpegWithTag(POST),
+                [`${ASSETS}/${POST}/content`]: JPEG_BYTES,
+            });
+
+            expect(results.map((r) => r.url)).toEqual([
+                "attachments/grok/images/grok_b2d2143f_b2d2143f_b2d2143f.jpg",
+                "attachments/grok/images/grok_b2d2143f_b2d2143f_00000000.jpg",
+            ]);
+        });
+
+        it("falls back to the placeholder when nothing matches", async () => {
+            const results = await resolve({
+                [`${ASSETS}/ffffffff-0000/content`]: jpegWithTag("other-post"),
+            });
+
+            expect(results).toHaveLength(1);
+            expect(results[0].status?.reason).toBe("not_in_export");
+        });
     });
 });
