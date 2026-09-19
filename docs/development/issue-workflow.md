@@ -79,15 +79,19 @@ Conventions for triaging, labeling, and tracking issues in this repository.
 1. **Triage** → `bug` + `status: evaluation in progress`
 2. **Information missing** → `status: pending user insight`, comment tagging the reporter with specific questions
 3. **Information received** → `status: in progress`, assign to a branch, add `target: X.Y.Z`
-4. **Fix merged to dev branch** → add `fixed-in-dev`, keep `target: X.Y.Z`
-5. **Released** → `status: released` + `fixed`, close
+4. **Fix merged to dev branch** → remove `status: in progress`, add `fixed-in-dev` +
+   `pending-release`, keep `target: X.Y.Z`; closing now is fine
+5. **Released** → replace `fixed-in-dev` + `pending-release` with `status: released` +
+   `fixed`; close if still open
 
 ### Feature / enhancement
 
 1. **Triage** → `enhancement` + `status: evaluation in progress`
 2. **Accepted** → `status: in progress` + `target: X.Y.Z`
-3. **Shipped** → `status: released`, close
-4. **Rejected** → `wontimplement`, close with a short explanation
+3. **Done on the dev branch** → remove `status: in progress`, add `fixed-in-dev` +
+   `pending-release`, keep `target: X.Y.Z`, comment what shipped, close
+4. **Released** → replace `fixed-in-dev` + `pending-release` with `status: released`
+5. **Rejected** → `wontimplement`, close with a short explanation
 
 ### Chore / arch / doc
 
