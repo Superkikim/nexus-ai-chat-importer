@@ -2619,21 +2619,31 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     overflow-wrap: anywhere;
 }
 
-/* Name | field | switch | switch label, then the description and the
-   warning on full-width rows of their own. */
-.nexus-custom-id-setting {
+/* Settings laid out by setFullWidthDescription(): name and controls on the
+   first row, then the description (and any preview or warning) on
+   full-width rows of their own. */
+.nexus-setting-full-width-desc {
     flex-wrap: wrap;
     align-items: center;
     column-gap: 16px;
 }
 
-.nexus-custom-id-setting .setting-item-info {
+.nexus-setting-full-width-desc .setting-item-info {
     flex: 0 0 auto;
     margin-inline-end: 0;
 }
 
-.nexus-custom-id-setting .setting-item-control {
+.nexus-setting-full-width-desc .setting-item-control {
     flex: 1 1 auto;
+}
+
+.nexus-setting-full-width-desc .nexus-setting-desc-row {
+    flex: 0 0 100%;
+    margin: 8px 0 0;
+}
+
+/* Custom ID property: field, overwrite switch and its label follow the name. */
+.nexus-custom-id-setting .setting-item-control {
     justify-content: flex-start;
     gap: 8px;
 }
@@ -2643,7 +2653,6 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     min-width: 8em;
 }
 
-.nexus-custom-id-setting .nexus-custom-id-description,
 .nexus-custom-id-setting .nexus-setting-warning {
     flex: 0 0 100%;
     margin: 8px 0 0;

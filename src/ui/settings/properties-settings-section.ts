@@ -23,6 +23,7 @@ import { t } from "../../i18n";
 import { CustomIdPropertyService } from "../../services/custom-id-property-service";
 import { CustomIdPropertyDialogs } from "../../dialogs/custom-id-property-dialogs";
 import { CustomIdPropertyController } from "./custom-id-property-controller";
+import { setFullWidthDescription } from "./full-width-description";
 
 /** A description with line breaks and `code` spans, built without HTML. */
 function describe(text: string): DocumentFragment {
@@ -117,17 +118,14 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             label.addEventListener("click", () => toggle.toggleEl.click());
         });
 
-        nameSetting.settingEl
-            .createDiv({
-                cls: "setting-item-description nexus-custom-id-description",
-            })
-            .append(
-                describe(
-                    `${t("settings.properties.custom_id.desc")}\n${t(
-                        "settings.properties.overwrite.desc"
-                    )}`
-                )
-            );
+        setFullWidthDescription(
+            nameSetting,
+            describe(
+                `${t("settings.properties.custom_id.desc")}\n${t(
+                    "settings.properties.overwrite.desc"
+                )}`
+            )
+        );
         nameSetting.settingEl.appendChild(warning);
     }
 

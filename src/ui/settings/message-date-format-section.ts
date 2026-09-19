@@ -23,6 +23,7 @@ import { MESSAGE_TIMESTAMP_FORMATS } from "../../config/constants";
 import { formatMessageTimestamp } from "../../utils";
 import type { MessageTimestampFormat } from "../../types/plugin";
 import { t } from "../../i18n";
+import { setFullWidthDescription } from "./full-width-description";
 
 export class MessageDateFormatSection extends BaseSettingsSection {
     get title() {
@@ -57,7 +58,6 @@ export class MessageDateFormatSection extends BaseSettingsSection {
         if (this.plugin.settings.useCustomMessageTimestampFormat) {
             const formatSetting = new Setting(sectionContainer)
                 .setName(t("settings.timestamps.timestamp_format.name"))
-                .setDesc(t("settings.timestamps.timestamp_format.desc"))
                 .addDropdown((dropdown) => {
                     // Add all available formats
                     Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(
@@ -84,6 +84,10 @@ export class MessageDateFormatSection extends BaseSettingsSection {
             // Inside the setting item, on a line of its own: a preview that
             // sits outside the box reads as an orphan paragraph rather than
             // as what the dropdown above it produces.
+            setFullWidthDescription(
+                formatSetting,
+                t("settings.timestamps.timestamp_format.desc")
+            );
             formatSetting.settingEl.addClass("nexus-timestamp-setting");
             const previewContainer = formatSetting.settingEl.createDiv({
                 cls: "nexus-timestamp-preview",
