@@ -1730,14 +1730,16 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 /* The dialog shows only the outcomes that happened, so the count varies from
    one to five: a fixed three-column grid would strand a lone card in a corner.
    They centre and wrap instead. */
-.nexus-import-completion-dialog .nexus-stats-grid {
+.nexus-import-completion-dialog .nexus-stats-grid,
+.nexus-custom-id-dialog .nexus-stats-grid {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 12px;
 }
 
-.nexus-import-completion-dialog .nexus-stat-card {
+.nexus-import-completion-dialog .nexus-stat-card,
+.nexus-custom-id-dialog .nexus-stat-card {
     flex: 0 1 140px;
     text-align: center;
     padding: 12px;
@@ -1746,18 +1748,21 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.nexus-import-completion-dialog .nexus-stat-card-icon {
+.nexus-import-completion-dialog .nexus-stat-card-icon,
+.nexus-custom-id-dialog .nexus-stat-card-icon {
     font-size: 1.5em;
     margin-bottom: 4px;
 }
 
-.nexus-import-completion-dialog .nexus-stat-card-value {
+.nexus-import-completion-dialog .nexus-stat-card-value,
+.nexus-custom-id-dialog .nexus-stat-card-value {
     font-weight: 600;
     font-size: 1.4em;
     margin-bottom: 4px;
 }
 
-.nexus-import-completion-dialog .nexus-stat-card-label {
+.nexus-import-completion-dialog .nexus-stat-card-label,
+.nexus-custom-id-dialog .nexus-stat-card-label {
     font-size: 0.85em;
     color: var(--text-muted);
 }
@@ -1836,13 +1841,15 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
         padding: 14px 14px 18px 14px;
     }
 
-    .nexus-import-completion-dialog .nexus-stat-card {
+    .nexus-import-completion-dialog .nexus-stat-card,
+.nexus-custom-id-dialog .nexus-stat-card {
         flex: 1 1 120px;
     }
 }
 
 @media (max-width: 480px) {
-    .nexus-import-completion-dialog .nexus-stat-card {
+    .nexus-import-completion-dialog .nexus-stat-card,
+.nexus-custom-id-dialog .nexus-stat-card {
         flex: 1 1 100%;
     }
 }
@@ -2567,7 +2574,8 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     margin-bottom: 20px;
 }
 
-/* Custom ID property setting (issue #86) */
+/* Custom ID property setting and dialogs (issue #86). The dialogs reuse the
+   folder migration dialog's parts and the import completion stat cards. */
 .nexus-setting-warning {
     margin-top: -6px;
     margin-bottom: 12px;
@@ -2577,20 +2585,36 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     font-weight: 500;
 }
 
-.nexus-ai-chat-importer-modal .modal-button-container.nexus-custom-id-choices {
+.nexus-custom-id-dialog .nexus-migration-paths {
+    text-align: center;
+}
+
+.nexus-custom-id-dialog .nexus-migration-buttons {
+    margin-top: 1.5em;
+}
+
+.nexus-custom-id-dialog .nexus-custom-id-choices {
     flex-direction: column;
-    align-items: stretch;
 }
 
-.nexus-ai-chat-importer-modal .nexus-custom-id-footnote {
-    margin-top: 1em;
-    color: var(--text-muted);
-    font-size: 0.9em;
+.nexus-custom-id-dialog .nexus-custom-id-choices button {
+    flex: none;
+    height: auto;
+    white-space: normal;
 }
 
-.nexus-ai-chat-importer-modal .nexus-custom-id-failures {
-    max-height: 12em;
-    overflow-y: auto;
+.nexus-custom-id-dialog .nexus-custom-id-footnote {
+    margin: 1em 0 0;
+    text-align: center;
+}
+
+.nexus-custom-id-dialog .nexus-custom-id-context {
+    margin-top: 12px;
+    text-align: center;
     font-size: 0.85em;
-    word-break: break-all;
+    color: var(--text-muted);
+}
+
+.nexus-custom-id-dialog .nexus-merge-errors li {
+    overflow-wrap: anywhere;
 }
