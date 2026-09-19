@@ -426,4 +426,57 @@ describe("ConversationProcessor reconciliation", () => {
             expect(written).not.toContain("uid:");
         });
     });
+    describe("mode and models on update", () => {
+        const stampOnly = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            convertChat: vi.fn(),
+            getProviderName: () => "perplexity",
+            processMessageAttachments: vi.fn(),
+        };
+
+        const note = [
+            "---",
+            "update_time: 2026-01-01T00:00:00.000Z",
+            'mode: "CONCISE"',
+            "models:",
+            '  - "sonar"',
+            "---",
+            "<!-- UID: m1 -->",
+            "<!-- UID: m2 -->",
+        ].join("\n");
+
+        async function update(metadata: Record<string, unknown>) {
+            const { processor, writeToFile } = createProcessor(note);
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+            await processor.updateExistingNote(
+                stampOnly,
+                { ...conversationOf([...EXISTING_MESSAGES]), metadata },
+                "note.md",
+                2,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return writeToFile.mock.calls[0][1];
+        }
+
+        it("keeps them when the export names neither", async () => {
+            const written = await update({});
+
+            expect(written).toContain('mode: "CONCISE"');
+            expect(written).toContain('models:\n  - "sonar"');
+        });
+
+        it("replaces only what the export names", async () => {
+            const written = await update({ mode: "COPILOT", models: [] });
+
+            expect(written).toContain('mode: "COPILOT"');
+            expect(written).not.toContain('mode: "CONCISE"');
+            expect(written).toContain('models:\n  - "sonar"');
+        });
+    });
 });

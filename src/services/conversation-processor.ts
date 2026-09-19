@@ -1153,13 +1153,19 @@ export class ConversationProcessor {
             return content;
         }
 
+        // An export that does not name the mode or the models says nothing
+        // about them: the note keeps what an earlier, richer export wrote.
         let frontmatter = frontmatterMatch[0];
-        frontmatter = frontmatter
-            .replace(/^mode: .*$/m, "")
-            .replace(/\n{3,}/g, "\n\n");
-        frontmatter = frontmatter
-            .replace(/^models:\n(?:\s+- .*\n?)*/m, "")
-            .replace(/\n{3,}/g, "\n\n");
+        if (mode) {
+            frontmatter = frontmatter
+                .replace(/^mode: .*$/m, "")
+                .replace(/\n{3,}/g, "\n\n");
+        }
+        if (models.length > 0) {
+            frontmatter = frontmatter
+                .replace(/^models:\n(?:\s+- .*\n?)*/m, "")
+                .replace(/\n{3,}/g, "\n\n");
+        }
 
         const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"\n` : "";
         const modelsBlock =
