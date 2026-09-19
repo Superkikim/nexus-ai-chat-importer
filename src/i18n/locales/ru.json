@@ -541,7 +541,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "Спасибо за установку Nexus AI Chat Importer!",
-        "description": "Импортируйте и управляйте беседами ChatGPT, Claude, Mistral Vibe и Perplexity прямо в вашем хранилище Obsidian.",
+        "description": "Импортируйте и управляйте беседами ChatGPT, Claude, Mistral Vibe, Perplexity и Grok прямо в вашем хранилище Obsidian.",
         "resources_title": "Ресурсы",
         "resources": {
             "documentation": {
