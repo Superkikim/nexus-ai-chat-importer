@@ -74,133 +74,139 @@ export class StreamingJsonArrayParser {
 
         let { buffer, done, pullNextChunk, scanIndex } = arrayState;
 
-        let inString = false;
-        let escape = false;
-        let elementDepth = 0;
-        let elementStart = -1;
-        let elementEnd = -1;
+        // Stopping at the closing bracket leaves the source unread: close it,
+        // so a ZIP entry stream does not stay open behind the parser.
+        try {
+            let inString = false;
+            let escape = false;
+            let elementDepth = 0;
+            let elementStart = -1;
+            let elementEnd = -1;
 
-        while (true) {
-            while (scanIndex < buffer.length) {
-                const ch = buffer[scanIndex];
+            while (true) {
+                while (scanIndex < buffer.length) {
+                    const ch = buffer[scanIndex];
 
-                if (elementStart === -1) {
-                    if (ch === "]") {
-                        return;
-                    }
-                    if (ch === "," || /\s/.test(ch)) {
-                        scanIndex++;
-                        continue;
-                    }
+                    if (elementStart === -1) {
+                        if (ch === "]") {
+                            return;
+                        }
+                        if (ch === "," || /\s/.test(ch)) {
+                            scanIndex++;
+                            continue;
+                        }
 
-                    elementStart = scanIndex;
-                    elementEnd = -1;
-                    inString = false;
-                    escape = false;
-                    elementDepth = 0;
-                }
-
-                if (inString) {
-                    if (escape) {
-                        escape = false;
-                    } else if (ch === "\\") {
-                        escape = true;
-                    } else if (ch === '"') {
+                        elementStart = scanIndex;
+                        elementEnd = -1;
                         inString = false;
-                    }
-                } else {
-                    if (ch === '"') {
-                        inString = true;
-                    } else if (ch === "{" || ch === "[") {
-                        elementDepth++;
-                    } else if (ch === "}" || ch === "]") {
-                        elementDepth--;
-                        if (elementDepth < 0) {
-                            throw new Error(
-                                "Invalid chunked JSON array: unbalanced brackets"
-                            );
-                        }
-                        if (elementDepth === 0) {
-                            elementEnd = scanIndex + 1;
-                        }
+                        escape = false;
+                        elementDepth = 0;
                     }
 
-                    if (elementEnd !== -1) {
-                        if (ch === "," || ch === "]") {
-                            const element = buffer
-                                .slice(elementStart, elementEnd)
-                                .trim();
-                            if (element.length > 0) {
-                                try {
-                                    yield JSON.parse(element);
-                                } catch {
-                                    // Keep parity with string parser: skip malformed elements.
-                                }
-                            }
-
-                            buffer = buffer.slice(scanIndex + 1);
-                            scanIndex = 0;
-                            elementStart = -1;
-                            elementEnd = -1;
-                            elementDepth = 0;
-                            inString = false;
+                    if (inString) {
+                        if (escape) {
                             escape = false;
-
-                            if (ch === "]") {
-                                return;
+                        } else if (ch === "\\") {
+                            escape = true;
+                        } else if (ch === '"') {
+                            inString = false;
+                        }
+                    } else {
+                        if (ch === '"') {
+                            inString = true;
+                        } else if (ch === "{" || ch === "[") {
+                            elementDepth++;
+                        } else if (ch === "}" || ch === "]") {
+                            elementDepth--;
+                            if (elementDepth < 0) {
+                                throw new Error(
+                                    "Invalid chunked JSON array: unbalanced brackets"
+                                );
                             }
-                            continue;
+                            if (elementDepth === 0) {
+                                elementEnd = scanIndex + 1;
+                            }
                         }
 
-                        if (!/\s/.test(ch)) {
-                            const element = buffer
-                                .slice(elementStart, elementEnd)
-                                .trim();
-                            if (element.length > 0) {
-                                try {
-                                    yield JSON.parse(element);
-                                } catch {
-                                    // Keep parity with string parser: skip malformed elements.
+                        if (elementEnd !== -1) {
+                            if (ch === "," || ch === "]") {
+                                const element = buffer
+                                    .slice(elementStart, elementEnd)
+                                    .trim();
+                                if (element.length > 0) {
+                                    try {
+                                        yield JSON.parse(element);
+                                    } catch {
+                                        // Keep parity with string parser: skip malformed elements.
+                                    }
                                 }
+
+                                buffer = buffer.slice(scanIndex + 1);
+                                scanIndex = 0;
+                                elementStart = -1;
+                                elementEnd = -1;
+                                elementDepth = 0;
+                                inString = false;
+                                escape = false;
+
+                                if (ch === "]") {
+                                    return;
+                                }
+                                continue;
                             }
 
-                            buffer = buffer.slice(elementEnd);
-                            scanIndex = 0;
-                            elementStart = -1;
-                            elementEnd = -1;
-                            elementDepth = 0;
-                            inString = false;
-                            escape = false;
-                            continue;
+                            if (!/\s/.test(ch)) {
+                                const element = buffer
+                                    .slice(elementStart, elementEnd)
+                                    .trim();
+                                if (element.length > 0) {
+                                    try {
+                                        yield JSON.parse(element);
+                                    } catch {
+                                        // Keep parity with string parser: skip malformed elements.
+                                    }
+                                }
+
+                                buffer = buffer.slice(elementEnd);
+                                scanIndex = 0;
+                                elementStart = -1;
+                                elementEnd = -1;
+                                elementDepth = 0;
+                                inString = false;
+                                escape = false;
+                                continue;
+                            }
                         }
                     }
+
+                    scanIndex++;
                 }
 
-                scanIndex++;
-            }
-
-            if (done) {
-                if (elementStart !== -1 && elementEnd !== -1) {
-                    const element = buffer
-                        .slice(elementStart, elementEnd)
-                        .trim();
-                    if (element.length > 0) {
-                        try {
-                            yield JSON.parse(element);
-                        } catch {
-                            // Keep parity with string parser: skip malformed elements.
+                if (done) {
+                    if (elementStart !== -1 && elementEnd !== -1) {
+                        const element = buffer
+                            .slice(elementStart, elementEnd)
+                            .trim();
+                        if (element.length > 0) {
+                            try {
+                                yield JSON.parse(element);
+                            } catch {
+                                // Keep parity with string parser: skip malformed elements.
+                            }
                         }
                     }
+                    return;
                 }
-                return;
-            }
 
-            const nextChunk = await pullNextChunk();
-            if (nextChunk === null) {
-                done = true;
-                continue;
+                const nextChunk = await pullNextChunk();
+                if (nextChunk === null) {
+                    done = true;
+                    continue;
+                }
+                buffer += nextChunk;
             }
-            buffer += nextChunk;
+        } finally {
+            await arrayState.close();
         }
     }
 
@@ -337,8 +343,12 @@ export class StreamingJsonArrayParser {
         scanIndex: number;
         done: boolean;
         pullNextChunk: () => Promise<string | null>;
+        close: () => Promise<void>;
     } | null> {
         const iterator = chunks[Symbol.asyncIterator]();
+        const close = async (): Promise<void> => {
+            if (!done) await iterator.return?.();
+        };
         let done = false;
 
         const pullNextChunk = async (): Promise<string | null> => {
@@ -375,9 +385,13 @@ export class StreamingJsonArrayParser {
                             scanIndex: 0,
                             done,
                             pullNextChunk,
+                            close,
                         };
                     }
-                    if (ch !== "{") return null;
+                    if (ch !== "{") {
+                        await close();
+                        return null;
+                    }
                     started = true;
                     depth = 1;
                     expectingKey = true;
@@ -416,6 +430,7 @@ export class StreamingJsonArrayParser {
                             scanIndex: 0,
                             done,
                             pullNextChunk,
+                            close,
                         };
                     }
                     matchState = 0;
@@ -431,7 +446,10 @@ export class StreamingJsonArrayParser {
                     depth++;
                 } else if (ch === "}" || ch === "]") {
                     depth--;
-                    if (depth <= 0) return null;
+                    if (depth <= 0) {
+                        await close();
+                        return null;
+                    }
                 } else if (ch === "," && depth === 1) {
                     expectingKey = true;
                 }
