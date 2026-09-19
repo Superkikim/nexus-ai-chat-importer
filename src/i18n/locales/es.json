@@ -223,7 +223,7 @@
             }
         },
         "display": {
-            "section_title": "📅 Prefijo de fecha",
+            "section_title": "📅 Formato de fecha",
             "add_date_prefix": {
                 "name": "Añadir prefijo de fecha a los nombres de archivo",
                 "desc": "Añadir la fecha de creación como prefijo a los nombres de archivo de conversación",
@@ -231,7 +231,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 Formato de fecha de mensajes",
             "custom_format": {
                 "name": "Formato de marca de tiempo personalizado para mensajes",
                 "desc": "Reemplazar el formato de marca de tiempo predeterminado basado en la configuración regional en los encabezados de mensajes. Cuando está desactivado, las marcas de tiempo siguen la configuración de idioma de Obsidian."

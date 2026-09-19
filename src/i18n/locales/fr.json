@@ -223,7 +223,7 @@
             }
         },
         "display": {
-            "section_title": "📅 Préfixe de date",
+            "section_title": "📅 Format de date",
             "add_date_prefix": {
                 "name": "Ajouter un préfixe de date aux noms de fichiers",
                 "desc": "Ajouter la date de création comme préfixe aux noms de fichiers de conversation",
@@ -231,7 +231,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 Format de date des messages",
             "custom_format": {
                 "name": "Format d'horodatage personnalisé des messages",
                 "desc": "Remplacer le format d'horodatage par défaut basé sur la locale dans les en-têtes de messages. Lorsque désactivé, les horodatages suivent le paramètre de langue d'Obsidian."

@@ -1,6 +1,6 @@
 # Settings
 
-Open **Settings → Nexus AI Chat Importer**. There are five sections, shown in this
+Open **Settings → Nexus AI Chat Importer**. There are four sections, shown in this
 order.
 
 ## 💝 Support & Help
@@ -8,14 +8,16 @@ order.
 Links to the documentation, release notes, GitHub issues, and the community forum
 thread. No configurable options.
 
-## 📅 Date Prefix
+## 📅 Date Format
+
+### Date prefix
 
 **Add date prefix to filenames** — off by default. When on, each conversation
 filename is prefixed with its creation date. The format is **`YYYY-MM-DD`** or
 **`YYYYMMDD`** (default `YYYY-MM-DD`). The date uses your computer's local
 timezone.
 
-## 📅 Message Date Format
+### Message timestamps
 
 Controls how the timestamp on each message is displayed in a note. It does **not**
 affect frontmatter, which is always stored in ISO 8601 UTC.

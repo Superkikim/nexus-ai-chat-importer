@@ -26,9 +26,9 @@ import { t } from "../../i18n";
 import { setFullWidthDescription } from "./full-width-description";
 
 export class MessageDateFormatSection extends BaseSettingsSection {
-    get title() {
-        return t("settings.timestamps.section_title");
-    }
+    // No heading of its own: these settings continue the Date Format
+    // section opened by DisplaySettingsSection (order 10) right above.
+    readonly title = undefined;
     readonly order = 11;
 
     render(containerEl: HTMLElement): void {

@@ -223,7 +223,7 @@
             }
         },
         "display": {
-            "section_title": "📅 날짜 접두사",
+            "section_title": "📅 날짜 형식",
             "add_date_prefix": {
                 "name": "파일 이름에 날짜 접두사 추가",
                 "desc": "대화 파일 이름 앞에 생성 날짜를 접두사로 추가합니다",
@@ -231,7 +231,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 메시지 날짜 형식",
             "custom_format": {
                 "name": "메시지 타임스탬프 형식 사용자 지정",
                 "desc": "메시지 헤더의 기본 로케일 기반 타임스탬프 형식을 재정의합니다. 비활성화되면 타임스탬프는 Obsidian의 언어 설정을 따릅니다."

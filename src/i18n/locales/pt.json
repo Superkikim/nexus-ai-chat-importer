@@ -223,7 +223,7 @@
             }
         },
         "display": {
-            "section_title": "📅 Prefixo de data",
+            "section_title": "📅 Formato de data",
             "add_date_prefix": {
                 "name": "Adicionar prefixo de data aos nomes de ficheiro",
                 "desc": "Adicionar a data de criação como prefixo aos nomes dos ficheiros de conversa",
@@ -231,7 +231,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 Formato de data das mensagens",
             "custom_format": {
                 "name": "Formato de data e hora personalizado nas mensagens",
                 "desc": "Substituir o formato de data e hora predefinido baseado nas definições de idioma nos cabeçalhos das mensagens. Quando desativado, os carimbos de data e hora seguem as definições de idioma do Obsidian."

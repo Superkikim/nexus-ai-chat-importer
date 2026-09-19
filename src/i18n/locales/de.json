@@ -223,7 +223,7 @@
             }
         },
         "display": {
-            "section_title": "📅 Datumspräfix",
+            "section_title": "📅 Datumsformat",
             "add_date_prefix": {
                 "name": "Datumspräfix zu Dateinamen hinzufügen",
                 "desc": "Das Erstellungsdatum als Präfix zu Gesprächsdateinamen hinzufügen",
@@ -231,7 +231,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 Nachrichtendatumsformat",
             "custom_format": {
                 "name": "Benutzerdefiniertes Zeitstempelformat für Nachrichten",
                 "desc": "Das standardmäßige gebietsschemabasierte Zeitstempelformat in Nachrichtenkopfzeilen überschreiben. Wenn deaktiviert, folgen Zeitstempel der Spracheinstellung von Obsidian."

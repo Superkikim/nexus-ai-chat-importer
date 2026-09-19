@@ -223,7 +223,7 @@
             }
         },
         "display": {
-            "section_title": "📅 Date Prefix",
+            "section_title": "📅 Date Format",
             "add_date_prefix": {
                 "name": "Add date prefix to filenames",
                 "desc": "Add creation date as a prefix to conversation filenames",
@@ -231,7 +231,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 Message Date Format",
             "custom_format": {
                 "name": "Custom message timestamp format",
                 "desc": "Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting."
