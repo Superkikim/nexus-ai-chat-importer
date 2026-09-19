@@ -11,7 +11,8 @@ export type SupportedArchiveProvider =
     | "chatgpt"
     | "claude"
     | "vibe"
-    | "perplexity";
+    | "perplexity"
+    | "grok";
 
 export type ArchiveClassification =
     | {
@@ -73,6 +74,22 @@ export function findPerplexityJsonFiles(fileNames: string[]): string[] {
     });
 }
 
+/**
+ * Grok exports nest their single JSON payload under per-user folders
+ * (`ttl/30d/export_data/<user>/prod-grok-backend.json`), so it is found by
+ * base name.
+ */
+export function findGrokBackendJsonFiles(fileNames: string[]): string[] {
+    return fileNames.filter(
+        (name) =>
+            (name.split("/").pop() ?? name).toLowerCase() ===
+            "prod-grok-backend.json"
+    );
+}
+
+/** Top-level arrays of a Grok payload that hold importable items. */
+const GROK_ITEM_ARRAYS = ["conversations", "media_posts"] as const;
+
 function hasNestedZipContainerSignature(fileNames: string[]): boolean {
     const zipEntries = fileNames.filter((name) =>
         name.toLowerCase().endsWith(".zip")
@@ -105,10 +122,13 @@ export function classifyArchiveEntries(
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
     const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
+    const hasGrokFiles = findGrokBackendJsonFiles(fileNames).length > 0;
     const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
 
     const detectedProvider: SupportedArchiveProvider | undefined =
-        hasMistralVibeFiles && !hasConversationsJson
+        hasGrokFiles && !hasConversationsJson
+            ? "grok"
+            : hasMistralVibeFiles && !hasConversationsJson
             ? "vibe"
             : hasPerplexityFiles &&
               !hasConversationsJson &&
@@ -304,10 +324,13 @@ async function listFileNames(zip: ZipArchiveReader): Promise<string[]> {
     return entries.map((entry) => entry.path);
 }
 
-async function collectJsonArrayFromEntry(entry: {
-    readText(): Promise<string>;
-    readTextChunks?: () => AsyncGenerator<string>;
-}): Promise<{ items: unknown[]; uncompressedBytes: number }> {
+async function collectJsonArrayFromEntry(
+    entry: {
+        readText(): Promise<string>;
+        readTextChunks?: () => AsyncGenerator<string>;
+    },
+    arrayKey?: string
+): Promise<{ items: unknown[]; uncompressedBytes: number }> {
     const items: unknown[] = [];
     let uncompressedBytes = 0;
     const chunkReader = entry.readTextChunks?.bind(entry);
@@ -322,7 +345,8 @@ async function collectJsonArrayFromEntry(entry: {
         }
 
         for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(
-            countingChunks()
+            countingChunks(),
+            arrayKey
         )) {
             items.push(value);
         }
@@ -384,6 +408,39 @@ async function collectJsonObjectFromEntry(entry: {
     return { item: parsed, uncompressedBytes };
 }
 
+/**
+ * Every importable item of a Grok payload: its conversations, then its
+ * Imagine posts. The file is read once per array; an array the export does
+ * not carry is simply empty.
+ */
+async function* streamGrokItems(
+    entry: ZipEntryHandle
+): AsyncGenerator<unknown> {
+    const chunkReader = entry.readTextChunks?.bind(entry);
+    if (!chunkReader) {
+        throw new NexusAiChatImporterError(
+            "ZIP_TEXT_STREAM_REQUIRED",
+            "ZIP entry text streaming is unavailable for this archive reader."
+        );
+    }
+
+    for (const arrayKey of GROK_ITEM_ARRAYS) {
+        try {
+            for await (const item of StreamingJsonArrayParser.streamConversationsFromChunks(
+                chunkReader(),
+                arrayKey
+            )) {
+                yield item;
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "";
+            if (!message.startsWith(`Could not find ${arrayKey} array`)) {
+                throw error;
+            }
+        }
+    }
+}
+
 function formatRuntimeMemorySnapshot(): string {
     const perf = window.performance as Performance & {
         memory?: {
@@ -411,6 +468,26 @@ export async function extractRawConversations(
     zip: ZipArchiveReader
 ): Promise<RawConversationExtractionResult> {
     const fileNames = await listFileNames(zip);
+
+    const grokFiles = findGrokBackendJsonFiles(fileNames).sort();
+    if (grokFiles.length > 0) {
+        const entrySizes = new Map(
+            (await zip.listEntries()).map((e) => [e.path, e.size])
+        );
+        const conversations: unknown[] = [];
+        let uncompressedBytes = 0;
+
+        for (const fileName of grokFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            for await (const item of streamGrokItems(entry)) {
+                conversations.push(item);
+            }
+            uncompressedBytes += entrySizes.get(fileName) ?? 0;
+        }
+
+        return { conversations, uncompressedBytes };
+    }
 
     const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
@@ -539,6 +616,28 @@ export async function* extractConversationsStream(
         entryCount: fileNames.length,
         durationMs: Date.now() - startedAt,
     });
+
+    const grokFiles = findGrokBackendJsonFiles(fileNames).sort();
+    if (grokFiles.length > 0) {
+        streamLogger.debug("Using Grok conversation stream", {
+            fileCount: grokFiles.length,
+        });
+        let yieldedCount = 0;
+        for (const fileName of grokFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            for await (const item of streamGrokItems(entry)) {
+                yieldedCount++;
+                yield item;
+                await yieldToEventLoopIfNeeded(yieldedCount);
+            }
+        }
+        streamLogger.debug("Grok conversation stream complete", {
+            yieldedCount,
+            durationMs: Date.now() - startedAt,
+        });
+        return;
+    }
 
     const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)

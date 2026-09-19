@@ -369,3 +369,68 @@ describe("resolveArchiveClassification", () => {
         expect(memories.supported).toBe(false);
     });
 });
+
+describe("Grok archives", () => {
+    const GROK_PATH = "ttl/30d/export_data/u1/prod-grok-backend.json";
+    const grokPayload = {
+        conversations: [
+            { conversation: { id: "c1" }, responses: [] },
+            { conversation: { id: "c2" }, responses: [] },
+        ],
+        projects: [],
+        tasks: [],
+        media_posts: [{ id: "p1", original_prompt: "a cat" }],
+    };
+
+    function grokReader(payload: unknown = grokPayload): MemoryZipReader {
+        return new MemoryZipReader({
+            [GROK_PATH]: JSON.stringify(payload),
+            "ttl/30d/export_data/u1/prod-mc-asset-server//a1/content": "x",
+        });
+    }
+
+    function idOf(item: unknown): string {
+        const record = item as {
+            id?: string;
+            conversation?: { id: string };
+        };
+        return record.conversation?.id ?? record.id ?? "";
+    }
+
+    it("is recognized by its nested backend JSON", () => {
+        expect(
+            classifyArchiveEntries([
+                GROK_PATH,
+                "ttl/30d/export_data/u1/prod-mc-billing.json",
+            ])
+        ).toEqual({ supported: true, provider: "grok", reason: "supported" });
+    });
+
+    it("is refused, by name, when another provider was expected", () => {
+        const result = classifyArchiveEntries([GROK_PATH], "claude");
+        expect(result.supported).toBe(false);
+        expect(result.reason).toBe("provider-mismatch");
+    });
+
+    it("extracts conversations, then Imagine posts", async () => {
+        const result = await extractRawConversations(grokReader());
+
+        expect(result.conversations.map(idOf)).toEqual(["c1", "c2", "p1"]);
+    });
+
+    it("streams conversations, then Imagine posts", async () => {
+        const ids: string[] = [];
+        for await (const item of extractConversationsStream(grokReader())) {
+            ids.push(idOf(item));
+        }
+
+        expect(ids).toEqual(["c1", "c2", "p1"]);
+    });
+
+    it("accepts a payload without Imagine posts", async () => {
+        const withoutPosts = { ...grokPayload, media_posts: undefined };
+        const result = await extractRawConversations(grokReader(withoutPosts));
+
+        expect(result.conversations.map(idOf)).toEqual(["c1", "c2"]);
+    });
+});

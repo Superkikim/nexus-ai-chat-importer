@@ -600,7 +600,8 @@
             "chatgpt": "ChatGPT",
             "claude": "Claude",
             "vibe": "Mistral Vibe",
-            "perplexity": "Perplexity"
+            "perplexity": "Perplexity",
+            "grok": "Grok"
         }
     },
     "commands": {
