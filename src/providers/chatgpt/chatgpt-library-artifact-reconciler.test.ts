@@ -4,7 +4,7 @@ import {
     ChatGPTLibraryEntry,
     ChatGPTLibraryIndex,
 } from "./chatgpt-library-index";
-import { createMissingGeneratedImageAttachment } from "./chatgpt-generated-image";
+import { createMissingGeneratedImageAttachment } from "../../utils/generated-image-placeholder";
 import { StandardAttachment, StandardMessage } from "../../types/standard";
 import { ScopedLogger } from "../../logger";
 

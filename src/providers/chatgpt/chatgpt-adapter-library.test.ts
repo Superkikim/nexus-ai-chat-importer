@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { ChatGPTAdapter } from "./chatgpt-adapter";
-import { createMissingGeneratedImageAttachment } from "./chatgpt-generated-image";
+import { createMissingGeneratedImageAttachment } from "../../utils/generated-image-placeholder";
 import { StandardMessage } from "../../types/standard";
 import { ZipArchiveReader, ZipEntryHandle } from "../../utils/zip-loader";
 import type NexusAiChatImporterPlugin from "../../main";

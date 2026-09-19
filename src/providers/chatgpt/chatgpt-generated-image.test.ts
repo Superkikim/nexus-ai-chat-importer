@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
     annotateMissingGeneratedImages,
-    createMissingGeneratedImageAttachment,
     hasStructuredGeneratedImage,
     isAssistantImageClaim,
     isImageGenerationRequest,
@@ -150,24 +149,5 @@ describe("annotateMissingGeneratedImages", () => {
         expect(hasStructuredGeneratedImage(legacyChat)).toBe(true);
         const out = annotateMissingGeneratedImages(messages, legacyChat);
         expect(out).toEqual(messages);
-    });
-});
-
-describe("createMissingGeneratedImageAttachment", () => {
-    it("includes the prompt callout when a prompt is provided", () => {
-        const att = createMissingGeneratedImageAttachment("a red bicycle");
-        expect(att.extractedContent).toContain("**Image prompt**");
-        expect(att.extractedContent).toContain("a red bicycle");
-        expect(att.extractedContent).toContain(
-            "**Generated image — not in export**"
-        );
-    });
-
-    it("omits the prompt callout when no prompt is provided", () => {
-        const att = createMissingGeneratedImageAttachment();
-        expect(att.extractedContent).not.toContain("**Image prompt**");
-        expect(att.extractedContent).toContain(
-            "**Generated image — not in export**"
-        );
     });
 });
