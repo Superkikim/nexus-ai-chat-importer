@@ -36,7 +36,7 @@ front.
    [ChatGPT](providers/chatgpt.md#get-your-export),
    [Claude](providers/claude.md#get-your-export),
    [Mistral Vibe](providers/mistral-vibe.md#get-your-export),
-   [Perplexity](providers/perplexity.md#getting-a-compatible-export), or
+   [Perplexity](providers/perplexity.md#get-your-export), or
    [Grok](providers/grok.md#get-your-export). Do **not**
    unzip it.
 2. In Obsidian, run **Import AI conversations** — from the command palette, or the

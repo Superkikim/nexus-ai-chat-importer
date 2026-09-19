@@ -51,7 +51,7 @@ resolve.
 | ChatGPT | root `conversations.json`, or numbered `conversations-NNN.json` (sorted and merged). Signature: a conversations JSON **without** `users.json`. |
 | Claude | root `conversations.json` **plus** `users.json` (legacy combined export); **or** an archive whose only meaningful entry is `conversations.json` and whose head contains `chat_messages` and not ChatGPT `mapping` (newer split export — `users.json` not required). |
 | Mistral Vibe | one or more root `chat-<hex/uuid>.json` files, each a top-level message array (one conversation per file). |
-| Perplexity | JSON files whose basename starts with `perplexity_` (may sit below a directory). Two schemas are normalised downstream. |
+| Perplexity | Perplexity's own data export: `conversations-<YYYYMMDD>_<HHMMSS>-<hash>.json` (any directory), whose `conversations` array is streamed. Thread Exporter extension: JSON files whose basename starts with `perplexity_` (may sit below a directory). All three schemas are normalised by the Perplexity provider. |
 
 Rules that public docs also state, kept here for reference:
 
