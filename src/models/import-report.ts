@@ -611,7 +611,11 @@ export class ImportReport {
 
             lines.push("### Notes");
             lines.push("");
-            lines.push("| Outcome | Conversations |");
+            lines.push(
+                `| Outcome | ${
+                    ledger.categories[0]?.category ?? DEFAULT_ITEM_CATEGORY
+                } |`
+            );
             lines.push("| --- | ---: |");
             lines.push(`| ✨ Created | ${ledger.created} |`);
             lines.push(`| 🔄 Updated | ${ledger.updated} |`);
