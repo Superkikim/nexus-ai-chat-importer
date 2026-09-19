@@ -579,9 +579,12 @@ export class ImportReport {
         // archives; with one, this line is the only place the name survives.
         if (allFiles && allFiles.length === 1) {
             const only = allFiles[0];
+            // "—" stands for an archive whose name carries no date (Grok's
+            // is a bare UUID): there is nothing to append then.
             const timestamp = archiveTimestamps?.get(only.name);
+            const dated = timestamp && timestamp !== "—";
             lines.push(
-                `Archive: \`${only.name}\`${timestamp ? ` — ${timestamp}` : ""}`
+                `Archive: \`${only.name}\`${dated ? ` — ${timestamp}` : ""}`
             );
             lines.push("");
         }

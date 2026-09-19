@@ -821,3 +821,33 @@ describe("import report — an export that mixes kinds of item", () => {
         );
     });
 });
+
+describe("import report — the single-archive line", () => {
+    function archiveLine(timestamp: string | undefined): string | undefined {
+        const report = populatedReport();
+        const timestamps = new Map<string, string>();
+        if (timestamp !== undefined) timestamps.set("export.zip", timestamp);
+        return report
+            .generateSummaryReportContent(
+                [fakeFile("export.zip")],
+                ["export.zip"],
+                [],
+                false,
+                undefined,
+                LINKS,
+                timestamps
+            )
+            .split("\n")
+            .find((line) => line.startsWith("Archive:"));
+    }
+
+    it("appends the archive date when its name carries one", () => {
+        expect(archiveLine("2026-05-13 21:26")).toBe(
+            "Archive: `export.zip` — 2026-05-13 21:26"
+        );
+    });
+
+    it("appends nothing when its name carries no date", () => {
+        expect(archiveLine("—")).toBe("Archive: `export.zip`");
+    });
+});
