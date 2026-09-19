@@ -90,6 +90,12 @@ export class GrokAdapter extends BaseProviderAdapter<GrokItem> {
         if (isGrokMediaPost(chat) && !(chat.original_prompt || "").trim()) {
             return "empty prompt";
         }
+        if (
+            isGrokConversation(chat) &&
+            GrokConverter.convertConversation(chat).messages.length === 0
+        ) {
+            return "no messages";
+        }
         return null;
     }
 

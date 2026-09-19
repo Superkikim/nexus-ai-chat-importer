@@ -9,6 +9,7 @@ import { ChatGPTAdapter } from "../providers/chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "../providers/claude/claude-adapter";
 import { MistralVibeAdapter } from "../providers/vibe/vibe-adapter";
 import { PerplexityAdapter } from "../providers/perplexity/perplexity-adapter";
+import { GrokAdapter } from "../providers/grok/grok-adapter";
 
 /**
  * Tests that ConversationMetadataExtractor stays aligned with
@@ -224,5 +225,90 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
         expect(m.messageCount).toBe(2);
         expect(m.createTime).toBe(1706745600);
         expect(m.updateTime).toBe(1706749200);
+    });
+
+    it("reads Grok items through the adapter, categories and exclusions included", () => {
+        const plugin = createTestPlugin();
+        const registry = new DefaultProviderRegistry();
+        registry.register("grok", new GrokAdapter(plugin));
+        const extractor = new ConversationMetadataExtractor(registry, plugin);
+
+        const at = (ms: number) => ({ $date: { $numberLong: String(ms) } });
+        const items = [
+            {
+                conversation: {
+                    id: "c1",
+                    title: "Chat",
+                    create_time: "2026-01-01T00:00:00Z",
+                    modify_time: "2026-01-01T00:05:00Z",
+                },
+                responses: [
+                    {
+                        response: {
+                            _id: "q",
+                            sender: "human",
+                            message: "Q",
+                            create_time: at(1),
+                        },
+                    },
+                    {
+                        response: {
+                            _id: "a",
+                            sender: "assistant",
+                            message: "A",
+                            create_time: at(2),
+                        },
+                    },
+                ],
+            },
+            {
+                conversation: { id: "c2", title: "Silent" },
+                responses: [
+                    {
+                        response: {
+                            _id: "e",
+                            sender: "ASSISTANT",
+                            message: "",
+                            create_time: at(3),
+                        },
+                    },
+                ],
+            },
+            {
+                id: "p1",
+                original_prompt: "a cat",
+                media_type: "image",
+                create_time: "2026-02-01T00:00:00Z",
+            },
+            {
+                id: "p2",
+                original_prompt: "",
+                media_type: "video",
+                create_time: "2026-02-02T00:00:00Z",
+            },
+        ];
+
+        const metadata = (extractor as any).extractMetadataByProvider(
+            items,
+            "grok"
+        ) as any[];
+
+        expect(
+            metadata.map((m) => [
+                m.id,
+                m.title,
+                m.messageCount,
+                m.category,
+                m.exclusionReason,
+            ])
+        ).toEqual([
+            ["c1", "Chat", 2, "Conversations", undefined],
+            ["c2", "Silent", 0, "Conversations", "no messages"],
+            ["p1", "Imagine - a cat", 2, "Imagine", undefined],
+            ["p2", "Imagine - Untitled", 2, "Imagine", "empty prompt"],
+        ]);
+        expect(metadata[0].createTime).toBe(
+            Date.parse("2026-01-01T00:00:00Z") / 1000
+        );
     });
 });
