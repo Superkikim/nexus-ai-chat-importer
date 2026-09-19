@@ -117,6 +117,9 @@ export const URL_GENERATORS: Record<string, UrlGenerator> = {
     perplexity: {
         generateChatUrl: PROVIDER_URLS.PERPLEXITY.CHAT,
     },
+    grok: {
+        generateChatUrl: PROVIDER_URLS.GROK.CHAT,
+    },
 };
 
 /**

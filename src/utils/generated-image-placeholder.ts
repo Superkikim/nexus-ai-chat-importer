@@ -11,6 +11,8 @@ export interface MissingGeneratedImageOptions {
     note?: string;
     /** Where the image can still be seen, linked from the warning line. */
     sourceUrl?: string;
+    /** What was generated, for the heading (default "Generated image"). */
+    label?: string;
 }
 
 /** Build a placeholder attachment for an image that the export omitted. */
@@ -22,7 +24,9 @@ export function createMissingGeneratedImageAttachment(
     const link = options.sourceUrl
         ? ` [Open original](${options.sourceUrl})`
         : "";
-    const warning = `this export did not include the image${link}`;
+    const label = options.label ?? "Generated image";
+    const noun = label === "Generated image" ? "image" : label.toLowerCase();
+    const warning = `this export did not include the ${noun}${link}`;
 
     let extractedContent: string;
     if (trimmed) {
@@ -32,10 +36,10 @@ export function createMissingGeneratedImageAttachment(
 >> ${formattedPrompt}
 >> \`\`\`
 >
->>[!nexus_attachment] **Generated image — not in export**
+>>[!nexus_attachment] **${label} — not in export**
 >> ${warning}`;
     } else {
-        extractedContent = `>>[!nexus_attachment] **Generated image — not in export**
+        extractedContent = `>>[!nexus_attachment] **${label} — not in export**
 >> ${warning}`;
     }
 
