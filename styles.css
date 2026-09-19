@@ -2645,7 +2645,15 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 /* Custom ID property: field, overwrite switch and its label follow the name. */
 .nexus-custom-id-setting .setting-item-control {
     justify-content: flex-start;
+    flex-wrap: wrap;
     gap: 8px;
+}
+
+.nexus-custom-id-overwrite {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
 }
 
 .nexus-custom-id-setting .setting-item-control input[type="text"] {
@@ -2662,5 +2670,4 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     cursor: pointer;
     font-size: var(--font-ui-small);
     color: var(--text-muted);
-    white-space: nowrap;
 }
