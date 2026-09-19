@@ -1,17 +1,17 @@
 # Release workflow
 
-The end-to-end process for releasing a new plugin version, from the end of
+The end-to-end process for releasing a new plugin version, from the start of
 development to publication on the Obsidian Community Plugin registry.
 
-Releases are **semi-automated**: the quality checks, documentation, version bump,
+Releases are **semi-automated**: the version bump, quality checks, documentation,
 and merge are manual; a single tag push triggers the automated build and GitHub
 Release.
 
 | Step | Who |
 |---|---|
+| Version bump (first commit on the dev branch) | Manual |
 | Pre-release quality gate | Manual |
 | Documentation updates | Manual |
-| Version bump | Manual |
 | Merge dev → master | Manual (explicit authorization required) |
 | Tag + push | Manual (explicit authorization required) |
 | Build, attest, publish GitHub Release | GitHub Actions |
@@ -24,6 +24,20 @@ Release.
 All work for a release happens on a `dev-X.Y.Z` branch, with granular commits (one
 logical change per commit) using the standard prefixes: `feat:`, `fix:`, `chore:`,
 `docs:`, `refactor:`.
+
+### First commit: the version bump
+
+Bump the version **before any other work** on a new `dev-X.Y.Z` branch, so every
+build made from it — in the dev vault or by a tester — reports itself as X.Y.Z.
+
+| File | Field |
+|---|---|
+| `package.json`, `package-lock.json` | `version` (`npm version X.Y.Z --no-git-tag-version` updates both) |
+| `manifest.json` | `version` |
+
+`versions.json` maps the new version to its `minAppVersion` — add a row.
+Commit: `chore(release): bump version to X.Y.Z`. Also update the **Current
+Version** line in [`CLAUDE.md`](../../CLAUDE.md).
 
 ---
 
@@ -47,7 +61,7 @@ npm run check:docs-links
 
 ## Phase 3 — Documentation
 
-Update, before the version-bump commit:
+Update before merging:
 
 ### `RELEASE_NOTES.md`
 
@@ -105,20 +119,7 @@ stale again, replace it with a short version-agnostic pointer to
 
 ---
 
-## Phase 4 — Version bump
-
-| File | Field |
-|---|---|
-| `package.json` | `version` |
-| `manifest.json` | `version` |
-
-`versions.json` maps the new version to its `minAppVersion` — add a row.
-Commit: `chore(release): bump version to X.Y.Z`. Also update the **Current
-Version** line in [`CLAUDE.md`](../../CLAUDE.md).
-
----
-
-## Phase 5 — Merge to master
+## Phase 4 — Merge to master
 
 > **Authorization required.** Never merge, tag, or release without explicit
 > sign-off from the maintainer. Each step is a separate gate.
@@ -133,7 +134,7 @@ git push
 
 ---
 
-## Phase 6 — Tag and push
+## Phase 5 — Tag and push
 
 Tag on `master` with the **bare** semantic version (no `v` prefix):
 
@@ -146,7 +147,7 @@ This push is the sole trigger for `release.yml`. `ci.yml` ignores all tags.
 
 ---
 
-## Phase 7 — GitHub Actions (automatic)
+## Phase 6 — GitHub Actions (automatic)
 
 `release.yml` fires on a tag matching `[0-9]+.[0-9]+.[0-9]+`:
 
@@ -160,7 +161,7 @@ This push is the sole trigger for `release.yml`. `ci.yml` ignores all tags.
 
 ---
 
-## Phase 8 — Post-release
+## Phase 7 — Post-release
 
 For each issue addressed, follow the [Issue workflow](issue-workflow.md): swap the
 status label to `status: released`, add `fixed` for bugs, and close.
@@ -176,7 +177,7 @@ manual action.
 |---|---|
 | `RELEASE_NOTES.md` | New version section at top |
 | `src/i18n/locales/*.json` (×10) | `upgrade.complete_modal.fallback_content` |
-| `package.json`, `manifest.json` | `version` |
+| `package.json`, `package-lock.json`, `manifest.json` | `version` (at the start of the release, not the end) |
 | `versions.json` | New version → `minAppVersion` row |
 | `CLAUDE.md` | Current Version line |
 | `README.md` | Replace the **What's new in X.Y.Z** section |
