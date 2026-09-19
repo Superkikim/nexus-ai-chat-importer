@@ -48,10 +48,13 @@ export class GrokConverter {
             this.parseIso(record.conversation.create_time) ||
             messages[0]?.timestamp ||
             0;
-        const updateTime =
-            this.parseIso(record.conversation.modify_time) ||
-            messages[messages.length - 1]?.timestamp ||
-            createTime;
+        // Grok does not always move modify_time when a response is added: the
+        // latest message wins, or a later export would read as unchanged.
+        const updateTime = Math.max(
+            this.parseIso(record.conversation.modify_time),
+            messages[messages.length - 1]?.timestamp ?? 0,
+            createTime
+        );
 
         return {
             id,
@@ -113,9 +116,10 @@ export class GrokConverter {
         return (record.conversation.title || "").trim() || "Untitled";
     }
 
+    /** A prompt can span lines; the title is one. */
     static mediaPostTitle(post: GrokMediaPost): string {
         return `${GROK_IMAGINE_CATEGORY} - ${truncateTitlePreview(
-            post.original_prompt || ""
+            (post.original_prompt || "").replace(/\s+/g, " ")
         )}`;
     }
 
@@ -222,13 +226,29 @@ export class GrokConverter {
             return card ? this.renderCard(card) : "";
         });
 
+        // The callout gets a blank line on each side, without touching the
+        // blank lines of the text around it.
         const withArtifacts = withCards.replace(
             ARTIFACT_TAG_RE,
-            (_tag, attrs: string, body: string) =>
-                `\n\n${this.renderArtifact(attrs, body)}\n\n`
+            (
+                _tag,
+                attrs: string,
+                body: string,
+                offset: number,
+                all: string
+            ) => {
+                const before = all.slice(0, offset).match(/\n*$/)![0].length;
+                const after = all.slice(offset + _tag.length).match(/^\n*/)![0]
+                    .length;
+                return `${"\n".repeat(
+                    Math.max(0, 2 - before)
+                )}${this.renderArtifact(attrs, body)}${"\n".repeat(
+                    Math.max(0, 2 - after)
+                )}`;
+            }
         );
 
-        return withArtifacts.replace(/\n{3,}/g, "\n\n").trim();
+        return withArtifacts.trim();
     }
 
     private static renderCard(card: GrokCard): string {
