@@ -42,7 +42,8 @@ See the provider page for specifics:
 [ChatGPT](providers/chatgpt.md#attachments-and-generated-content) ·
 [Claude](providers/claude.md#attachments-and-artifacts) ·
 [Mistral Vibe](providers/mistral-vibe.md#attachments) ·
-[Perplexity](providers/perplexity.md#attachments).
+[Perplexity](providers/perplexity.md#attachments) ·
+[Grok](providers/grok.md#attachments).
 
 ## Recovering attachments later
 

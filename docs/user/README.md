@@ -7,12 +7,13 @@ runs locally in your vault.
 
 ## Supported providers
 
-The plugin imports exports from exactly four providers:
+The plugin imports exports from exactly five providers:
 
 - **[ChatGPT](providers/chatgpt.md)** (OpenAI)
 - **[Claude](providers/claude.md)** (Anthropic)
 - **[Mistral Vibe](providers/mistral-vibe.md)** (formerly Le Chat)
 - **[Perplexity](providers/perplexity.md)**
+- **[Grok](providers/grok.md)** (xAI) — conversations and Imagine posts
 
 ## Start here
 

@@ -1,5 +1,17 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.8.0
+
+![Version](https://img.shields.io/badge/version-1.8.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
+
+### ✨ New
+
+- **Grok — conversations and Imagine posts.** Import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer in order, citations become links to their source, and artifacts show inline. Each Imagine post with a prompt becomes a note titled *Imagine - …* with the images the export carries — including the variants found through Grok's signature in the image metadata — and a link to the post for the rest. See [Grok](docs/user/providers/grok.md).
+
+### 🔧 Improved
+
+- **Reports say what was left out, and why.** Items a provider does not import are listed under their reason (for example *Ignored — empty prompt*), and an export holding more than one kind of item gets one column per kind.
+
 ## Version 1.7.1 — Forbidden characters, oversized notes and hanging upgrade dialog
 
 ![Version](https://img.shields.io/badge/version-1.7.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

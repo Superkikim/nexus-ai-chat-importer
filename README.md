@@ -14,7 +14,7 @@ import report. Everything runs locally in your vault.
 
 ## Supported providers
 
-**ChatGPT** · **Claude** · **Mistral Vibe** (formerly Le Chat) · **Perplexity**
+**ChatGPT** · **Claude** · **Mistral Vibe** (formerly Le Chat) · **Perplexity** · **Grok**
 
 ## Features
 
