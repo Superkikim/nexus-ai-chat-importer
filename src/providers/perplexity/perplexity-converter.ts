@@ -97,7 +97,7 @@ export class PerplexityConverter {
         sources?: { title?: string; url?: string; snippet?: string }[]
     ): string {
         if (!sources || sources.length === 0) {
-            return answer;
+            return this.stripCitationMarkers(answer);
         }
 
         const referenceLines = sources
@@ -118,10 +118,31 @@ export class PerplexityConverter {
             .filter(Boolean);
 
         if (referenceLines.length === 0) {
-            return answer;
+            return this.stripCitationMarkers(answer);
         }
 
         return `${answer}\n\n### References\n${referenceLines.join("\n")}`;
+    }
+
+    /**
+     * Drop `[1][2]` citation markers from an answer whose sources the export
+     * did not carry: they point nowhere, and `![1]` renders as a broken image.
+     * Code is left untouched, as are links (`[1](...)`) and definitions
+     * (`[1]: ...`).
+     */
+    private static stripCitationMarkers(answer: string): string {
+        return answer
+            .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/)
+            .map((part, index) =>
+                index % 2 === 1
+                    ? part
+                    : part.replace(
+                          /[ \t]*(?:\[\d+\])+(?!\()/g,
+                          (marker: string, offset: number, text: string) =>
+                              isDefinition(marker, offset, text) ? marker : ""
+                      )
+            )
+            .join("");
     }
 
     private static parseTimestamp(value?: string): number {
@@ -165,4 +186,10 @@ export class PerplexityConverter {
         }
         return `${PROVIDER_URLS.PERPLEXITY.BASE}/search/${value}`;
     }
+}
+
+/** A `[1]: ...` reference definition, as opposed to a citation before a colon. */
+function isDefinition(marker: string, offset: number, text: string): boolean {
+    const startsLine = offset === 0 || text[offset - 1] === "\n";
+    return startsLine && text[offset + marker.length] === ":";
 }
