@@ -148,7 +148,7 @@ const SUMMARY_CARDS: Array<{
     { key: "added", icon: "✨", color: "var(--color-green)" },
     { key: "renamed", icon: "✏️", color: "var(--color-purple)" },
     { key: "overwritten", icon: "🔄", color: "var(--color-orange)" },
-    { key: "removed", icon: "➖", color: "var(--color-blue)" },
+    { key: "removed", icon: "🧹", color: "var(--color-blue)" },
     { key: "skipped", icon: "⏭️", color: "var(--text-muted)" },
     { key: "failed", icon: "❌", color: "var(--color-red)" },
 ];
