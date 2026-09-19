@@ -785,11 +785,12 @@ export class ConversationProcessor {
                     attachmentStats =
                         this.calculateAttachmentStats(processedNewMessages);
 
-                    content +=
-                        "\n\n" +
+                    content = this.appendMessagesToNote(
+                        content,
                         this.messageFormatter.formatMessages(
                             processedNewMessages
-                        );
+                        )
+                    );
                     content = this.updateRelatedQueriesSection(
                         content,
                         standardConversation
@@ -1183,6 +1184,21 @@ export class ConversationProcessor {
         }
 
         return content.replace(frontmatterMatch[0], frontmatter);
+    }
+
+    /**
+     * New messages go after the last message, which is before a closing
+     * Related Queries section when the note has one: that section is rewritten
+     * from its heading to the end of the note, and would take them with it.
+     */
+    private appendMessagesToNote(content: string, messages: string): string {
+        const relatedQueries = /\n+## Related Queries\n[\s\S]*$/.exec(content);
+        if (!relatedQueries) {
+            return `${content}\n\n${messages}`;
+        }
+
+        const before = content.slice(0, relatedQueries.index);
+        return `${before}\n\n${messages}${relatedQueries[0]}`;
     }
 
     private updateRelatedQueriesSection(

@@ -479,4 +479,78 @@ describe("ConversationProcessor reconciliation", () => {
             expect(written).toContain('models:\n  - "sonar"');
         });
     });
+    describe("new messages in a note with Related Queries", () => {
+        const note = [
+            "---",
+            "update_time: 2026-01-01T00:00:00.000Z",
+            "---",
+            "<!-- UID: m1 -->",
+            "<!-- UID: m2 -->",
+            "",
+            "## Related Queries",
+            "- Old follow-up",
+        ].join("\n");
+
+        const adapter = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            convertChat: vi.fn(),
+            getProviderName: () => "perplexity",
+            processMessageAttachments: vi.fn(
+                async (messages: StandardMessage[]) => messages
+            ),
+        };
+
+        async function update(relatedQueries: string[]) {
+            const { processor, writeToFile } = createProcessor(note);
+            processor.longContentExtractorInstance = {
+                extract: vi.fn(async (messages: StandardMessage[]) => messages),
+            };
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+            await processor.updateExistingNote(
+                adapter,
+                {
+                    ...conversationOf([
+                        ...EXISTING_MESSAGES,
+                        {
+                            id: "m3",
+                            role: "user",
+                            content: "One more",
+                            timestamp: 1002,
+                        },
+                    ]),
+                    metadata: { related_queries: relatedQueries },
+                },
+                "note.md",
+                3,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return writeToFile.mock.calls[0][1];
+        }
+
+        it("keeps them when the export refreshes the section", async () => {
+            const written = await update(["New follow-up"]);
+
+            expect(written).toContain("<!-- UID: m3 -->");
+            expect(written.indexOf("<!-- UID: m3 -->")).toBeLessThan(
+                written.indexOf("## Related Queries")
+            );
+            expect(written).toContain("- New follow-up");
+            expect(written.match(/## Related Queries/g)).toHaveLength(1);
+        });
+
+        it("places them before the section when the export has none", async () => {
+            const written = await update([]);
+
+            expect(written.indexOf("<!-- UID: m3 -->")).toBeLessThan(
+                written.indexOf("## Related Queries")
+            );
+            expect(written).toContain("- Old follow-up");
+        });
+    });
 });
