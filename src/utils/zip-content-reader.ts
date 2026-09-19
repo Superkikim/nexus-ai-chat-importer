@@ -75,6 +75,23 @@ export function findPerplexityJsonFiles(fileNames: string[]): string[] {
 }
 
 /**
+ * Perplexity's own data export ("Export my data") ships every conversation in
+ * one `conversations-<YYYYMMDD>_<HHMMSS>-<hash>.json`, next to a spreadsheet
+ * of account data that is never read. The date-and-hash name keeps it apart
+ * from ChatGPT's `conversations-<n>.json`.
+ */
+export function findPerplexityOfficialJsonFiles(fileNames: string[]): string[] {
+    return fileNames.filter((name) =>
+        /^conversations-\d{8}_\d{6}-[0-9a-f]+\.json$/i.test(
+            name.split("/").pop() ?? name
+        )
+    );
+}
+
+/** Top-level array of a Perplexity data export that holds its conversations. */
+const PERPLEXITY_OFFICIAL_ITEM_ARRAY = "conversations";
+
+/**
  * Grok exports nest their single JSON payload under per-user folders
  * (`ttl/30d/export_data/<user>/prod-grok-backend.json`), so it is found by
  * base name.
@@ -121,7 +138,9 @@ export function classifyArchiveEntries(
     const hasMistralVibeFiles = fileNames.some((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
-    const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
+    const hasPerplexityFiles =
+        findPerplexityJsonFiles(fileNames).length > 0 ||
+        findPerplexityOfficialJsonFiles(fileNames).length > 0;
     const hasGrokFiles = findGrokBackendJsonFiles(fileNames).length > 0;
     const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
 
@@ -508,10 +527,24 @@ export async function extractRawConversations(
         return { conversations, uncompressedBytes };
     }
 
+    const perplexityOfficialFiles =
+        findPerplexityOfficialJsonFiles(fileNames).sort();
     const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
-    if (perplexityJsonFiles.length > 0) {
+    if (perplexityOfficialFiles.length > 0 || perplexityJsonFiles.length > 0) {
         const conversations: unknown[] = [];
         let uncompressedBytes = 0;
+
+        for (const fileName of perplexityOfficialFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            const { items, uncompressedBytes: fileBytes } =
+                await collectJsonArrayFromEntry(
+                    entry,
+                    PERPLEXITY_OFFICIAL_ITEM_ARRAY
+                );
+            uncompressedBytes += fileBytes;
+            conversations.push(...items);
+        }
 
         for (const fileName of perplexityJsonFiles) {
             const entry = zip.get(fileName);
@@ -669,12 +702,34 @@ export async function* extractConversationsStream(
         return;
     }
 
+    const perplexityOfficialFiles =
+        findPerplexityOfficialJsonFiles(fileNames).sort();
     const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
-    if (perplexityJsonFiles.length > 0) {
+    if (perplexityOfficialFiles.length > 0 || perplexityJsonFiles.length > 0) {
         streamLogger.debug("Using Perplexity conversation stream", {
-            fileCount: perplexityJsonFiles.length,
+            fileCount:
+                perplexityOfficialFiles.length + perplexityJsonFiles.length,
         });
         let yieldedCount = 0;
+        for (const fileName of perplexityOfficialFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            const chunkReader = entry.readTextChunks?.bind(entry);
+            if (!chunkReader) {
+                throw new NexusAiChatImporterError(
+                    "ZIP_TEXT_STREAM_REQUIRED",
+                    "ZIP entry text streaming is unavailable for this archive reader."
+                );
+            }
+            for await (const item of StreamingJsonArrayParser.streamConversationsFromChunks(
+                chunkReader(),
+                PERPLEXITY_OFFICIAL_ITEM_ARRAY
+            )) {
+                yieldedCount++;
+                yield item;
+                await yieldToEventLoopIfNeeded(yieldedCount);
+            }
+        }
         for (const fileName of perplexityJsonFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;

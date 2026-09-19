@@ -434,3 +434,62 @@ describe("Grok archives", () => {
         expect(result.conversations.map(idOf)).toEqual(["c1", "c2"]);
     });
 });
+
+describe("Perplexity data export archives", () => {
+    const CONVERSATIONS_FILE = "conversations-20250301_080000-0a1b2c3d.json";
+    const payload = {
+        conversations: [
+            { context_uuid: "ctx-1", entries: [] },
+            { context_uuid: "ctx-2", entries: [] },
+        ],
+    };
+
+    function officialReader(): MemoryZipReader {
+        return new MemoryZipReader({
+            "user-data-20250301_080000-0a1b2c3d.xlsx": "not read",
+            [CONVERSATIONS_FILE]: JSON.stringify(payload),
+        });
+    }
+
+    function idOf(item: unknown): string {
+        return (item as { context_uuid: string }).context_uuid;
+    }
+
+    it("is recognized as Perplexity, detected or chosen", () => {
+        const names = [
+            "user-data-20250301_080000-0a1b2c3d.xlsx",
+            CONVERSATIONS_FILE,
+        ];
+        const supported = {
+            supported: true,
+            provider: "perplexity",
+            reason: "supported",
+        };
+
+        expect(classifyArchiveEntries(names)).toEqual(supported);
+        expect(classifyArchiveEntries(names, "perplexity")).toEqual(supported);
+    });
+
+    it("leaves ChatGPT's numbered conversation files to ChatGPT", () => {
+        expect(classifyArchiveEntries(["conversations-000.json"])).toEqual({
+            supported: true,
+            provider: "chatgpt",
+            reason: "supported",
+        });
+    });
+
+    it("extracts each conversation of the export", async () => {
+        const result = await extractRawConversations(officialReader());
+
+        expect(result.conversations.map(idOf)).toEqual(["ctx-1", "ctx-2"]);
+    });
+
+    it("streams each conversation of the export", async () => {
+        const ids: string[] = [];
+        for await (const item of extractConversationsStream(officialReader())) {
+            ids.push(idOf(item));
+        }
+
+        expect(ids).toEqual(["ctx-1", "ctx-2"]);
+    });
+});
