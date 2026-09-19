@@ -55,9 +55,7 @@ describe("GrokAdapter", () => {
     it("identifies both kinds of item", () => {
         expect(adapter.getId(conversation)).toBe(conversation.conversation.id);
         expect(adapter.getId(post)).toBe(post.id);
-        expect(adapter.getTitle(conversation)).toBe(
-            "Planning a Garden"
-        );
+        expect(adapter.getTitle(conversation)).toBe("Planning a Garden");
         expect(adapter.getTitle(post)).toBe(
             "Imagine - A watercolour lighthouse at dawn"
         );
