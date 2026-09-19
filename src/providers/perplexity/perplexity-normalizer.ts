@@ -20,6 +20,8 @@ import {
     PerplexityConversationFile,
     PerplexityEntry,
     PerplexityEntryExportFile,
+    PerplexityOfficialConversation,
+    PerplexityOfficialEntry,
     PerplexityRawConversationFile,
     PerplexitySource,
     PerplexityTurn,
@@ -39,7 +41,87 @@ export function normalizePerplexityConversationFile(
         return legacy;
     }
 
+    // Before the extension's entries[] form: both carry an `entries` array,
+    // only Perplexity's own export names the conversation at its root.
+    const official = tryNormalizeOfficialExport(
+        raw as Partial<PerplexityOfficialConversation>
+    );
+    if (official) {
+        return official;
+    }
+
     return tryNormalizeEntriesExport(raw as Partial<PerplexityEntryExportFile>);
+}
+
+function tryNormalizeOfficialExport(
+    raw: Partial<PerplexityOfficialConversation>
+): PerplexityConversationFile | null {
+    const contextUuid = normalizeString(raw.context_uuid);
+    if (!contextUuid || !Array.isArray(raw.entries)) {
+        return null;
+    }
+
+    const mode = normalizeString(raw.mode);
+    const turns = raw.entries
+        .map((entry) => normalizeTurnFromOfficialEntry(entry, mode))
+        .filter((turn): turn is PerplexityTurn => turn !== null)
+        .sort(
+            (a, b) =>
+                parseTimestampMs(a.timestamp) - parseTimestampMs(b.timestamp)
+        );
+
+    if (turns.length === 0) {
+        return null;
+    }
+
+    // The export's updated_at can predate its own last entry, which would
+    // leave that entry out of every later update check.
+    const updatedAt = normalizeString(raw.updated_at);
+    const lastTurnAt = turns[turns.length - 1].timestamp;
+    const threadUpdatedAt =
+        parseTimestampMs(lastTurnAt) > parseTimestampMs(updatedAt)
+            ? lastTurnAt
+            : updatedAt || lastTurnAt;
+
+    return {
+        metadata: {
+            thread_id: contextUuid,
+            thread_title: normalizeString(raw.context_title) || "Untitled",
+            // Perplexity opens a thread at /search/<first entry's uuid>.
+            thread_url: turns[0].uuid,
+            total_entries: raw.entries.length,
+            thread_created_at:
+                normalizeString(raw.created_at) || turns[0].timestamp,
+            thread_updated_at: threadUpdatedAt,
+        },
+        conversations: turns,
+    };
+}
+
+function normalizeTurnFromOfficialEntry(
+    raw: unknown,
+    mode: string | undefined
+): PerplexityTurn | null {
+    if (!isRecord(raw)) return null;
+
+    const entry = raw as PerplexityOfficialEntry;
+    const uuid = normalizeString(entry.entry_uuid);
+    if (!uuid) return null;
+
+    const query = normalizeString(entry.query);
+    const answer = normalizeString(entry.answer);
+
+    if (!query && !answer) {
+        return null;
+    }
+
+    return {
+        uuid,
+        query,
+        answer,
+        mode,
+        timestamp: normalizeString(entry.created_at),
+    };
 }
 
 function tryNormalizeLegacy(

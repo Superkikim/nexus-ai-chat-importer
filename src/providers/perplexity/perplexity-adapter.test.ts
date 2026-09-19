@@ -130,4 +130,66 @@ describe("PerplexityAdapter", () => {
         expect(converted.metadata?.mode).toBe("CONCISE");
         expect(converted.metadata?.models).toEqual(["sonar"]);
     });
+    it("detects and converts a conversation from Perplexity's own export", () => {
+        const officialChat = {
+            context_uuid: "33333333-aaaa-4bbb-8ccc-000000000001",
+            context_title: "Official Thread",
+            created_at: "2025-03-01T08:00:00.000Z",
+            updated_at: "2025-03-01T08:30:00.000Z",
+            mode: "CONCISE",
+            collection_uuid: null,
+            entries: [
+                {
+                    entry_uuid: "44444444-aaaa-4bbb-8ccc-000000000001",
+                    query: "Question?",
+                    answer: "Answer.",
+                    created_at: "2025-03-01T08:00:00.000Z",
+                    label: null,
+                    query_status: "COMPLETED",
+                    engine_mode: "auto",
+                },
+            ],
+        };
+
+        expect(adapter.detect([officialChat])).toBe(true);
+        expect(adapter.getId(officialChat)).toBe(
+            "33333333-aaaa-4bbb-8ccc-000000000001"
+        );
+        expect(
+            adapter.getNewMessages(officialChat, [
+                "44444444-aaaa-4bbb-8ccc-000000000001",
+            ])
+        ).toHaveLength(0);
+
+        const converted = adapter.convertChat(officialChat);
+        expect(converted.messages.map((message) => message.id)).toEqual([
+            "44444444-aaaa-4bbb-8ccc-000000000001-user",
+            "44444444-aaaa-4bbb-8ccc-000000000001",
+        ]);
+        expect(converted.chatUrl).toBe(
+            "https://www.perplexity.ai/search/44444444-aaaa-4bbb-8ccc-000000000001"
+        );
+        expect(converted.metadata?.mode).toBe("CONCISE");
+        expect(converted.metadata?.models).toEqual([]);
+    });
+
+    it("counts turns for the report in every export shape", () => {
+        const column = adapter
+            .getReportNamingStrategy()
+            .getProviderSpecificColumn();
+        const officialChat = {
+            context_uuid: "33333333-aaaa-4bbb-8ccc-000000000002",
+            entries: [
+                {
+                    entry_uuid: "44444444-aaaa-4bbb-8ccc-000000000002",
+                    query: "Q",
+                    answer: "A",
+                    created_at: "2025-03-01T08:00:00.000Z",
+                },
+            ],
+        };
+
+        expect(column.getValue(adapter, sampleChat)).toBe(1);
+        expect(column.getValue(adapter, officialChat)).toBe(1);
+    });
 });

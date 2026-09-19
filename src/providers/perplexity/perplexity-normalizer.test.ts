@@ -133,4 +133,101 @@ describe("PerplexityNormalizer", () => {
         const normalized = normalizePerplexityConversationFile(raw);
         expect(normalized?.metadata.thread_id).toBe("entries-thread-fallback");
     });
+    describe("Perplexity's own data export", () => {
+        const officialConversation = {
+            context_uuid: "11111111-aaaa-4bbb-8ccc-000000000001",
+            context_title: "Official Thread",
+            created_at: "2025-03-01T08:00:00.000Z",
+            updated_at: "2025-03-01T08:30:00.000Z",
+            mode: "COPILOT",
+            collection_uuid: null,
+            entries: [
+                {
+                    entry_uuid: "22222222-aaaa-4bbb-8ccc-000000000002",
+                    query: "Second question",
+                    answer: "Second answer",
+                    created_at: "2025-03-01T08:20:00.000Z",
+                    label: null,
+                    query_status: null,
+                    engine_mode: "pro",
+                },
+                {
+                    entry_uuid: "22222222-aaaa-4bbb-8ccc-000000000001",
+                    query: "First question",
+                    answer: "First answer",
+                    created_at: "2025-03-01T08:00:00.000Z",
+                    label: "reject",
+                    query_status: "COMPLETED",
+                    engine_mode: null,
+                },
+            ],
+        };
+
+        it("reads the conversation and orders its entries by time", () => {
+            const normalized =
+                normalizePerplexityConversationFile(officialConversation);
+
+            expect(normalized?.metadata.thread_id).toBe(
+                "11111111-aaaa-4bbb-8ccc-000000000001"
+            );
+            expect(normalized?.metadata.thread_title).toBe("Official Thread");
+            expect(normalized?.metadata.thread_created_at).toBe(
+                "2025-03-01T08:00:00.000Z"
+            );
+            expect(normalized?.conversations.map((turn) => turn.uuid)).toEqual([
+                "22222222-aaaa-4bbb-8ccc-000000000001",
+                "22222222-aaaa-4bbb-8ccc-000000000002",
+            ]);
+            expect(normalized?.conversations[0]).toMatchObject({
+                query: "First question",
+                answer: "First answer",
+                mode: "COPILOT",
+                timestamp: "2025-03-01T08:00:00.000Z",
+            });
+        });
+
+        it("keeps a rejected answer and never reports a model", () => {
+            const normalized =
+                normalizePerplexityConversationFile(officialConversation);
+
+            expect(normalized?.conversations).toHaveLength(2);
+            expect(normalized?.conversations.every((turn) => !turn.model)).toBe(
+                true
+            );
+        });
+
+        it("links the thread through its first entry", () => {
+            const normalized =
+                normalizePerplexityConversationFile(officialConversation);
+
+            expect(normalized?.metadata.thread_url).toBe(
+                "22222222-aaaa-4bbb-8ccc-000000000001"
+            );
+        });
+
+        it("dates the update no earlier than the last entry", () => {
+            const staleUpdate = {
+                ...officialConversation,
+                updated_at: "2025-03-01T08:10:00.000Z",
+            };
+
+            expect(
+                normalizePerplexityConversationFile(staleUpdate)?.metadata
+                    .thread_updated_at
+            ).toBe("2025-03-01T08:20:00.000Z");
+            expect(
+                normalizePerplexityConversationFile(officialConversation)
+                    ?.metadata.thread_updated_at
+            ).toBe("2025-03-01T08:30:00.000Z");
+        });
+
+        it("rejects a conversation without a usable entry", () => {
+            expect(
+                normalizePerplexityConversationFile({
+                    ...officialConversation,
+                    entries: [{ entry_uuid: "no-content" }],
+                })
+            ).toBeNull();
+        });
+    });
 });

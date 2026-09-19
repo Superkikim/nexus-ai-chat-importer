@@ -21,7 +21,8 @@ import {
     ReportNamingStrategy,
 } from "../../types/standard";
 import { extractReportPrefixFromZip } from "../../utils/report-naming-utils";
-import { PerplexityConversationFile } from "./perplexity-types";
+import { normalizePerplexityConversationFile } from "./perplexity-normalizer";
+import { PerplexityRawConversationFile } from "./perplexity-types";
 
 export class PerplexityReportNamingStrategy implements ReportNamingStrategy {
     extractReportPrefix(zipFileName: string): string {
@@ -36,12 +37,12 @@ export class PerplexityReportNamingStrategy implements ReportNamingStrategy {
     getProviderSpecificColumn(): ProviderSpecificColumn {
         return {
             header: "Turns",
-            getValue: (_adapter: unknown, chat: unknown) => {
-                const perplexityChat = chat as PerplexityConversationFile;
-                return Array.isArray(perplexityChat?.conversations)
-                    ? perplexityChat.conversations.length
-                    : 0;
-            },
+            // The raw chat is in any of the three export shapes; only the
+            // normalized form counts its turns the same way for all of them.
+            getValue: (_adapter: unknown, chat: unknown) =>
+                normalizePerplexityConversationFile(
+                    chat as PerplexityRawConversationFile
+                )?.conversations.length ?? 0,
         };
     }
 }

@@ -96,6 +96,32 @@ export interface PerplexityEntryExportFile {
     thread_metadata?: PerplexityEntryThreadMetadata;
 }
 
+/** One question and its answer in Perplexity's own data export. */
+export interface PerplexityOfficialEntry {
+    entry_uuid?: string;
+    query?: string;
+    answer?: string;
+    created_at?: string;
+    label?: string | null;
+    query_status?: string | null;
+    engine_mode?: string | null;
+}
+
+/**
+ * One conversation in Perplexity's own data export ("Export my data"):
+ * `conversations-<date>_<time>-<hash>.json` holds `{ conversations: [...] }`.
+ */
+export interface PerplexityOfficialConversation {
+    context_uuid?: string;
+    context_title?: string;
+    created_at?: string;
+    updated_at?: string;
+    mode?: string;
+    collection_uuid?: string | null;
+    entries?: PerplexityOfficialEntry[];
+}
+
 export type PerplexityRawConversationFile =
     | PerplexityConversationFile
-    | PerplexityEntryExportFile;
+    | PerplexityEntryExportFile
+    | PerplexityOfficialConversation;
