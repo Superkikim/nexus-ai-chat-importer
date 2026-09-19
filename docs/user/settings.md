@@ -3,6 +3,10 @@
 Open **Settings → Nexus AI Chat Importer**. There are four sections, shown in this
 order.
 
+On Obsidian 1.13 and later, these settings also appear in Obsidian's settings
+search: search for a setting by name, by a word from its description, or by a related
+term such as `uid` or `folder`.
+
 ## 💝 Support & Help
 
 Links to the documentation, release notes, GitHub issues, and the community forum

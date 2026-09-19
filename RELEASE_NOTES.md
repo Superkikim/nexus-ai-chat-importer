@@ -13,6 +13,7 @@
 ### 🔧 Improved
 
 - **Settings are laid out consistently.** The date prefix, message timestamp format and custom ID property settings put their controls beside the name and their description across the full width, and wrap cleanly on narrow panes. The two date settings now share one **Date Format** section, and switching one of them no longer scrolls Settings back to the top.
+- **The plugin's settings appear in Obsidian's settings search** (Obsidian 1.13 and later). They are now declared through Obsidian's settings API instead of being drawn by hand, so searching for a setting — by name, by a word from its description, or by a term such as `uid` or `folder` — finds it. Older versions of Obsidian keep the same settings tab as before.
 - **Reports say what was left out, and why.** Items a provider does not import are listed under their reason (for example *Ignored — empty prompt*), and an export holding more than one kind of item gets one column per kind.
 
 ## Version 1.7.1 — Forbidden characters, oversized notes and hanging upgrade dialog
