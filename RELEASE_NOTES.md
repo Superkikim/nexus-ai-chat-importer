@@ -8,6 +8,8 @@
 
 - **Grok — conversations and Imagine posts.** Import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer in order, citations become links to their source, and artifacts show inline. Each Imagine post with a prompt becomes a note titled *Imagine - …* with the images the export carries — including the variants found through Grok's signature in the image metadata — and a link to the post for the rest. See [Grok](docs/user/providers/grok.md).
 
+- **Perplexity — official data export.** Import the ZIP from Perplexity's own *Export my data* as-is: every conversation it holds becomes a note, with its mode and a link back to the thread. It works alongside the Thread Exporter extension — a conversation already imported from one source only receives the answers it lacks from the other. See [Perplexity](docs/user/providers/perplexity.md).
+
 - **Custom ID property.** Settings → Properties adds a property of your choice (for example `uid`) to every conversation note, holding the conversation ID, so imported notes fit a vault that identifies notes by a property of its own. Enabling, renaming or clearing it asks first, updates your existing notes with progress and a summary, and touches nothing else in them — comments, quotes and line endings stay exactly as they were. **Overwrite existing values** decides what happens when a note already has a property with that name. See [Settings](docs/user/settings.md#custom-id-property).
 
 ### 🔧 Improved
@@ -15,6 +17,12 @@
 - **Settings are laid out consistently.** The date prefix, message timestamp format and custom ID property settings put their controls beside the name and their description across the full width, and wrap cleanly on narrow panes. The two date settings now share one **Date Format** section, and switching one of them no longer scrolls Settings back to the top.
 - **The plugin's settings appear in Obsidian's settings search** (Obsidian 1.13 and later). They are now declared through Obsidian's settings API instead of being drawn by hand, so searching for a setting — by name, by a word from its description, or by a term such as `uid` or `folder` — finds it. Older versions of Obsidian keep the same settings tab as before.
 - **Reports say what was left out, and why.** Items a provider does not import are listed under their reason (for example *Ignored — empty prompt*), and an export holding more than one kind of item gets one column per kind.
+
+### 🐛 Fixed
+
+- **Perplexity citation markers no longer point nowhere.** Answers cite their sources as `[1][2]`, but exports rarely include the sources themselves. Markers are now removed from answers without a References section, so they no longer clutter the text or show up as a broken image after an exclamation mark.
+- **Updating a note no longer erases its mode or models.** When the archive you import does not name them, the note keeps the ones an earlier import wrote.
+- **The *Turns* column of Perplexity reports counted 0** for archives in the Thread Exporter's newer format.
 
 ## Version 1.7.1 — Forbidden characters, oversized notes and hanging upgrade dialog
 
