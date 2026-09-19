@@ -64,6 +64,10 @@ by its file path or title. Re-importing is how you keep notes current.
 | Rebuild notes after a plugin update, to pick up new features | Import All with **Reprocess existing notes** ticked | Each existing note is **regenerated from scratch** from the archive. Recorded as **Recreated**. |
 | Rebuild only specific notes | Select Specific → tick the conversations → tick **Rebuild selected notes if they exist** | Only those notes are regenerated. |
 
+> **With a [custom ID property](settings.md#custom-id-property) set,** an update also
+> adds it to the note if missing, and a rebuild writes it like a new note. An update
+> replaces an existing value only when **Overwrite existing values** is on.
+
 > **Rebuilding replaces the whole note.** Any manual edits you made to a rebuilt
 > note are lost. A normal update never does this.
 
