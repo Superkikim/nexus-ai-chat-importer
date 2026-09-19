@@ -611,6 +611,11 @@ export class ConversationMetadataExtractor {
                 return this.extractMistralVibeMetadata(rawConversations);
             case "perplexity":
                 return this.extractPerplexityMetadata(rawConversations);
+            case "grok":
+                return this.extractMetadataThroughAdapter(
+                    rawConversations,
+                    "grok"
+                );
             default:
                 throw new Error(`Unsupported provider: ${provider}`);
         }
@@ -739,6 +744,45 @@ export class ConversationMetadataExtractor {
                 };
             })
             .filter((metadata) => metadata.messageCount > 0);
+    }
+
+    /**
+     * Metadata read through the provider's own adapter, category and
+     * exclusion included, so the analysis and the import cannot disagree.
+     */
+    private extractMetadataThroughAdapter(
+        items: unknown[],
+        provider: string
+    ): ConversationMetadata[] {
+        const adapter = this.providerRegistry.getAdapter(provider);
+        if (!adapter) {
+            throw new Error(`Unsupported provider: ${provider}`);
+        }
+
+        const metadata: ConversationMetadata[] = [];
+        for (const item of items) {
+            const id = adapter.getId(item);
+            if (!id) {
+                this.plugin.logger.warn(
+                    `Skipping ${provider} item without an id`
+                );
+                continue;
+            }
+            metadata.push({
+                id,
+                title: adapter.getTitle(item),
+                createTime: adapter.getCreateTime(item),
+                updateTime: adapter.getUpdateTime(item),
+                messageCount: adapter.getNewMessages(item, []).length,
+                provider,
+                isStarred: false,
+                isArchived: false,
+                category: adapter.getItemCategory?.(item),
+                exclusionReason:
+                    adapter.getExclusionReason?.(item) ?? undefined,
+            });
+        }
+        return metadata;
     }
 
     private extractPerplexityMetadata(

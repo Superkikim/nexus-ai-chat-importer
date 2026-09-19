@@ -22,6 +22,7 @@ import { ChatGPTAdapter } from "./chatgpt/chatgpt-adapter";
 import { ClaudeAdapter } from "./claude/claude-adapter";
 import { MistralVibeAdapter } from "./vibe/vibe-adapter";
 import { PerplexityAdapter } from "./perplexity/perplexity-adapter";
+import { GrokAdapter } from "./grok/grok-adapter";
 import type NexusAiChatImporterPlugin from "../main";
 
 /**
@@ -43,6 +44,8 @@ export function createProviderRegistry(
 
     // Register Perplexity provider
     registry.register("perplexity", new PerplexityAdapter(plugin));
+
+    registry.register("grok", new GrokAdapter(plugin));
 
     return registry;
 }
