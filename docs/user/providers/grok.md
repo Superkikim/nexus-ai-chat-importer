@@ -12,9 +12,11 @@ A Grok export holds two kinds of item, and both become notes:
 
 ## Get your export
 
-Request a copy of your data from your Grok account; for the current location of
-that option, see xAI's help centre. Import the `.zip` as downloaded — do not
-extract it or select a file inside it.
+In Grok's settings, open **Data Controls** and use **Download account data**
+(the same page is reachable at `accounts.x.ai/data`). xAI prepares the export
+and emails you a download link; for the current location of the option, see
+xAI's help centre. Import the `.zip` as downloaded — do not extract it or
+select a file inside it.
 
 ## Recognised archive layout
 
