@@ -252,7 +252,7 @@
             },
             "overwrite": {
                 "name": "既存の値を上書き",
-                "desc": "オフ：ノートにすでにこのプロパティがある場合、Nexus AI Chat Importer はそのプロパティをそのままにします。\nオン：Nexus AI Chat Importer はそのプロパティの値を会話 ID に置き換えます。"
+                "desc": "既存の値を上書き：ノートにすでにこのプロパティがある場合、Nexus AI Chat Importer はその値を会話 ID に置き換えます。オフの場合、そのプロパティはそのままです。"
             },
             "enable": {
                 "title": "既存のノートに「{{name}}」プロパティを追加しますか？",

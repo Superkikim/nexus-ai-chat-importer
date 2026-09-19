@@ -252,7 +252,7 @@
             },
             "overwrite": {
                 "name": "Sovrascrivi i valori esistenti",
-                "desc": "Disattivato: se una nota ha già questa proprietà, Nexus AI Chat Importer la lascia così com'è.\nAttivato: Nexus AI Chat Importer sostituisce il valore di questa proprietà con l'ID della conversazione."
+                "desc": "Sovrascrivi i valori esistenti: se una nota ha già questa proprietà, Nexus AI Chat Importer ne sostituisce il valore con l'ID della conversazione. Disattivato, la lascia così com'è."
             },
             "enable": {
                 "title": "Aggiungere la proprietà «{{name}}» alle note esistenti?",

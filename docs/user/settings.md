@@ -80,7 +80,7 @@ Keeping the property after clearing the field is not permanent: a
 
 ### Overwrite existing values
 
-Off by default. Decides what happens when a note already has a property with the
+The switch next to the name field, off by default. Decides what happens when a note already has a property with the
 chosen name and a different value — on enabling, on renaming, and on every
 later update:
 

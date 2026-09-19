@@ -252,7 +252,7 @@
             },
             "overwrite": {
                 "name": "覆盖已有值",
-                "desc": "关闭：如果笔记已有此属性，Nexus AI Chat Importer 保持该属性不变。\n开启：Nexus AI Chat Importer 将该属性的值替换为对话 ID。"
+                "desc": "覆盖已有值：如果笔记已有此属性，Nexus AI Chat Importer 会将其值替换为对话 ID。关闭时，该属性保持不变。"
             },
             "enable": {
                 "title": "要为现有笔记添加“{{name}}”属性吗？",

@@ -252,7 +252,7 @@
             },
             "overwrite": {
                 "name": "기존 값 덮어쓰기",
-                "desc": "끔: 노트에 이미 이 속성이 있으면 Nexus AI Chat Importer는 해당 속성을 그대로 둡니다.\n켬: Nexus AI Chat Importer는 해당 속성의 값을 대화 ID로 바꿉니다."
+                "desc": "기존 값 덮어쓰기: 노트에 이미 이 속성이 있으면 Nexus AI Chat Importer가 그 값을 대화 ID로 바꿉니다. 끄면 해당 속성을 그대로 둡니다."
             },
             "enable": {
                 "title": "기존 노트에 \"{{name}}\" 속성을 추가할까요?",

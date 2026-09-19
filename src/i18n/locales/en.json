@@ -252,7 +252,7 @@
             },
             "overwrite": {
                 "name": "Overwrite existing values",
-                "desc": "Off: if a note already has this property, Nexus AI Chat Importer leaves that property as is.\nOn: Nexus AI Chat Importer replaces the value of that property with the conversation ID."
+                "desc": "Overwrite existing values: when a note already has this property, Nexus AI Chat Importer replaces its value with the conversation ID. Off, it leaves that property as is."
             },
             "enable": {
                 "title": "Add the \"{{name}}\" property to existing notes?",

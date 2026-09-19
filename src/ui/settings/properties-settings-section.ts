@@ -72,9 +72,18 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             new CustomIdPropertyDialogs(plugin.app, service, plugin.logger)
         );
 
+        // One setting: the name field, then the overwrite toggle with its
+        // label, and both explained in a single description.
         const nameSetting = new Setting(containerEl)
             .setName(t("settings.properties.custom_id.name"))
-            .setDesc(describe(t("settings.properties.custom_id.desc")));
+            .setDesc(
+                describe(
+                    `${t("settings.properties.custom_id.desc")}\n${t(
+                        "settings.properties.overwrite.desc"
+                    )}`
+                )
+            );
+        nameSetting.settingEl.addClass("nexus-custom-id-setting");
 
         const warning = containerEl.createDiv({
             cls: "nexus-setting-warning",
@@ -101,17 +110,19 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             });
         });
 
-        new Setting(containerEl)
-            .setName(t("settings.properties.overwrite.name"))
-            .setDesc(describe(t("settings.properties.overwrite.desc")))
-            .addToggle((toggle) =>
-                toggle
-                    .setValue(plugin.settings.customIdPropertyOverwrite)
-                    .onChange(async (value) => {
-                        plugin.settings.customIdPropertyOverwrite = value;
-                        await plugin.saveSettings();
-                    })
-            );
+        nameSetting.addToggle((toggle) => {
+            toggle
+                .setValue(plugin.settings.customIdPropertyOverwrite)
+                .onChange(async (value) => {
+                    plugin.settings.customIdPropertyOverwrite = value;
+                    await plugin.saveSettings();
+                });
+            const label = nameSetting.controlEl.createSpan({
+                text: t("settings.properties.overwrite.name"),
+                cls: "nexus-custom-id-overwrite-label",
+            });
+            label.addEventListener("click", () => toggle.toggleEl.click());
+        });
     }
 
     /** A name typed just before the tab closed is committed, not dropped. */

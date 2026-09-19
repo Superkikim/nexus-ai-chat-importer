@@ -252,7 +252,7 @@
             },
             "overwrite": {
                 "name": "Vorhandene Werte überschreiben",
-                "desc": "Aus: Hat eine Notiz diese Eigenschaft bereits, lässt Nexus AI Chat Importer diese Eigenschaft unverändert.\nEin: Nexus AI Chat Importer ersetzt den Wert dieser Eigenschaft durch die Unterhaltungs-ID."
+                "desc": "Vorhandene Werte überschreiben: Hat eine Notiz diese Eigenschaft bereits, ersetzt Nexus AI Chat Importer ihren Wert durch die Unterhaltungs-ID. Ausgeschaltet bleibt die Eigenschaft unverändert."
             },
             "enable": {
                 "title": "Die Eigenschaft „{{name}}“ zu vorhandenen Notizen hinzufügen?",

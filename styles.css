@@ -2618,3 +2618,14 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 .nexus-custom-id-dialog .nexus-merge-errors li {
     overflow-wrap: anywhere;
 }
+
+.nexus-custom-id-setting .setting-item-control {
+    gap: 8px;
+}
+
+.nexus-custom-id-overwrite-label {
+    cursor: pointer;
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+    white-space: nowrap;
+}

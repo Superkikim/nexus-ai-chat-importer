@@ -252,7 +252,7 @@
             },
             "overwrite": {
                 "name": "Remplacer les valeurs existantes",
-                "desc": "Désactivé : si une note possède déjà cette propriété, Nexus AI Chat Importer laisse cette propriété telle quelle.\nActivé : Nexus AI Chat Importer remplace la valeur de cette propriété par l'identifiant de la conversation."
+                "desc": "Remplacer les valeurs existantes : quand une note possède déjà cette propriété, Nexus AI Chat Importer remplace sa valeur par l'identifiant de la conversation. Désactivé, il laisse cette propriété telle quelle."
             },
             "enable": {
                 "title": "Ajouter la propriété « {{name}} » aux notes existantes ?",
