@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readJpegExifArtist } from "./jpeg-exif";
 import { jpegWithTag } from "./jpeg-exif.fixture";
 
-const POST_ID = "b2d2143f-4e28-43fd-9a7a-8698bfd0c76a";
+const POST_ID = "33333333-cccc-4ccc-8ccc-333333333333";
 
 describe("readJpegExifArtist", () => {
     it("reads the Artist of a little-endian EXIF block", () => {

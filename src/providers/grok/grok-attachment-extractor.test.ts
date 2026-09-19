@@ -61,7 +61,7 @@ function createPluginMock() {
     };
 }
 
-const CONVERSATION_ID = "6ff87162-ac88-4b61-996e-9d11280e7bf1";
+const CONVERSATION_ID = "11111111-aaaa-4aaa-8aaa-111111111111";
 const CHAT_URL = `https://grok.com/c/${CONVERSATION_ID}`;
 
 describe("GrokAttachmentExtractor", () => {
@@ -79,12 +79,12 @@ describe("GrokAttachmentExtractor", () => {
     it("writes an upload under a name built from the ids and the detected type", async () => {
         const zip = createZipMock({
             // Grok's paths carry a doubled slash before the asset id.
-            [`${ASSETS}/8daf320f-73fb-47cf-b21a-b25e1da2aa39/content`]:
+            [`${ASSETS}/44444444-dddd-4ddd-8ddd-444444444444/content`]:
                 JPEG_BYTES,
         });
         const upload: StandardAttachment = {
-            fileName: "8daf320f-73fb-47cf-b21a-b25e1da2aa39",
-            fileId: "8daf320f-73fb-47cf-b21a-b25e1da2aa39",
+            fileName: "44444444-dddd-4ddd-8ddd-444444444444",
+            fileId: "44444444-dddd-4ddd-8ddd-444444444444",
             attachmentType: "file",
             url: CHAT_URL,
         };
@@ -93,18 +93,18 @@ describe("GrokAttachmentExtractor", () => {
             zip,
             CONVERSATION_ID,
             [upload],
-            "da30493c-0000"
+            "77777777-0000"
         );
 
         const path =
-            "attachments/grok/images/grok_6ff87162_da30493c_8daf320f.jpg";
+            "attachments/grok/images/grok_11111111_77777777_44444444.jpg";
         expect(result.status).toEqual({
             processed: true,
             found: true,
             localPath: path,
         });
         expect(result.url).toBe(path);
-        expect(result.fileName).toBe("grok_6ff87162_da30493c_8daf320f.jpg");
+        expect(result.fileName).toBe("grok_11111111_77777777_44444444.jpg");
         expect(result.fileType).toBe("image/jpeg");
         expect(mock.written.has(path)).toBe(true);
     });
@@ -122,7 +122,7 @@ describe("GrokAttachmentExtractor", () => {
         );
 
         expect(result.url).toBe(
-            "attachments/grok/documents/grok_6ff87162_m1_aaaaaaaa.pdf"
+            "attachments/grok/documents/grok_11111111_m1_aaaaaaaa.pdf"
         );
     });
 
@@ -200,12 +200,12 @@ describe("GrokAttachmentExtractor", () => {
     });
 
     describe("Imagine media", () => {
-        const POST = "b2d2143f-4e28-43fd-9a7a-8698bfd0c76a";
+        const POST = "33333333-cccc-4ccc-8ccc-333333333333";
         const media: StandardAttachment = {
             fileName: POST,
             fileId: POST,
             attachmentType: "generated_image",
-            generationPrompt: "a night street",
+            generationPrompt: "a red bicycle",
             url: `https://grok.com/imagine/post/${POST}`,
             providerMetadata: { imaginePost: true, mediaType: "image" },
         };
@@ -231,15 +231,15 @@ describe("GrokAttachmentExtractor", () => {
 
         it("finds the variants signed with the post id", async () => {
             const results = await resolve({
-                [`${ASSETS}/3a747abd-0000/content`]: jpegWithTag(POST),
-                [`${ASSETS}/b8c56377-0000/content`]: jpegWithTag(POST),
+                [`${ASSETS}/55555555-0000/content`]: jpegWithTag(POST),
+                [`${ASSETS}/66666666-0000/content`]: jpegWithTag(POST),
                 [`${ASSETS}/ffffffff-0000/content`]: jpegWithTag("other-post"),
                 [`${ASSETS}/eeeeeeee-0000/content`]: JPEG_BYTES,
             });
 
             expect(results.map((r) => r.url)).toEqual([
-                "attachments/grok/images/grok_b2d2143f_b2d2143f_3a747abd.jpg",
-                "attachments/grok/images/grok_b2d2143f_b2d2143f_b8c56377.jpg",
+                "attachments/grok/images/grok_33333333_33333333_55555555.jpg",
+                "attachments/grok/images/grok_33333333_33333333_66666666.jpg",
             ]);
             expect(results.every((r) => r.generationPrompt)).toBe(true);
         });
@@ -251,8 +251,8 @@ describe("GrokAttachmentExtractor", () => {
             });
 
             expect(results.map((r) => r.url)).toEqual([
-                "attachments/grok/images/grok_b2d2143f_b2d2143f_b2d2143f.jpg",
-                "attachments/grok/images/grok_b2d2143f_b2d2143f_00000000.jpg",
+                "attachments/grok/images/grok_33333333_33333333_33333333.jpg",
+                "attachments/grok/images/grok_33333333_33333333_00000000.jpg",
             ]);
         });
 

@@ -28,8 +28,8 @@ function conversation(
         conversation: {
             id: "c0ffee00-0000-0000-0000-000000000000",
             title,
-            create_time: "2026-05-26T16:06:57.420Z",
-            modify_time: "2026-05-26T16:10:41.726Z",
+            create_time: "2026-01-10T08:00:00.123Z",
+            modify_time: "2026-01-10T08:05:00.456Z",
         },
         responses,
     };
@@ -55,13 +55,13 @@ describe("GrokConverter — conversations", () => {
     it("orders by millisecond, the question first when both share one", () => {
         const std = GrokConverter.convertConversation(
             conversation([
-                response("d708", "ASSISTANT", "Answer", 5000),
-                response("da30", "human", "Question", 5000),
+                response("a002", "ASSISTANT", "Answer", 5000),
+                response("a001", "human", "Question", 5000),
                 response("0001", "human", "Earlier", 4999),
             ])
         );
 
-        expect(std.messages.map((m) => m.id)).toEqual(["0001", "da30", "d708"]);
+        expect(std.messages.map((m) => m.id)).toEqual(["0001", "a001", "a002"]);
     });
 
     it("keeps every regenerated answer, in order", () => {
@@ -82,10 +82,10 @@ describe("GrokConverter — conversations", () => {
 
     it("keeps millisecond precision in the timestamps", () => {
         const std = GrokConverter.convertConversation(
-            conversation([response("r1", "human", "Hi", 1779811617461)])
+            conversation([response("r1", "human", "Hi", 1768032000123)])
         );
 
-        expect(std.messages[0].timestamp).toBe(1779811617.461);
+        expect(std.messages[0].timestamp).toBe(1768032000.123);
     });
 
     it("drops a response with neither text nor file", () => {
@@ -103,15 +103,15 @@ describe("GrokConverter — conversations", () => {
         const std = GrokConverter.convertConversation(
             conversation([
                 response("q", "human", "Look", 1000, {
-                    file_attachments: ["8daf320f-73fb-47cf-b21a-b25e1da2aa39"],
+                    file_attachments: ["44444444-dddd-4ddd-8ddd-444444444444"],
                 }),
             ])
         );
 
         expect(std.messages[0].attachments).toEqual([
             {
-                fileName: "8daf320f-73fb-47cf-b21a-b25e1da2aa39",
-                fileId: "8daf320f-73fb-47cf-b21a-b25e1da2aa39",
+                fileName: "44444444-dddd-4ddd-8ddd-444444444444",
+                fileId: "44444444-dddd-4ddd-8ddd-444444444444",
                 attachmentType: "file",
                 url: "https://grok.com/c/c0ffee00-0000-0000-0000-000000000000",
             },
@@ -139,10 +139,10 @@ describe("GrokConverter — conversations", () => {
             "https://grok.com/c/c0ffee00-0000-0000-0000-000000000000"
         );
         expect(std.createTime).toBe(
-            Date.parse("2026-05-26T16:06:57.420Z") / 1000
+            Date.parse("2026-01-10T08:00:00.123Z") / 1000
         );
         expect(std.updateTime).toBe(
-            Date.parse("2026-05-26T16:10:41.726Z") / 1000
+            Date.parse("2026-01-10T08:05:00.456Z") / 1000
         );
     });
 });
@@ -150,13 +150,13 @@ describe("GrokConverter — conversations", () => {
 describe("GrokConverter — assistant text", () => {
     const cards = GrokConverter.parseCards([
         JSON.stringify({
-            id: "c4b8aa",
+            id: "card01",
             type: "render_inline_citation",
             cardType: "citation_card",
-            url: "https://www.the-line-up.com/dark-taboo-novels",
+            url: "https://www.example.org/reading-list",
         }),
         JSON.stringify({
-            id: "92a05a",
+            id: "card02",
             cardType: "image_card",
             image: {
                 title: "A picture",
@@ -167,16 +167,16 @@ describe("GrokConverter — assistant text", () => {
 
     it("replaces a citation with a link to its source", () => {
         const text =
-            'Tracks.<grok:render card_id="c4b8aa" card_type="citation_card" type="render_inline_citation"><argument name="citation_id">12</argument></grok:render>\n\nNext';
+            'Sources.<grok:render card_id="card01" card_type="citation_card" type="render_inline_citation"><argument name="citation_id">12</argument></grok:render>\n\nNext';
 
         expect(GrokConverter.renderAssistantText(text, cards)).toBe(
-            "Tracks. [the-line-up.com](https://www.the-line-up.com/dark-taboo-novels)\n\nNext"
+            "Sources. [example.org](https://www.example.org/reading-list)\n\nNext"
         );
     });
 
     it("replaces an image card with a link to its page", () => {
         const text =
-            'See<grok:render card_id="92a05a" card_type="image_card" type="render_searched_image"><argument name="image_id">0</argument></grok:render>';
+            'See<grok:render card_id="card02" card_type="image_card" type="render_searched_image"><argument name="image_id">0</argument></grok:render>';
 
         expect(GrokConverter.renderAssistantText(text, cards)).toBe(
             "See [🖼️ A picture](https://example.com/article)"
@@ -211,17 +211,17 @@ describe("GrokConverter — assistant text", () => {
 
 describe("GrokConverter — Imagine posts", () => {
     const post = {
-        id: "b2d2143f-4e28-43fd-9a7a-8698bfd0c76a",
+        id: "33333333-cccc-4ccc-8ccc-333333333333",
         original_prompt:
-            "A digital illustration of a young Korean woman in a moody urban night setting.",
+            "A pencil sketch of a red bicycle leaning against a stone wall in the rain.",
         media_type: "image",
-        create_time: "2026-03-06T19:16:01.384710Z",
-        link: "https://grok.com/imagine/post/b2d2143f-4e28-43fd-9a7a-8698bfd0c76a",
+        create_time: "2026-01-13T10:00:00.000000Z",
+        link: "https://grok.com/imagine/post/33333333-cccc-4ccc-8ccc-333333333333",
     };
 
     it("titles the note after the start of the prompt", () => {
         expect(GrokConverter.mediaPostTitle(post)).toBe(
-            "Imagine - A digital illustration of a young Korean woman in..."
+            "Imagine - A pencil sketch of a red bicycle leaning against a..."
         );
     });
 

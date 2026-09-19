@@ -10,10 +10,10 @@ const plugin = {
 
 const conversation: GrokConversationRecord = {
     conversation: {
-        id: "6ff87162-ac88-4b61-996e-9d11280e7bf1",
-        title: "Dark Captivity Books Without Romance",
-        create_time: "2026-05-26T16:06:57.420837Z",
-        modify_time: "2026-05-26T16:10:41.726Z",
+        id: "11111111-aaaa-4aaa-8aaa-111111111111",
+        title: "Planning a Garden",
+        create_time: "2026-01-10T08:00:00.123456Z",
+        modify_time: "2026-01-10T08:05:00.456Z",
     },
     responses: [
         {
@@ -21,7 +21,7 @@ const conversation: GrokConversationRecord = {
                 _id: "q1",
                 sender: "human",
                 message: "Question",
-                create_time: { $date: { $numberLong: "1779811617461" } },
+                create_time: { $date: { $numberLong: "1768032000123" } },
             },
         },
         {
@@ -29,18 +29,18 @@ const conversation: GrokConversationRecord = {
                 _id: "a1",
                 sender: "assistant",
                 message: "",
-                create_time: { $date: { $numberLong: "1779811620000" } },
+                create_time: { $date: { $numberLong: "1768032003000" } },
             },
         },
     ],
 };
 
 const post: GrokMediaPost = {
-    id: "1b8074c0-59df-4703-b4da-0011c9949db5",
-    original_prompt: "A black-and-white abstract drawing",
+    id: "22222222-bbbb-4bbb-8bbb-222222222222",
+    original_prompt: "A watercolour lighthouse at dawn",
     media_type: "image",
-    create_time: "2026-02-21T09:51:31.000110Z",
-    link: "https://grok.com/imagine/post/1b8074c0-59df-4703-b4da-0011c9949db5",
+    create_time: "2026-01-12T09:00:00.000100Z",
+    link: "https://grok.com/imagine/post/22222222-bbbb-4bbb-8bbb-222222222222",
 };
 
 describe("GrokAdapter", () => {
@@ -55,20 +55,18 @@ describe("GrokAdapter", () => {
     it("identifies both kinds of item", () => {
         expect(adapter.getId(conversation)).toBe(conversation.conversation.id);
         expect(adapter.getId(post)).toBe(post.id);
-        expect(adapter.getTitle(conversation)).toBe(
-            "Dark Captivity Books Without Romance"
-        );
+        expect(adapter.getTitle(conversation)).toBe("Planning a Garden");
         expect(adapter.getTitle(post)).toBe(
-            "Imagine - A black-and-white abstract drawing"
+            "Imagine - A watercolour lighthouse at dawn"
         );
     });
 
     it("dates items in whole seconds", () => {
         expect(adapter.getCreateTime(conversation)).toBe(
-            Math.floor(Date.parse("2026-05-26T16:06:57.420837Z") / 1000)
+            Math.floor(Date.parse("2026-01-10T08:00:00.123456Z") / 1000)
         );
         expect(adapter.getUpdateTime(post)).toBe(
-            Math.floor(Date.parse("2026-02-21T09:51:31.000110Z") / 1000)
+            Math.floor(Date.parse("2026-01-12T09:00:00.000100Z") / 1000)
         );
     });
 
