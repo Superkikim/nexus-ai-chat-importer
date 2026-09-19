@@ -263,7 +263,7 @@
             },
             "rename": {
                 "title": "Renommer la propriété « {{oldName}} » en « {{newName}} » dans les notes existantes ?",
-                "body": "Seul le nom de la propriété change. Les notes ne sont pas touchées.",
+                "body": "Nexus AI Chat Importer renomme la propriété là où elle contient l'identifiant de la conversation, et ajoute « {{newName}} » aux notes qui ne l'ont pas. Une valeur « {{oldName}} » que vous avez saisie vous-même reste en place. Rien d'autre ne change dans vos notes.",
                 "confirm": "Renommer la propriété"
             },
             "clear": {

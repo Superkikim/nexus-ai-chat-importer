@@ -263,7 +263,7 @@
             },
             "rename": {
                 "title": "要在现有笔记中将“{{oldName}}”属性重命名为“{{newName}}”吗？",
-                "body": "只更改属性名。笔记本身不受影响。",
+                "body": "Nexus AI Chat Importer 会在属性值为对话 ID 的笔记中重命名该属性，并为缺少“{{newName}}”的笔记添加它。你自己设置的“{{oldName}}”值保持不变。笔记的其他内容不会改变。",
                 "confirm": "重命名属性"
             },
             "clear": {

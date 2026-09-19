@@ -263,7 +263,7 @@
             },
             "rename": {
                 "title": "Die Eigenschaft „{{oldName}}“ in vorhandenen Notizen in „{{newName}}“ umbenennen?",
-                "body": "Nur der Name der Eigenschaft ändert sich. Die Notizen bleiben unberührt.",
+                "body": "Nexus AI Chat Importer benennt die Eigenschaft dort um, wo sie die Unterhaltungs-ID enthält, und fügt „{{newName}}“ zu den Notizen hinzu, denen sie fehlt. Ein selbst gesetzter Wert unter „{{oldName}}“ bleibt erhalten. Sonst ändert sich nichts in deinen Notizen.",
                 "confirm": "Eigenschaft umbenennen"
             },
             "clear": {

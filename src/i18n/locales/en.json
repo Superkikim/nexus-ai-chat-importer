@@ -263,7 +263,7 @@
             },
             "rename": {
                 "title": "Rename the \"{{oldName}}\" property to \"{{newName}}\" on existing notes?",
-                "body": "Only the property name changes. Notes are not touched.",
+                "body": "Nexus AI Chat Importer renames the property where it holds the conversation ID, and adds \"{{newName}}\" to the notes that lack it. A \"{{oldName}}\" value you set yourself stays where it is. Nothing else in your notes changes.",
                 "confirm": "Rename property"
             },
             "clear": {

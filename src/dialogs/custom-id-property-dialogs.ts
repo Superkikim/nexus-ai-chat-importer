@@ -229,7 +229,11 @@ export class CustomIdPropertyDialogs implements CustomIdPropertyUi {
                 t("settings.properties.rename.title", { oldName, newName })
             );
             nameBox(el, oldName, newName);
-            notice(el, "info", t("settings.properties.rename.body"));
+            notice(
+                el,
+                "info",
+                t("settings.properties.rename.body", { oldName, newName })
+            );
             buttons(el, finish, [
                 { label: t("common.buttons.cancel"), value: false },
                 {

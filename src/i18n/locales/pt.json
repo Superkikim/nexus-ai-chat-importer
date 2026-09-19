@@ -263,7 +263,7 @@
             },
             "rename": {
                 "title": "Renomear a propriedade \"{{oldName}}\" para \"{{newName}}\" nas notas existentes?",
-                "body": "Só o nome da propriedade muda. As notas não são alteradas.",
+                "body": "O Nexus AI Chat Importer renomeia a propriedade onde ela contém o ID da conversa e adiciona \"{{newName}}\" às notas que não a têm. Um valor \"{{oldName}}\" definido por você fica onde está. Nada mais muda nas suas notas.",
                 "confirm": "Renomear propriedade"
             },
             "clear": {
