@@ -493,8 +493,12 @@
    ======================================== */
 
 /* Support Section Styling */
-.nexus-support-section {
-    margin: 2em 0;
+.nexus-support-banner {
+    display: block;
+    margin: 1em 0;
+    padding: 0;
+    border: none;
+    background: none;
 }
 
 .nexus-support-hero {
@@ -577,7 +581,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.nexus-support-section .setting-item {
+.nexus-support-resources {
     border-bottom: none;
     padding-top: 0.8em;
     padding-bottom: 0.8em;
@@ -585,12 +589,12 @@
     gap: 8px;
 }
 
-.nexus-support-section .setting-item .setting-item-control {
+.nexus-support-resources .setting-item-control {
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.nexus-support-section .setting-item .setting-item-control button {
+.nexus-support-resources .setting-item-control button {
     flex: 1 1 auto;
     min-width: fit-content;
 }
@@ -600,17 +604,6 @@
     margin: 2em 0;
     border: none;
     border-top: 1px solid var(--background-modifier-border);
-}
-
-/* Date prefix section */
-.nexus-date-prefix-section .setting-item {
-    display: flex;
-    align-items: center;
-}
-
-/* Message date section */
-.nexus-message-date-section {
-    margin-top: 1em;
 }
 
 /* Timestamp preview styling */
@@ -1262,25 +1255,13 @@ body.is-mobile .nexus-file-list-item {
     align-items: stretch;
 }
 
-body.is-mobile .nexus-date-prefix-section .setting-item {
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-body.is-mobile .nexus-date-prefix-section .setting-item .setting-item-control {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-body.is-mobile .nexus-support-section .setting-item .setting-item-control {
+body.is-mobile .nexus-support-resources .setting-item-control {
     width: 100%;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-body.is-mobile .nexus-support-section .setting-item .setting-item-control button {
+body.is-mobile .nexus-support-resources .setting-item-control button {
     flex: 1 1 auto;
     min-width: fit-content;
 }
@@ -2648,6 +2629,11 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     align-items: center;
     gap: 8px;
     min-width: 0;
+}
+
+/* A hidden control group (the date format while the prefix is off). */
+.nexus-control-group.nexus-hidden {
+    display: none;
 }
 
 .nexus-control-label {

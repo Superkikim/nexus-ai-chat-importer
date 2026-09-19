@@ -18,7 +18,7 @@
 
 // src/ui/settings/folder-settings-section.ts
 import { Setting, TFolder, TextComponent, Notice, Modal } from "obsidian";
-import { BaseSettingsSection } from "./base-settings-section";
+import { BaseSettingsSection, type SectionRow } from "./base-settings-section";
 import { FolderMigrationDialog } from "../../dialogs/folder-migration-dialog";
 import { FolderTreeBrowserModal } from "../../dialogs/folder-tree-browser-modal";
 import { validateFolderNesting } from "../../utils/folder-validation";
@@ -29,6 +29,36 @@ import {
 } from "../../utils";
 import { t } from "../../i18n";
 
+interface FolderConfig {
+    key: "conversationFolder" | "reportFolder" | "attachmentFolder";
+    /** The folder type handleFolderChange() and the link updates expect. */
+    type: "conversations" | "reports" | "attachments";
+    /** Key under `settings.folders` in the locale files. */
+    i18n: "conversation_folder" | "reports_folder" | "attachment_folder";
+    inputClass: string;
+}
+
+const FOLDERS: FolderConfig[] = [
+    {
+        key: "conversationFolder",
+        type: "conversations",
+        i18n: "conversation_folder",
+        inputClass: "nexus-conversation-folder-input",
+    },
+    {
+        key: "reportFolder",
+        type: "reports",
+        i18n: "reports_folder",
+        inputClass: "nexus-report-folder-input",
+    },
+    {
+        key: "attachmentFolder",
+        type: "attachments",
+        i18n: "attachment_folder",
+        inputClass: "nexus-attachment-folder-input",
+    },
+];
+
 export class FolderSettingsSection extends BaseSettingsSection {
     get title() {
         return t("settings.folders.section_title");
@@ -38,21 +68,30 @@ export class FolderSettingsSection extends BaseSettingsSection {
     // The folder has a sane default and can be migrated afterwards.
     readonly order = 20;
 
-    render(containerEl: HTMLElement): void {
-        // Conversation Folder
-        let conversationFolderTextComponent: TextComponent | undefined;
-        const conversationFolderSetting = new Setting(containerEl)
-            .setName(t("settings.folders.conversation_folder.name"))
-            .setDesc(t("settings.folders.conversation_folder.desc"))
+    protected rows(): SectionRow[] {
+        return FOLDERS.map((folder) => ({
+            name: t(`settings.folders.${folder.i18n}.name`),
+            desc: t(`settings.folders.${folder.i18n}.desc`),
+            aliases: ["folder", "path", "directory", "location"],
+            cls: "nexus-folder-path-setting",
+            render: (setting) => this.renderFolder(setting, folder),
+        }));
+    }
+
+    /** A read-only path field and its Browse button. */
+    private renderFolder(setting: Setting, folder: FolderConfig): void {
+        let textComponent: TextComponent | undefined;
+
+        setting
             .addText((text) => {
-                conversationFolderTextComponent = text;
+                textComponent = text;
 
                 text.setPlaceholder(
-                    t("settings.folders.conversation_folder.placeholder")
-                ).setValue(this.plugin.settings.conversationFolder);
+                    t(`settings.folders.${folder.i18n}.placeholder`)
+                ).setValue(this.plugin.settings[folder.key]);
 
                 text.inputEl.addClass("nexus-folder-path-input");
-                text.inputEl.addClass("nexus-conversation-folder-input");
+                text.inputEl.addClass(folder.inputClass);
 
                 // Make input read-only - only Browse button can change the value
                 text.inputEl.readOnly = true;
@@ -62,29 +101,27 @@ export class FolderSettingsSection extends BaseSettingsSection {
                 button
                     .setButtonText(t("common.buttons.browse"))
                     .setTooltip(
-                        t("settings.folders.conversation_folder.browse_tooltip")
+                        t(`settings.folders.${folder.i18n}.browse_tooltip`)
                     )
                     .onClick(() => {
                         const modal = new FolderTreeBrowserModal(
                             this.plugin.app,
                             (path: string) => {
                                 // User selected or created a folder - handle the change directly
-                                if (conversationFolderTextComponent) {
-                                    conversationFolderTextComponent.setValue(
-                                        path
-                                    );
+                                if (textComponent) {
+                                    textComponent.setValue(path);
                                     void this.handleFolderChange(
-                                        "conversationFolder",
+                                        folder.key,
                                         path,
-                                        "conversations",
-                                        conversationFolderTextComponent
+                                        folder.type,
+                                        textComponent
                                     );
                                 }
                             },
-                            this.plugin.settings.conversationFolder,
+                            this.plugin.settings[folder.key],
                             (path: string) =>
                                 validateFolderNesting(
-                                    "conversationFolder",
+                                    folder.key,
                                     path,
                                     this.plugin.settings.conversationFolder,
                                     this.plugin.settings.reportFolder,
@@ -94,121 +131,6 @@ export class FolderSettingsSection extends BaseSettingsSection {
                         modal.open();
                     });
             });
-        conversationFolderSetting.settingEl.addClass(
-            "nexus-folder-path-setting"
-        );
-
-        // Report Folder
-        let reportFolderTextComponent: TextComponent | undefined;
-        const reportFolderSetting = new Setting(containerEl)
-            .setName(t("settings.folders.reports_folder.name"))
-            .setDesc(t("settings.folders.reports_folder.desc"))
-            .addText((text) => {
-                reportFolderTextComponent = text;
-
-                text.setPlaceholder(
-                    t("settings.folders.reports_folder.placeholder")
-                ).setValue(this.plugin.settings.reportFolder);
-
-                text.inputEl.addClass("nexus-folder-path-input");
-                text.inputEl.addClass("nexus-report-folder-input");
-
-                // Make input read-only - only Browse button can change the value
-                text.inputEl.readOnly = true;
-                text.inputEl.addClass("nexus-cursor-default");
-            })
-            .addButton((button) => {
-                button
-                    .setButtonText(t("common.buttons.browse"))
-                    .setTooltip(
-                        t("settings.folders.reports_folder.browse_tooltip")
-                    )
-                    .onClick(() => {
-                        const modal = new FolderTreeBrowserModal(
-                            this.plugin.app,
-                            (path: string) => {
-                                // User selected or created a folder - handle the change directly
-                                if (reportFolderTextComponent) {
-                                    reportFolderTextComponent.setValue(path);
-                                    void this.handleFolderChange(
-                                        "reportFolder",
-                                        path,
-                                        "reports",
-                                        reportFolderTextComponent
-                                    );
-                                }
-                            },
-                            this.plugin.settings.reportFolder,
-                            (path: string) =>
-                                validateFolderNesting(
-                                    "reportFolder",
-                                    path,
-                                    this.plugin.settings.conversationFolder,
-                                    this.plugin.settings.reportFolder,
-                                    this.plugin.settings.attachmentFolder
-                                )
-                        );
-                        modal.open();
-                    });
-            });
-        reportFolderSetting.settingEl.addClass("nexus-folder-path-setting");
-
-        // Attachment Folder
-        let attachmentFolderTextComponent: TextComponent | undefined;
-        const attachmentFolderSetting = new Setting(containerEl)
-            .setName(t("settings.folders.attachment_folder.name"))
-            .setDesc(t("settings.folders.attachment_folder.desc"))
-            .addText((text) => {
-                attachmentFolderTextComponent = text;
-
-                text.setPlaceholder(
-                    t("settings.folders.attachment_folder.placeholder")
-                ).setValue(this.plugin.settings.attachmentFolder);
-
-                text.inputEl.addClass("nexus-folder-path-input");
-                text.inputEl.addClass("nexus-attachment-folder-input");
-
-                // Make input read-only - only Browse button can change the value
-                text.inputEl.readOnly = true;
-                text.inputEl.addClass("nexus-cursor-default");
-            })
-            .addButton((button) => {
-                button
-                    .setButtonText(t("common.buttons.browse"))
-                    .setTooltip(
-                        t("settings.folders.attachment_folder.browse_tooltip")
-                    )
-                    .onClick(() => {
-                        const modal = new FolderTreeBrowserModal(
-                            this.plugin.app,
-                            (path: string) => {
-                                // User selected or created a folder - handle the change directly
-                                if (attachmentFolderTextComponent) {
-                                    attachmentFolderTextComponent.setValue(
-                                        path
-                                    );
-                                    void this.handleFolderChange(
-                                        "attachmentFolder",
-                                        path,
-                                        "attachments",
-                                        attachmentFolderTextComponent
-                                    );
-                                }
-                            },
-                            this.plugin.settings.attachmentFolder,
-                            (path: string) =>
-                                validateFolderNesting(
-                                    "attachmentFolder",
-                                    path,
-                                    this.plugin.settings.conversationFolder,
-                                    this.plugin.settings.reportFolder,
-                                    this.plugin.settings.attachmentFolder
-                                )
-                        );
-                        modal.open();
-                    });
-            });
-        attachmentFolderSetting.settingEl.addClass("nexus-folder-path-setting");
     }
 
     private async handleFolderChange(

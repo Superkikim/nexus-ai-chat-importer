@@ -17,8 +17,7 @@
  */
 
 // src/ui/settings/support-section.ts
-import { Setting } from "obsidian";
-import { BaseSettingsSection } from "./base-settings-section";
+import { BaseSettingsSection, type SectionRow } from "./base-settings-section";
 import { createSupportBox } from "../components/support-box";
 import { t } from "../../i18n";
 import {
@@ -34,49 +33,50 @@ export class SupportSection extends BaseSettingsSection {
     }
     readonly order = 5;
 
-    render(containerEl: HTMLElement): void {
-        const supportContainer = containerEl.createDiv({
-            cls: "nexus-support-section",
-        });
-
-        // Use reusable support box component
-        createSupportBox(supportContainer);
-
-        // Resources section - ONE Setting with multiple buttons
-        new Setting(supportContainer)
-            .setName(t("settings.support.resources.name"))
-            .setDesc(t("settings.support.resources.desc"))
-            .addButton((button) =>
-                button
-                    .setButtonText(
-                        t("settings.support.resources.documentation")
-                    )
-                    .onClick(() => {
-                        window.open(getLocalizedDocsUrl(), "_blank");
-                    })
-            )
-            .addButton((button) =>
-                button
-                    .setButtonText(
-                        t("settings.support.resources.release_notes")
-                    )
-                    .onClick(() => {
-                        window.open(getReleaseNotesUrl(), "_blank");
-                    })
-            )
-            .addButton((button) =>
-                button
-                    .setButtonText(t("settings.support.resources.issues"))
-                    .onClick(() => {
-                        window.open(getIssuesUrl(), "_blank");
-                    })
-            )
-            .addButton((button) =>
-                button
-                    .setButtonText(t("settings.support.resources.forum"))
-                    .onClick(() => {
-                        window.open(getCommunityForumUrl(), "_blank");
-                    })
-            );
+    protected rows(): SectionRow[] {
+        return [
+            {
+                // The support box is not a setting: it fills its row and
+                // stays out of the settings search.
+                name: t("settings.support.section_title"),
+                searchable: false,
+                cls: "nexus-support-banner",
+                render: (setting) => {
+                    setting.settingEl.empty();
+                    createSupportBox(setting.settingEl);
+                },
+            },
+            {
+                name: t("settings.support.resources.name"),
+                desc: t("settings.support.resources.desc"),
+                aliases: ["help", "documentation", "issues", "forum", "docs"],
+                cls: "nexus-support-resources",
+                // ONE setting with multiple buttons
+                render: (setting) => {
+                    const links: Array<[string, () => string]> = [
+                        [
+                            t("settings.support.resources.documentation"),
+                            getLocalizedDocsUrl,
+                        ],
+                        [
+                            t("settings.support.resources.release_notes"),
+                            getReleaseNotesUrl,
+                        ],
+                        [t("settings.support.resources.issues"), getIssuesUrl],
+                        [
+                            t("settings.support.resources.forum"),
+                            getCommunityForumUrl,
+                        ],
+                    ];
+                    for (const [label, url] of links) {
+                        setting.addButton((button) =>
+                            button.setButtonText(label).onClick(() => {
+                                window.open(url(), "_blank");
+                            })
+                        );
+                    }
+                },
+            },
+        ];
     }
 }

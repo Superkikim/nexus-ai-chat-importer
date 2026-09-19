@@ -18,12 +18,11 @@
 
 // src/ui/settings/properties-settings-section.ts
 import { Setting } from "obsidian";
-import { BaseSettingsSection } from "./base-settings-section";
+import { BaseSettingsSection, type SectionRow } from "./base-settings-section";
 import { t } from "../../i18n";
 import { CustomIdPropertyService } from "../../services/custom-id-property-service";
 import { CustomIdPropertyDialogs } from "../../dialogs/custom-id-property-dialogs";
 import { CustomIdPropertyController } from "./custom-id-property-controller";
-import { setFullWidthDescription } from "./full-width-description";
 
 /** A description with line breaks and `code` spans, built without HTML. */
 function describe(text: string): DocumentFragment {
@@ -50,7 +49,37 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
     private committing = false;
     private pendingCommit?: () => void;
 
-    render(containerEl: HTMLElement): void {
+    protected rows(): SectionRow[] {
+        return [
+            {
+                name: t("settings.properties.custom_id.name"),
+                // The description covers both the field and the switch.
+                desc: describe(
+                    `${t("settings.properties.custom_id.desc")}\n${t(
+                        "settings.properties.overwrite.desc"
+                    )}`
+                ),
+                aliases: [
+                    "uid",
+                    "id",
+                    "frontmatter",
+                    "yaml",
+                    "metadata",
+                    "overwrite",
+                ],
+                fullWidthDesc: true,
+                cls: "nexus-custom-id-setting",
+                render: (setting) => this.renderCustomId(setting),
+            },
+        ];
+    }
+
+    /**
+     * Name, field, overwrite switch and its label on the first row; the
+     * description (already moved by the row) spans the full width under
+     * them, followed by the invalid-name warning.
+     */
+    private renderCustomId(setting: Setting): void {
         const plugin = this.plugin;
         const service = new CustomIdPropertyService(
             plugin.app,
@@ -73,18 +102,10 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             new CustomIdPropertyDialogs(plugin.app, service, plugin.logger)
         );
 
-        // One setting on two rows: name, field, overwrite switch and its
-        // label on the first; the description, which covers both, spans the
-        // full width under them, followed by the invalid-name warning.
-        const nameSetting = new Setting(containerEl).setName(
-            t("settings.properties.custom_id.name")
-        );
-        nameSetting.settingEl.addClass("nexus-custom-id-setting");
-
         const warning = createDiv({ cls: "nexus-setting-warning" });
         warning.hide();
 
-        nameSetting.addText((text) => {
+        setting.addText((text) => {
             text.setValue(plugin.settings.customIdProperty).onChange(() =>
                 warning.hide()
             );
@@ -104,7 +125,7 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             });
         });
 
-        nameSetting.addToggle((toggle) => {
+        setting.addToggle((toggle) => {
             toggle
                 .setValue(plugin.settings.customIdPropertyOverwrite)
                 .onChange(async (value) => {
@@ -112,7 +133,7 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
                     await plugin.saveSettings();
                 });
             // Switch and label wrap together when the row runs out of room.
-            const group = nameSetting.controlEl.createSpan({
+            const group = setting.controlEl.createSpan({
                 cls: "nexus-control-group",
             });
             group.appendChild(toggle.toggleEl);
@@ -123,15 +144,7 @@ export class PropertiesSettingsSection extends BaseSettingsSection {
             label.addEventListener("click", () => toggle.toggleEl.click());
         });
 
-        setFullWidthDescription(
-            nameSetting,
-            describe(
-                `${t("settings.properties.custom_id.desc")}\n${t(
-                    "settings.properties.overwrite.desc"
-                )}`
-            )
-        );
-        nameSetting.settingEl.appendChild(warning);
+        setting.settingEl.appendChild(warning);
     }
 
     /** A name typed just before the tab closed is committed, not dropped. */

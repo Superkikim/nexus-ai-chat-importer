@@ -18,9 +18,8 @@
 
 // src/ui/settings/display-settings-section.ts
 import { Setting } from "obsidian";
-import { BaseSettingsSection } from "./base-settings-section";
+import { BaseSettingsSection, type SectionRow } from "./base-settings-section";
 import { t } from "../../i18n";
-import { setFullWidthDescription } from "./full-width-description";
 
 export class DisplaySettingsSection extends BaseSettingsSection {
     get title() {
@@ -28,17 +27,27 @@ export class DisplaySettingsSection extends BaseSettingsSection {
     }
     readonly order = 10;
 
-    render(containerEl: HTMLElement): void {
-        // Add custom styling for better readability
-        const sectionContainer = containerEl.createDiv({
-            cls: "nexus-date-prefix-section",
-        });
+    protected rows(): SectionRow[] {
+        return [
+            {
+                name: t("settings.display.add_date_prefix.name"),
+                desc: t("settings.display.add_date_prefix.desc"),
+                aliases: ["filename", "file name", "prefix", "date"],
+                fullWidthDesc: true,
+                render: (setting) => this.renderDatePrefix(setting),
+            },
+        ];
+    }
 
-        // Name, switch and (when on) the format dropdown on the first row;
-        // the description across the full width under them.
-        const setting = new Setting(sectionContainer).setName(
-            t("settings.display.add_date_prefix.name")
-        );
+    /**
+     * The switch, then the format label and dropdown, which stay in place
+     * and are hidden while the switch is off: nothing needs to re-render.
+     */
+    private renderDatePrefix(setting: Setting): void {
+        let formatGroup: HTMLElement | undefined;
+        const showFormat = (enabled: boolean) => {
+            formatGroup?.toggleClass("nexus-hidden", !enabled);
+        };
 
         setting.addToggle((toggle) =>
             toggle
@@ -46,40 +55,33 @@ export class DisplaySettingsSection extends BaseSettingsSection {
                 .onChange(async (value) => {
                     this.plugin.settings.addDatePrefix = value;
                     await this.plugin.saveSettings();
-                    this.redraw(); // Show or hide the format dropdown
+                    showFormat(value);
                 })
         );
 
-        if (this.plugin.settings.addDatePrefix) {
-            setting.addDropdown((dropdown) => {
-                dropdown
-                    .addOption("YYYY-MM-DD", "YYYY-MM-DD")
-                    .addOption("YYYYMMDD", "YYYYMMDD")
-                    .setValue(this.plugin.settings.dateFormat)
-                    .onChange(async (value: string) => {
-                        if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
-                            this.plugin.settings.dateFormat = value;
-                            await this.plugin.saveSettings();
-                        }
-                    });
+        setting.addDropdown((dropdown) => {
+            dropdown
+                .addOption("YYYY-MM-DD", "YYYY-MM-DD")
+                .addOption("YYYYMMDD", "YYYYMMDD")
+                .setValue(this.plugin.settings.dateFormat)
+                .onChange(async (value: string) => {
+                    if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
+                        this.plugin.settings.dateFormat = value;
+                        await this.plugin.saveSettings();
+                    }
+                });
 
-                // Label and dropdown wrap together.
-                const group = setting.controlEl.createSpan({
-                    cls: "nexus-control-group",
-                });
-                group.createSpan({
-                    text: t(
-                        "settings.display.add_date_prefix.format_label"
-                    ).trim(),
-                    cls: "nexus-control-label",
-                });
-                group.appendChild(dropdown.selectEl);
+            // Label and dropdown wrap together.
+            formatGroup = setting.controlEl.createSpan({
+                cls: "nexus-control-group",
             });
-        }
+            formatGroup.createSpan({
+                text: t("settings.display.add_date_prefix.format_label").trim(),
+                cls: "nexus-control-label",
+            });
+            formatGroup.appendChild(dropdown.selectEl);
+        });
 
-        setFullWidthDescription(
-            setting,
-            t("settings.display.add_date_prefix.desc")
-        );
+        showFormat(this.plugin.settings.addDatePrefix);
     }
 }

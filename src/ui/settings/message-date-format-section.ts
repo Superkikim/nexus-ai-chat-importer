@@ -18,12 +18,11 @@
 
 // src/ui/settings/message-date-format-section.ts
 import { Setting } from "obsidian";
-import { BaseSettingsSection } from "./base-settings-section";
+import { BaseSettingsSection, type SectionRow } from "./base-settings-section";
 import { MESSAGE_TIMESTAMP_FORMATS } from "../../config/constants";
 import { formatMessageTimestamp } from "../../utils";
 import type { MessageTimestampFormat } from "../../types/plugin";
 import { t } from "../../i18n";
-import { setFullWidthDescription } from "./full-width-description";
 
 export class MessageDateFormatSection extends BaseSettingsSection {
     // No heading of its own: these settings continue the Date Format
@@ -31,74 +30,77 @@ export class MessageDateFormatSection extends BaseSettingsSection {
     readonly title = undefined;
     readonly order = 11;
 
-    render(containerEl: HTMLElement): void {
-        // Add custom styling for better readability
-        const sectionContainer = containerEl.createDiv({
-            cls: "nexus-message-date-section",
+    protected rows(): SectionRow[] {
+        return [
+            {
+                name: t("settings.timestamps.custom_format.name"),
+                desc: t("settings.timestamps.custom_format.desc"),
+                aliases: ["message", "timestamp", "locale"],
+                render: (setting) => {
+                    setting.addToggle((toggle) =>
+                        toggle
+                            .setValue(
+                                this.plugin.settings
+                                    .useCustomMessageTimestampFormat
+                            )
+                            .onChange(async (value) => {
+                                this.plugin.settings.useCustomMessageTimestampFormat =
+                                    value;
+                                await this.plugin.saveSettings();
+                                this.redraw(); // Show or hide the format row
+                            })
+                    );
+                },
+            },
+            {
+                name: t("settings.timestamps.timestamp_format.name"),
+                desc: t("settings.timestamps.timestamp_format.desc"),
+                aliases: ["message", "timestamp", "date", "time"],
+                visible: () =>
+                    this.plugin.settings.useCustomMessageTimestampFormat,
+                fullWidthDesc: true,
+                cls: "nexus-timestamp-setting",
+                render: (setting) => this.renderTimestampFormat(setting),
+            },
+        ];
+    }
+
+    private renderTimestampFormat(setting: Setting): void {
+        // Inside the setting item, on a line of its own: a preview that
+        // sits outside the box reads as an orphan paragraph rather than
+        // as what the dropdown above it produces.
+        const previewContainer = setting.settingEl.createDiv({
+            cls: "nexus-timestamp-preview",
         });
 
-        // Custom Message Timestamp Format
-        new Setting(sectionContainer)
-            .setName(t("settings.timestamps.custom_format.name"))
-            .setDesc(t("settings.timestamps.custom_format.desc"))
-            .addToggle((toggle) =>
-                toggle
-                    .setValue(
-                        this.plugin.settings.useCustomMessageTimestampFormat
-                    )
-                    .onChange(async (value) => {
-                        this.plugin.settings.useCustomMessageTimestampFormat =
-                            value;
-                        await this.plugin.saveSettings();
-                        this.redraw(); // Trigger redraw to show/hide format dropdown
-                    })
+        setting.addDropdown((dropdown) => {
+            // Add all available formats
+            Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(
+                ([key, config]) => {
+                    dropdown.addOption(key, config.label);
+                }
             );
 
-        // Message Timestamp Format Dropdown (only shown if custom format is enabled)
-        if (this.plugin.settings.useCustomMessageTimestampFormat) {
-            const formatSetting = new Setting(sectionContainer)
-                .setName(t("settings.timestamps.timestamp_format.name"))
-                .addDropdown((dropdown) => {
-                    // Add all available formats
-                    Object.entries(MESSAGE_TIMESTAMP_FORMATS).forEach(
-                        ([key, config]) => {
-                            dropdown.addOption(key, config.label);
-                        }
+            dropdown
+                .setValue(this.plugin.settings.messageTimestampFormat)
+                .onChange(async (value) => {
+                    this.plugin.settings.messageTimestampFormat =
+                        value as MessageTimestampFormat;
+                    await this.plugin.saveSettings();
+
+                    // Update preview
+                    this.updateTimestampPreview(
+                        previewContainer,
+                        value as MessageTimestampFormat
                     );
-
-                    dropdown
-                        .setValue(this.plugin.settings.messageTimestampFormat)
-                        .onChange(async (value) => {
-                            this.plugin.settings.messageTimestampFormat =
-                                value as MessageTimestampFormat;
-                            await this.plugin.saveSettings();
-
-                            // Update preview
-                            this.updateTimestampPreview(
-                                previewContainer,
-                                value as MessageTimestampFormat
-                            );
-                        });
                 });
+        });
 
-            // Inside the setting item, on a line of its own: a preview that
-            // sits outside the box reads as an orphan paragraph rather than
-            // as what the dropdown above it produces.
-            setFullWidthDescription(
-                formatSetting,
-                t("settings.timestamps.timestamp_format.desc")
-            );
-            formatSetting.settingEl.addClass("nexus-timestamp-setting");
-            const previewContainer = formatSetting.settingEl.createDiv({
-                cls: "nexus-timestamp-preview",
-            });
-
-            // Initial preview
-            this.updateTimestampPreview(
-                previewContainer,
-                this.plugin.settings.messageTimestampFormat
-            );
-        }
+        // Initial preview
+        this.updateTimestampPreview(
+            previewContainer,
+            this.plugin.settings.messageTimestampFormat
+        );
     }
 
     /**

@@ -25,21 +25,13 @@ import type { Setting } from "obsidian";
  * description beside the controls, which squeezes it and, once the setting
  * wraps, pushes the controls onto a line of their own.
  *
- * Call it after adding the controls; anything appended to `settingEl`
+ * The description element the setting already holds is moved, so the text
+ * stays whatever the caller gave to `setDesc()` (or, for a declarative
+ * setting definition, to `desc`). Anything appended to `settingEl`
  * afterwards (a preview, a warning) follows as further full-width rows.
  */
-export function setFullWidthDescription(
-    setting: Setting,
-    description: string | DocumentFragment
-): HTMLElement {
+export function setFullWidthDescription(setting: Setting): void {
     setting.settingEl.addClass("nexus-setting-full-width-desc");
-    const row = setting.settingEl.createDiv({
-        cls: "setting-item-description nexus-setting-desc-row",
-    });
-    if (typeof description === "string") {
-        row.setText(description);
-    } else {
-        row.append(description);
-    }
-    return row;
+    setting.descEl.addClass("nexus-setting-desc-row");
+    setting.settingEl.appendChild(setting.descEl);
 }
