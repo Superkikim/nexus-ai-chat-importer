@@ -145,6 +145,14 @@ describe("GrokConverter — conversations", () => {
             Date.parse("2026-01-10T08:05:00.456Z") / 1000
         );
     });
+    it("dates the update from the last message when it is later than Grok's", () => {
+        const lastMs = Date.parse("2026-01-12T00:00:00.000Z");
+        const std = GrokConverter.convertConversation(
+            conversation([response("q", "human", "Late", lastMs)])
+        );
+
+        expect(std.updateTime).toBe(lastMs / 1000);
+    });
 });
 
 describe("GrokConverter — assistant text", () => {
@@ -189,6 +197,11 @@ describe("GrokConverter — assistant text", () => {
 
         expect(GrokConverter.renderAssistantText(text, cards)).toBe("Text.");
     });
+    it("leaves the blank lines of the text alone", () => {
+        const text = "```\na\n\n\n\nb\n```";
+
+        expect(GrokConverter.renderAssistantText(text, cards)).toBe(text);
+    });
 
     it("unfolds a markdown artifact into a collapsed callout", () => {
         const text =
@@ -223,6 +236,14 @@ describe("GrokConverter — Imagine posts", () => {
         expect(GrokConverter.mediaPostTitle(post)).toBe(
             "Imagine - A pencil sketch of a red bicycle leaning against a..."
         );
+    });
+    it("keeps the title on one line", () => {
+        expect(
+            GrokConverter.mediaPostTitle({
+                ...post,
+                original_prompt: "Two lines:\nfirst\r\nsecond",
+            })
+        ).toBe("Imagine - Two lines: first second");
     });
 
     it("becomes the prompt, then the generated media", () => {
