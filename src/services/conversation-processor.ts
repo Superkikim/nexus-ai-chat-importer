@@ -1126,18 +1126,19 @@ export class ConversationProcessor {
                 /^update_time: .*$/m,
                 `update_time: ${updateTimeStr}`
             );
-        }
 
-        // The header line a reader sees, in the same readable form the note
-        // was created with — it used to be overwritten with the raw ISO stamp
-        // that belongs in the frontmatter, on every single update.
-        content = content.replace(
-            /^Last Updated: .*$/m,
-            `Last Updated: ${formatTimestamp(
-                updateTime,
-                "date"
-            )} at ${formatTimestamp(updateTime, "time")}`
-        );
+            // The header line a reader sees, in the same readable form the
+            // note was created with — it used to be overwritten with the raw
+            // ISO stamp that belongs in the frontmatter, on every update. It
+            // follows the stamp, or the two would disagree.
+            content = content.replace(
+                /^Last Updated: .*$/m,
+                `Last Updated: ${formatTimestamp(
+                    updateTime,
+                    "date"
+                )} at ${formatTimestamp(updateTime, "time")}`
+            );
+        }
 
         content = this.ensureCustomIdProperty(content);
 

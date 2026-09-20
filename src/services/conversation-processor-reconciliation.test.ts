@@ -691,6 +691,41 @@ describe("ConversationProcessor reconciliation", () => {
             expect(importReport.getUpdatedCount()).toBe(1);
         });
 
+        it("keeps the header line with the stamp when the archive is older", async () => {
+            perplexityAdapter.reconcileNoteMessages = vi.fn(() => ({
+                append: [],
+                rewrites: [],
+            }));
+            const noteWithHeader = [
+                "---",
+                "update_time: 2026-01-01T00:00:00.000Z",
+                "---",
+                "Last Updated: 01/01/2026 at 1:00:00 AM",
+                ">[!nexus_agent] **Assistant** - 01.01.2026 00:00:00",
+                "> A plain answer",
+                "<!-- UID: official-1 -->",
+            ].join("\n");
+            const { processor, writeToFile } = createProcessor(noteWithHeader);
+            processor.longContentExtractorInstance = {
+                extract: vi.fn(async (messages: StandardMessage[]) => messages),
+            };
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+
+            await processor.updateExistingNote(
+                perplexityAdapter,
+                conversationOf([...EXISTING_MESSAGES]),
+                "note.md",
+                1,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+
+            expect(writeToFile).not.toHaveBeenCalled();
+        });
+
         it("keeps the note's stamp when the archive is older", async () => {
             const { writeToFile } = await update({
                 append: [],
