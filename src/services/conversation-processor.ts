@@ -39,6 +39,7 @@ import {
     generateConversationFileName,
     CONVERSATION_NOTE_FILENAME_MAX_BYTES,
     compareTimestampsIgnoringSeconds,
+    formatTimestamp,
     getErrorMessage,
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
@@ -786,7 +787,6 @@ export class ConversationProcessor {
                             this.messageFormatter.formatMessages(rewritten) +
                             content.slice(rewrite.end);
                     }
-                    this.counters.totalConversationsActuallyUpdated++;
                 }
 
                 // The archive is newer than the note — that is the only way
@@ -836,16 +836,22 @@ export class ConversationProcessor {
                             processedNewMessages
                         )
                     );
-                    content = this.updateRelatedQueriesSection(
-                        content,
-                        standardConversation
-                    );
-                    this.counters.totalConversationsActuallyUpdated++;
                     this.counters.totalNonEmptyMessagesAdded +=
                         newMessages.length;
                 }
 
+                // Also after a rewrite that added no message: the export that
+                // brings a turn its sources brings the thread's follow-up
+                // questions with them.
                 if (content !== originalContent) {
+                    content = this.updateRelatedQueriesSection(
+                        content,
+                        standardConversation
+                    );
+                }
+
+                if (content !== originalContent) {
+                    this.counters.totalConversationsActuallyUpdated++;
                     await this.fileService.writeToFile(filePath, content);
 
                     importReport.addUpdated(
@@ -1122,10 +1128,15 @@ export class ConversationProcessor {
             );
         }
 
-        // Note: "Last Updated" field is not used in current note format, but kept for backward compatibility
+        // The header line a reader sees, in the same readable form the note
+        // was created with — it used to be overwritten with the raw ISO stamp
+        // that belongs in the frontmatter, on every single update.
         content = content.replace(
             /^Last Updated: .*$/m,
-            `Last Updated: ${updateTimeStr}`
+            `Last Updated: ${formatTimestamp(
+                updateTime,
+                "date"
+            )} at ${formatTimestamp(updateTime, "time")}`
         );
 
         content = this.ensureCustomIdProperty(content);

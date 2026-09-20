@@ -154,6 +154,16 @@ describe("planPerplexityNoteMerge", () => {
         expect(planPerplexityNoteMerge(existing, incoming).append).toEqual([]);
     });
 
+    it("recognises a question whose maths the note stores differently", () => {
+        offset = 0;
+        const existing = [block("user", "Can you explain $E=mc^2$ simply?")];
+        const incoming = [
+            message("user", "Can you explain \\(E=mc^2\\) simply?"),
+        ];
+
+        expect(planPerplexityNoteMerge(existing, incoming).append).toEqual([]);
+    });
+
     it("adds everything to a note with no messages", () => {
         offset = 0;
         const incoming = [

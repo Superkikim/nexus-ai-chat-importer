@@ -29,13 +29,18 @@ export interface NoteMessageBlock {
     role: "user" | "assistant" | "other";
     /** The message text, with the callout's `>` prefixes removed. */
     text: string;
-    /** Where the whole block sits in the note, UID comment included. */
+    /**
+     * Where the whole block sits in the note: its callout, its UID comment,
+     * and the `---` rule the formatter writes after an answer. Replacing a
+     * block has to take that rule with it, or the replacement's own rule
+     * lands next to the one left behind.
+     */
     start: number;
     end: number;
 }
 
 const BLOCK_PATTERN =
-    /^>\[!nexus_(\w+)\][\s\S]*?\n<!-- UID: (.*?) -->[ \t]*$/gm;
+    /^>\[!nexus_(\w+)\][\s\S]*?\n<!-- UID: (.*?) -->[ \t]*(?:\n\n---(?=\n|$))?/gm;
 
 export function readNoteMessageBlocks(content: string): NoteMessageBlock[] {
     const blocks: NoteMessageBlock[] = [];
@@ -70,7 +75,7 @@ function readCalloutText(block: string): string {
     return block
         .split("\n")
         .slice(1)
-        .filter((line) => !line.startsWith("<!-- UID:"))
+        .filter((line) => !line.startsWith("<!-- UID:") && line !== "---")
         .map((line) => line.replace(/^>[ \t]?/, ""))
         .join("\n")
         .trim();

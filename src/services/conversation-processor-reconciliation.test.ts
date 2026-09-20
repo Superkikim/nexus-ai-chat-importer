@@ -245,6 +245,37 @@ describe("ConversationProcessor reconciliation", () => {
      * every later import offered it as "Updated" again and did nothing about
      * it — a promise that could never resolve.
      */
+    it("keeps the header's Last Updated line readable", async () => {
+        const { processor, writeToFile } = createProcessor(
+            [
+                "---",
+                "update_time: 2020-01-01T00:00:00.000Z",
+                "---",
+                "Last Updated: 01/01/2020 at 1:00:00 AM",
+                "<!-- UID: m1 -->",
+                "<!-- UID: m2 -->",
+            ].join("\n")
+        );
+        const { adapter } = adapterAddingSyntheticMessage();
+        const importReport = new ImportReport();
+        importReport.startFileSection("chatgpt_export.zip");
+
+        await processor.updateExistingNote(
+            adapter,
+            conversationOf([...EXISTING_MESSAGES]),
+            "note.md",
+            2,
+            importReport,
+            ZIP,
+            false,
+            true
+        );
+
+        const written = writeToFile.mock.calls[0][1];
+        expect(written).toContain("Last Updated: ");
+        expect(written).not.toMatch(/^Last Updated: \d{4}-\d{2}-\d{2}T/m);
+    });
+
     it("closes the loop when only the stamp moved", async () => {
         const { processor, writeToFile } = createProcessor(
             noteWith(["m1", "m2"])

@@ -36,8 +36,8 @@ Classification is in
 | Extension | any `.json` whose base name starts with `perplexity_`, in any directory. |
 
 The official file holds every conversation, so its `conversations` array is
-streamed (`StreamingJsonArrayParser`) rather than parsed whole, as Grok's payload
-is. Extension files are read one thread at a time.
+streamed (`StreamingJsonArrayParser`), the way Grok's single payload is.
+Extension files hold one thread each and are read whole, one at a time.
 
 An outer `.zip` that only wraps the extension's part zips is refused with
 guidance to extract it first.
@@ -96,7 +96,7 @@ threads held in both:
 | Conversation id (`context_uuid` = extension `thread_id`) | 10/10 identical |
 | Turn count, questions, order | identical; all 48 questions matched character for character |
 | **Message ids** | **0/10 matched** — the exports number answers differently |
-| Timestamps | 7–12 seconds apart |
+| Timestamps | never equal: 2.5 s apart at best, 7 s typically, up to 30 minutes |
 | Update time | the official export is the newer one 10/10 |
 
 Matching by id therefore duplicated every message one way, and skipped the
@@ -109,9 +109,10 @@ returns what the note is missing:
 
 - a turn is recognised by the first 60 characters of its **question**, taken in
   order (7 threads of 493 hold two questions sharing that prefix; order settles
-  them). The question is the stable key: it is never rewritten on the way into
-  a note, while an answer loses its citation markers or gains a references
-  section;
+  them). The question is the stabler key: an answer loses its citation markers
+  or gains a references section on the way into a note, while a question is only
+  touched by the formatter's LaTeX conversion — which the key applies to both
+  sides so they still meet;
 - a turn the note does not hold is appended;
 - a turn whose sources the note lacks is **rewritten whole** from the richer
   export — appending the list alone would point at markers that were stripped;

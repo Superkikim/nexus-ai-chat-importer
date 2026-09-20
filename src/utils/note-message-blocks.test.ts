@@ -16,6 +16,8 @@ const NOTE = [
     "> ### References",
     "> 1. [A source](https://example.com)",
     "<!-- UID: turn-1 -->",
+    "",
+    "---",
     ">[!nexus_user] **User** - 01.01.2025 10:05:00",
     "> Second question",
     "<!-- UID: turn-2-user -->",
@@ -50,9 +52,18 @@ describe("readNoteMessageBlocks", () => {
         for (const block of blocks) {
             const slice = NOTE.slice(block.start, block.end);
             expect(slice.startsWith(">[!nexus_")).toBe(true);
-            expect(slice.endsWith(`<!-- UID: ${block.uid} -->`)).toBe(true);
         }
         expect(NOTE.slice(blocks[0].end, blocks[1].start)).toBe("\n");
+    });
+
+    it("takes the rule an answer is followed by, so a rewrite replaces it", () => {
+        const [, answer, question] = readNoteMessageBlocks(NOTE);
+
+        expect(NOTE.slice(answer.start, answer.end)).toContain(
+            "<!-- UID: turn-1 -->\n\n---"
+        );
+        expect(answer.text).not.toContain("---");
+        expect(NOTE.slice(answer.end, question.start)).toBe("\n");
     });
 
     it("reads nothing from a note without messages", () => {

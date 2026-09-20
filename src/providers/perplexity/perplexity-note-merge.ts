@@ -19,6 +19,7 @@
 // src/providers/perplexity/perplexity-note-merge.ts
 
 import { StandardMessage } from "../../types/standard";
+import { MessageFormatter } from "../../formatters/message-formatter";
 import { NoteMessageBlock } from "../../utils/note-message-blocks";
 import { NoteMergePlan } from "../provider-adapter";
 
@@ -104,8 +105,13 @@ function groupTurns<T>(items: T[], roleOf: (item: T) => string): Turn<T>[] {
     return turns;
 }
 
+/**
+ * The note side of the comparison went through the formatter, which rewrites
+ * LaTeX delimiters, so the incoming side is put through it too. Running it on
+ * already-converted text changes nothing.
+ */
 function questionKey(text: string): string {
-    return text
+    return MessageFormatter.convertLatexDelimiters(text)
         .replace(/\s+/g, " ")
         .trim()
         .slice(0, QUESTION_KEY_CHARS)
