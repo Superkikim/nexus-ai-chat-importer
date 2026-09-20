@@ -555,7 +555,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     files,
                     provider,
                     existingConversations,
-                    forceReprocess ? "rebuild" : "drop"
+                    // A provider that reconciles a note by what it says, not
+                    // by message ids, decides for itself whether an unchanged
+                    // conversation has anything to bring: the Perplexity
+                    // Thread Exporter's archive is older than Perplexity's own
+                    // export and still carries the sources it lacks.
+                    forceReprocess
+                        ? "rebuild"
+                        : providerRegistry.getAdapter(provider)
+                              ?.reconcileNoteMessages
+                        ? "offer"
+                        : "drop"
                 );
             this.logIgnoredArchives(
                 extractionResult.ignoredArchives,
