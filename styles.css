@@ -2606,8 +2606,8 @@ body.is-mobile .nexus-support-resources .setting-item-control button {
 .nexus-setting-full-width-desc {
     flex-wrap: wrap;
     align-items: center;
-    column-gap: 16px;
-    row-gap: 4px;
+    /* row gap, column gap */
+    gap: 4px 16px;
 }
 
 .nexus-setting-full-width-desc .setting-item-info {
