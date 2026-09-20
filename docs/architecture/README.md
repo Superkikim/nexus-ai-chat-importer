@@ -18,6 +18,7 @@ Where a page and the code disagree, the code wins — please fix the page.
 | [Providers / ChatGPT export format](providers/chatgpt-export-format.md) | Observed structure of the 2026 ChatGPT export (undocumented by OpenAI) that the importer relies on. |
 | [Providers / Claude export format](providers/claude-export-format.md) | Observed Claude export delivery and archive structure, and the data shape the adapter relies on. |
 | [Providers / Perplexity export formats](providers/perplexity-export-format.md) | The three Perplexity archives, what the official export leaves out, and how a note is reconciled against the other source. |
+| [Providers / Grok export format](providers/grok-export-format.md) | The single-payload Grok export, its two kinds of item (conversations and Imagine posts), and how assets are identified without names. |
 
 ## The provider adapter model
 

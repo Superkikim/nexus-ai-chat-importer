@@ -83,6 +83,9 @@ apart. The import report counts them in separate columns.
 
 See [Attachments](../attachments.md) for how saved files are stored and linked.
 
+More detail on the export structure and on how the plugin reads it:
+[architecture / Grok export format](../../architecture/providers/grok-export-format.md).
+
 ## Provider-specific troubleshooting
 
 - The archive is not recognised: check it contains `prod-grok-backend.json`. A
