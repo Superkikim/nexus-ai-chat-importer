@@ -588,4 +588,110 @@ describe("ConversationProcessor reconciliation", () => {
             expect(written).toContain("- Old follow-up");
         });
     });
+    describe("a provider that reconciles a note by content", () => {
+        const perplexityAdapter = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            getProviderName: () => "perplexity",
+            convertChat: vi.fn(),
+            reconcileNoteMessages: vi.fn(),
+        };
+
+        const note = [
+            "---",
+            "update_time: 2026-01-01T00:00:00.000Z",
+            "---",
+            ">[!nexus_agent] **Assistant** - 01.01.2026 00:00:00",
+            "> A plain answer",
+            "<!-- UID: official-1 -->",
+        ].join("\n");
+
+        async function update(plan: unknown) {
+            perplexityAdapter.reconcileNoteMessages = vi.fn(() => plan);
+            const { processor, writeToFile } = createProcessor(note);
+            processor.longContentExtractorInstance = {
+                extract: vi.fn(async (messages: StandardMessage[]) => messages),
+            };
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+            await processor.updateExistingNote(
+                perplexityAdapter,
+                conversationOf([
+                    {
+                        id: "extension-1",
+                        role: "assistant",
+                        content: "A sourced answer",
+                        timestamp: 1001,
+                    },
+                ]),
+                "note.md",
+                1,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return { writeToFile, importReport };
+        }
+
+        it("rewrites the stretch of note the plan names", async () => {
+            const { writeToFile, importReport } = await update({
+                append: [],
+                rewrites: [
+                    {
+                        start: note.indexOf(">[!nexus_agent]"),
+                        end: note.length,
+                        messages: [
+                            {
+                                id: "extension-1",
+                                role: "assistant",
+                                content: "A sourced answer",
+                                timestamp: 1001,
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            const written = writeToFile.mock.calls[0][1];
+            expect(written).toContain("<!-- UID: extension-1 -->");
+            expect(written).not.toContain("<!-- UID: official-1 -->");
+            expect(importReport.getUpdatedCount()).toBe(1);
+        });
+
+        it("keeps the note's stamp when the archive is older", async () => {
+            const { writeToFile } = await update({
+                append: [],
+                rewrites: [
+                    {
+                        start: note.indexOf(">[!nexus_agent]"),
+                        end: note.length,
+                        messages: [
+                            {
+                                id: "extension-1",
+                                role: "assistant",
+                                content: "A sourced answer",
+                                timestamp: 1001,
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(writeToFile.mock.calls[0][1]).toContain(
+                "update_time: 2026-01-01T00:00:00.000Z"
+            );
+        });
+
+        it("leaves the note alone when the plan is empty", async () => {
+            const { writeToFile, importReport } = await update({
+                append: [],
+                rewrites: [],
+            });
+
+            expect(writeToFile).not.toHaveBeenCalled();
+            expect(importReport.getUpdatedCount()).toBe(0);
+        });
+    });
 });

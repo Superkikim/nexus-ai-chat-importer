@@ -16,7 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-import { StandardConversation } from "../../types/standard";
+import { StandardConversation, StandardMessage } from "../../types/standard";
 import { ProviderAdapter } from "../provider-adapter";
 import {
     PerplexityConversationFile,
@@ -26,6 +26,9 @@ import {
 import { PerplexityConverter } from "./perplexity-converter";
 import { PerplexityReportNamingStrategy } from "./perplexity-report-naming";
 import { normalizePerplexityConversationFile } from "./perplexity-normalizer";
+import { planPerplexityNoteMerge } from "./perplexity-note-merge";
+import { NoteMessageBlock } from "../../utils/note-message-blocks";
+import { NoteMergePlan } from "../provider-adapter";
 
 export class PerplexityAdapter
     implements ProviderAdapter<PerplexityRawConversationFile>
@@ -115,6 +118,17 @@ export class PerplexityAdapter
         return (normalized.conversations || []).filter(
             (turn) => !!turn?.uuid && !existingMessageIds.includes(turn.uuid)
         );
+    }
+
+    /**
+     * Two Perplexity exports of one thread share their questions but not their
+     * message ids, so what a note already holds is decided on the questions.
+     */
+    reconcileNoteMessages(
+        existing: NoteMessageBlock[],
+        messages: StandardMessage[]
+    ): NoteMergePlan {
+        return planPerplexityNoteMerge(existing, messages);
     }
 
     getReportNamingStrategy() {
