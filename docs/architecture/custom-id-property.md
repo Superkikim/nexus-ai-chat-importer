@@ -85,6 +85,8 @@ the feature is left in place.
   indexed), outcome counting, unchanged notes not written.
 - `custom-id-property-controller.test.ts`: enable, rename and clear, Cancel and
   dismissal restoring the previous name, refused names.
+- `carry-over-foreign-properties.test.ts`: a rebuild regenerates the property
+  like the other plugin keys and keeps any other property as written.
 - `note-formatter.test.ts` and `conversation-processor-reconciliation.test.ts`:
   the property on new, rebuilt and updated notes.
 - `locale-parity.test.ts` covers the new strings in all ten locales.

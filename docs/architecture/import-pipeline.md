@@ -63,7 +63,9 @@ sequence for **new imports, incremental updates, and rebuilds** alike
    conversation — the import continues with the unreconciled messages.
 4. **Decide new messages** on the reconciled conversation. For an existing note,
    only messages whose `<!-- UID: … -->` marker is absent are appended; a rebuild
-   regenerates the whole note.
+   regenerates the whole note and re-attaches the frontmatter properties the
+   plugin does not write (`carryOverForeignProperties`,
+   [`custom-id-property.ts`](../../src/utils/custom-id-property.ts)).
 5. **Sort** messages chronologically (synthetic messages included).
 6. **Extract attachments** through the shared per-provider extractor (lazy `.dat`
    reads; see [Attachment handling](attachment-handling.md)).

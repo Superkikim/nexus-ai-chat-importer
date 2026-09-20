@@ -83,7 +83,8 @@ On rename, an old property whose value is **not** the conversation ID is left in
 place: it was there before the plugin used that name, so it is yours.
 
 Keeping the property after clearing the field is not permanent: a
-[rebuilt](importing.md#updates-and-rebuilds) note is regenerated without it.
+[rebuilt](importing.md#updates-and-rebuilds) note no longer regenerates it, but
+keeps it as an ordinary property with the value it had.
 
 ### Overwrite existing values
 

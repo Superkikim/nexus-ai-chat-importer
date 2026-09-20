@@ -31,8 +31,8 @@ notes, use **Reprocess** / **Rebuild** (see
 This is usually the export, not the plugin — the file simply wasn't in the archive.
 See [Attachments](attachments.md#why-an-attachment-can-be-missing) and your
 provider page. If a newer export includes the file, re-import with **Rebuild** —
-which [regenerates the whole note](importing.md#updates-and-rebuilds), so manual
-edits to it are lost.
+which [regenerates the note body](importing.md#updates-and-rebuilds), so manual
+edits to the body are lost. Properties you added are kept.
 
 ## A conversation shows as "Failed" in the report
 
