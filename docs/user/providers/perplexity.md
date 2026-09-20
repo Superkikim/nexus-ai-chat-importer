@@ -81,9 +81,10 @@ created from the other:
   rewritten at all.
 
 This works in both directions, and importing the same archive twice changes
-nothing. The extension's archive is always older than Perplexity's own export,
-so it is read for what it can add rather than skipped for its date — and it
-never dates a note back.
+nothing. An extension archive can be the older of the two — in the threads
+compared, Perplexity's own export reported the later update time — so it is read
+for what it can add rather than skipped for its date, and it never dates a note
+back.
 
 One thing it cannot do: bring sources to an answer that has none in either
 archive. Perplexity's own export has no sources at all.

@@ -129,8 +129,8 @@ Two consequences elsewhere in the pipeline
 [`main.ts`](../../../src/main.ts)):
 
 - Import All keeps conversations the vault is already level with when the
-  provider reconciles by content, because the extension's archive is always the
-  older one and still carries sources.
+  provider reconciles by content, because the extension's archive can be the
+  older one (it was, on all ten threads compared) and still carries sources.
 - Such a note keeps its own stamp rather than being dated back to the older
   archive, and is written only when something actually changed.
 

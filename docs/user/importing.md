@@ -60,7 +60,7 @@ by its file path or title. Re-importing is how you keep notes current.
 
 | You want to… | Do this | Result |
 |---|---|---|
-| Add new messages from a fresh export | Re-import (Import All, or Select Specific with the conversation ticked) | New messages are **appended**; earlier messages, formatting, and your manual edits are left untouched. The note is recorded as **Updated**. |
+| Add new messages from a fresh export | Re-import (Import All, or Select Specific with the conversation ticked) | New messages are **appended**; earlier messages, formatting, and your manual edits are left untouched. The note is recorded as **Updated**. [Perplexity](providers/perplexity.md#using-both-sources) also rewrites an answer that lacks its sources. |
 | Rebuild notes after a plugin update, to pick up new features | Import All with **Reprocess existing notes** ticked | Each existing note is **regenerated from scratch** from the archive. Recorded as **Recreated**. |
 | Rebuild only specific notes | Select Specific → tick the conversations → tick **Rebuild selected notes if they exist** | Only those notes are regenerated. |
 

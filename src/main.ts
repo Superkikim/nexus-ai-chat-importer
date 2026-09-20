@@ -558,8 +558,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     // A provider that reconciles a note by what it says, not
                     // by message ids, decides for itself whether an unchanged
                     // conversation has anything to bring: the Perplexity
-                    // Thread Exporter's archive is older than Perplexity's own
-                    // export and still carries the sources it lacks.
+                    // Thread Exporter's archive can be the older of the two and
+                    // still carries the sources Perplexity's own export lacks.
                     forceReprocess
                         ? "rebuild"
                         : providerRegistry.getAdapter(provider)

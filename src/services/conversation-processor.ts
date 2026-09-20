@@ -525,7 +525,7 @@ export class ConversationProcessor {
         // A provider that reconciles a note by what it says, not by message
         // ids, is asked even when its archive is older: the Perplexity Thread
         // Exporter ships sources that Perplexity's own export never has, and
-        // its archive is always the older of the two. The note is only written
+        // its archive can be the older of the two. The note is only written
         // if something actually changed.
         if (comparison <= 0 && !adapter.reconcileNoteMessages) {
             // ZIP is older or same as vault (ignoring seconds) → Skip
