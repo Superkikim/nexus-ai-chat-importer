@@ -85,6 +85,12 @@ Measured on a real 493-conversation export (2 010 turns):
   update time is the later of the two.
 - `label: "reject"` marks 10 entries whose answers are complete; they are
   imported like any other.
+- **A `mode` that means nothing reliable**, so it is not written. Both exports
+  carry one (`CONCISE` | `COPILOT`), and on the 48 turns held in both they
+  disagree: the extension says `COPILOT` for all of them, the official export
+  `CONCISE` for 42. Within the official export, `CONCISE` accompanies `pro`
+  searches and `COPILOT` accompanies entries with no search type at all, so it
+  follows neither the model nor the kind of search.
 
 ## Reconciling the two sources
 

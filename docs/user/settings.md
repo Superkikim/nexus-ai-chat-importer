@@ -52,7 +52,8 @@ name in effect:
 - Obsidian Publish properties: `publish`, `permalink`, `description`, `image`,
   `cover`.
 - Properties the plugin already writes: `nexus`, `plugin_version`, `provider`,
-  `conversation_id`, `create_time`, `update_time`, `mode`, `models`.
+  `conversation_id`, `create_time`, `update_time`, `models`, and `mode`, which
+  notes imported by earlier versions still carry.
 
 The name is applied when you press Enter, leave the field, or close Settings —
 not while you type. From then on, every import,

@@ -19,25 +19,10 @@
 // src/utils/frontmatter-lists.ts
 
 /**
- * Frontmatter fields that hold several values — `mode`, `models` — are written
- * as YAML lists. A provider may hand over one value or many, and notes written
- * before a field became a list still carry a single string.
+ * A frontmatter field that holds several values — `models` — is written as a
+ * YAML list. Written and rewritten in one place, so the note formatter and the
+ * update path cannot drift apart.
  */
-export function normalizeFrontmatterList(value: unknown): string[] {
-    const values = Array.isArray(value) ? value : [value];
-
-    const seen = new Set<string>();
-    const list: string[] = [];
-    for (const item of values) {
-        if (typeof item !== "string") continue;
-        const normalized = item.trim();
-        if (!normalized || seen.has(normalized)) continue;
-        seen.add(normalized);
-        list.push(normalized);
-    }
-
-    return list;
-}
 
 /** `key:` followed by one indented line per value, or nothing when empty. */
 export function yamlListBlock(key: string, values: string[]): string {
@@ -51,10 +36,7 @@ export function yamlListBlock(key: string, values: string[]): string {
     return `${key}:\n${lines}\n`;
 }
 
-/**
- * Matches the field in either shape: the list written now, or the single
- * `key: "value"` line notes carried before it became a list.
- */
+/** Matches the whole list a note holds for `key`, its items included. */
 export function frontmatterListPattern(key: string): RegExp {
-    return new RegExp(`^${key}:(?:\\n(?:\\s+- .*\\n?)*|.*\\n?)`, "m");
+    return new RegExp(`^${key}:\\n(?:\\s+- .*\\n?)*`, "m");
 }

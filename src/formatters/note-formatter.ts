@@ -23,10 +23,7 @@ import {
     customIdPropertyLine,
     resolveCustomIdProperty,
 } from "../utils/custom-id-property";
-import {
-    normalizeFrontmatterList,
-    yamlListBlock,
-} from "../utils/frontmatter-lists";
+import { yamlListBlock } from "../utils/frontmatter-lists";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
 import { URL_GENERATORS } from "../types/standard";
@@ -98,9 +95,7 @@ export class NoteFormatter {
                 );
         }
 
-        const modes = this.extractModes(conversation);
         const models = this.extractModels(conversation);
-        const modeLine = yamlListBlock("mode", modes);
         const modelsBlock = yamlListBlock("models", models);
 
         const customIdLine = customIdPropertyLine(
@@ -118,7 +113,7 @@ aliases: ${title}
 conversation_id: ${conversationId}
 ${customIdLine}create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
-${modeLine}${modelsBlock}---
+${modelsBlock}---
 `;
 
         // Build header content - use original title for display, safe title for frontmatter
@@ -140,10 +135,6 @@ ${modeLine}${modelsBlock}---
         conversation: StandardConversation
     ): string {
         return this.messageFormatter.formatMessages(conversation.messages);
-    }
-
-    private extractModes(conversation: StandardConversation): string[] {
-        return normalizeFrontmatterList(conversation.metadata?.mode);
     }
 
     private extractModels(conversation: StandardConversation): string[] {

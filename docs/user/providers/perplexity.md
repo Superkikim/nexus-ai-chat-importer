@@ -43,10 +43,8 @@ If the extension produced an outer `.zip` that holds `perplexity_*` part zips,
 ## What is imported
 
 Each question and its answer become a user message and an assistant message,
-sorted by time. Every note has a title and the conversation's timestamps. The
-official export also always adds the **modes** the thread used (for example
-`CONCISE` or `COPILOT`) and a link back to the thread; the extension adds them when
-its archive carries them.
+sorted by time. Every note has a title, the conversation's timestamps and a link
+back to the thread.
 
 The official export carries no title of its own — it repeats your first question —
 so the note title is that question cut to 50 characters, on one line. The
@@ -59,6 +57,10 @@ The sources differ in what else they carry:
 | Model of each answer (`models:`) | — | ✅ |
 | **Related Queries** list at the end | — | ✅ |
 | **References** section (title, URL, snippet) | — | Older form only, when the answer searched the web |
+
+Notes no longer get a `mode:` property. Perplexity's two exports fill it in
+differently — for seven of ten threads held in both they disagreed — so it said
+nothing reliable. Notes imported by an earlier version keep the one they have.
 
 **Citation markers** such as `[1][2]` are removed from an answer that has no
 References section: without their sources they point nowhere. Code, links and

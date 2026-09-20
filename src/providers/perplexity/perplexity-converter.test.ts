@@ -18,7 +18,6 @@ describe("PerplexityConverter", () => {
                     query: "Question",
                     answer: "Answer",
                     model: "sonar",
-                    mode: "CONCISE",
                     timestamp: "2024-01-01T10:00:10.000Z",
                     related_queries: ["A", "B", "A"],
                 },
@@ -32,7 +31,6 @@ describe("PerplexityConverter", () => {
         expect(result.messages).toHaveLength(2);
         expect(result.messages[1].id).toBe("turn-1");
         expect(result.messages[1].model).toBe("sonar");
-        expect(result.metadata?.mode).toEqual(["CONCISE"]);
         expect(result.metadata?.models).toEqual(["sonar"]);
         expect(result.metadata?.related_queries).toEqual(["A", "B"]);
         expect(result.chatUrl).toBe(

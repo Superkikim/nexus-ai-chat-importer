@@ -59,7 +59,6 @@ export class PerplexityConverter {
         const uniqueModels = this.uniqueNonEmpty(
             turns.map((turn) => turn.model)
         );
-        const uniqueModes = this.uniqueNonEmpty(turns.map((turn) => turn.mode));
         const relatedQueries = this.uniqueNonEmpty(
             turns.flatMap((turn) => turn.related_queries || [])
         );
@@ -82,9 +81,6 @@ export class PerplexityConverter {
             messages,
             chatUrl: this.buildThreadUrl(chat.metadata?.thread_url),
             metadata: {
-                // Every mode the thread used: a thread can switch between them,
-                // and a single value would hide the others.
-                mode: uniqueModes,
                 models: uniqueModels,
                 related_queries: relatedQueries,
                 thread_url: chat.metadata?.thread_url,

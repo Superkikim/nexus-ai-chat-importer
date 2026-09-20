@@ -28,7 +28,7 @@ async function createFormatter(settings: Record<string, unknown> = {}) {
 }
 
 describe("NoteFormatter", () => {
-    it("renders universal mode/models frontmatter and related queries section", async () => {
+    it("renders models frontmatter and related queries section", async () => {
         const formatter = await createFormatter();
         const rendered = formatter.generateMarkdownContent({
             id: "thread-1",
@@ -52,13 +52,12 @@ describe("NoteFormatter", () => {
                 },
             ],
             metadata: {
-                mode: ["CONCISE", "COPILOT"],
                 models: ["sonar"],
                 related_queries: ["rq-1", "rq-2"],
             },
         } as any);
 
-        expect(rendered).toContain('mode:\n  - "CONCISE"\n  - "COPILOT"');
+        expect(rendered).not.toContain("mode:");
         expect(rendered).toContain("models:");
         expect(rendered).toContain('- "sonar"');
         expect(rendered).toContain("## Related Queries");

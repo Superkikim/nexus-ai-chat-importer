@@ -47,7 +47,6 @@ import { ZipArchiveReader } from "../utils/zip-loader";
 import { readNoteMessageBlocks } from "../utils/note-message-blocks";
 import {
     frontmatterListPattern,
-    normalizeFrontmatterList,
     yamlListBlock,
 } from "../utils/frontmatter-lists";
 import {
@@ -1146,10 +1145,9 @@ export class ConversationProcessor {
             return content;
         }
 
-        const modes = normalizeFrontmatterList(conversation.metadata?.mode);
         const models = this.collectConversationModels(conversation);
 
-        return this.updateFrontmatterModeAndModels(content, modes, models);
+        return this.updateFrontmatterModels(content, models);
     }
 
     private noteIsNewerThan(content: string, updateTime: number): boolean {
@@ -1211,38 +1209,25 @@ export class ConversationProcessor {
         return models;
     }
 
-    private updateFrontmatterModeAndModels(
-        content: string,
-        modes: string[],
-        models: string[]
-    ): string {
+    private updateFrontmatterModels(content: string, models: string[]): string {
         const frontmatterMatch = content.match(/^---\n[\s\S]*?\n---/);
         if (!frontmatterMatch) {
             return content;
         }
 
-        // An export that does not name the mode or the models says nothing
-        // about them: the note keeps what an earlier, richer export wrote.
+        // An export that names no model says nothing about them: the note
+        // keeps what an earlier, richer export wrote.
         let frontmatter = frontmatterMatch[0];
-        if (modes.length > 0) {
-            frontmatter = frontmatter
-                .replace(frontmatterListPattern("mode"), "")
-                .replace(/\n{3,}/g, "\n\n");
-        }
         if (models.length > 0) {
             frontmatter = frontmatter
                 .replace(frontmatterListPattern("models"), "")
                 .replace(/\n{3,}/g, "\n\n");
         }
 
-        const modeLine = yamlListBlock("mode", modes);
         const modelsBlock = yamlListBlock("models", models);
 
-        if (modeLine || modelsBlock) {
-            frontmatter = frontmatter.replace(
-                /\n---$/,
-                `\n${modeLine}${modelsBlock}---`
-            );
+        if (modelsBlock) {
+            frontmatter = frontmatter.replace(/\n---$/, `\n${modelsBlock}---`);
         }
 
         return content.replace(frontmatterMatch[0], frontmatter);

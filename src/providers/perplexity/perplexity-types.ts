@@ -28,7 +28,6 @@ export interface PerplexityTurn {
     query?: string;
     answer?: string;
     model?: string;
-    mode?: string;
     timestamp?: string;
     language?: string;
     related_queries?: string[];
@@ -75,7 +74,6 @@ export interface PerplexityEntry {
     query_str?: string;
     display_model?: string;
     user_selected_model?: string;
-    mode?: string;
     related_queries?: string[];
     related_query_items?: PerplexityRelatedQueryItem[];
     blocks?: PerplexityEntryBlock[];
@@ -116,7 +114,6 @@ export interface PerplexityOfficialConversation {
     context_title?: string;
     created_at?: string;
     updated_at?: string;
-    mode?: string;
     collection_uuid?: string | null;
     entries?: PerplexityOfficialEntry[];
 }

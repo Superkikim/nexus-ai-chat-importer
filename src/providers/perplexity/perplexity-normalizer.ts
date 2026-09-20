@@ -62,9 +62,8 @@ function tryNormalizeOfficialExport(
         return null;
     }
 
-    const mode = normalizeString(raw.mode);
     const turns = raw.entries
-        .map((entry) => normalizeTurnFromOfficialEntry(entry, mode))
+        .map((entry) => normalizeTurnFromOfficialEntry(entry))
         .filter((turn): turn is PerplexityTurn => turn !== null)
         .sort(
             (a, b) =>
@@ -109,10 +108,7 @@ function previewTitle(value: unknown): string {
     return truncateTitlePreview(oneLine);
 }
 
-function normalizeTurnFromOfficialEntry(
-    raw: unknown,
-    mode: string | undefined
-): PerplexityTurn | null {
+function normalizeTurnFromOfficialEntry(raw: unknown): PerplexityTurn | null {
     if (!isRecord(raw)) return null;
 
     const entry = raw as PerplexityOfficialEntry;
@@ -130,7 +126,6 @@ function normalizeTurnFromOfficialEntry(
         uuid,
         query,
         answer,
-        mode,
         timestamp: normalizeString(entry.created_at),
     };
 }
@@ -261,7 +256,6 @@ function normalizeTurnFromLegacy(raw: unknown): PerplexityTurn | null {
         query,
         answer,
         model: normalizeString(raw.model),
-        mode: normalizeString(raw.mode),
         timestamp: normalizeString(raw.timestamp),
         language: normalizeString(raw.language),
         related_queries: normalizeRelatedQueries(raw.related_queries),
@@ -295,7 +289,6 @@ function normalizeTurnFromEntry(raw: unknown): PerplexityTurn | null {
         model:
             normalizeString(entry.display_model) ||
             normalizeString(entry.user_selected_model),
-        mode: normalizeString(entry.mode),
         timestamp:
             normalizeString(entry.entry_created_datetime) ||
             normalizeString(entry.entry_updated_datetime) ||

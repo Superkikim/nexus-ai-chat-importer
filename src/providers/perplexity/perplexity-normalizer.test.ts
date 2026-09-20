@@ -17,7 +17,6 @@ describe("PerplexityNormalizer", () => {
                     query: "Q",
                     answer: "A",
                     model: "sonar",
-                    mode: "CONCISE",
                     timestamp: "2024-01-01T10:00:10.000Z",
                 },
             ],
@@ -48,7 +47,6 @@ describe("PerplexityNormalizer", () => {
                     thread_title: "Entries Thread",
                     query_str: "Question?",
                     display_model: "sonar",
-                    mode: "CONCISE",
                     entry_created_datetime: "2024-02-01T00:10:00.000Z",
                     related_queries: ["A", "B"],
                     blocks: [
@@ -79,7 +77,6 @@ describe("PerplexityNormalizer", () => {
         expect(normalized?.conversations[0].query).toBe("Question?");
         expect(normalized?.conversations[0].answer).toBe("Answer text");
         expect(normalized?.conversations[0].model).toBe("sonar");
-        expect(normalized?.conversations[0].mode).toBe("CONCISE");
         expect(normalized?.conversations[0].related_queries).toEqual([
             "A",
             "B",
@@ -139,7 +136,6 @@ describe("PerplexityNormalizer", () => {
             context_title: "Official Thread",
             created_at: "2025-03-01T08:00:00.000Z",
             updated_at: "2025-03-01T08:30:00.000Z",
-            mode: "COPILOT",
             collection_uuid: null,
             entries: [
                 {
@@ -181,7 +177,6 @@ describe("PerplexityNormalizer", () => {
             expect(normalized?.conversations[0]).toMatchObject({
                 query: "First question",
                 answer: "First answer",
-                mode: "COPILOT",
                 timestamp: "2025-03-01T08:00:00.000Z",
             });
         });

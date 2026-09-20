@@ -52,10 +52,8 @@ update_time: 2026-01-16T09:05:00.000Z
 ---
 ```
 
-Added only when the export provides them:
+Added only when the export provides it:
 
-- `mode:` — a list of the conversation mode(s), for providers that have one. A
-  thread that switched modes lists each of them.
 - `models:` — a list of the model(s) used in the conversation.
 
 Added when you set one in [Settings → Properties](settings.md#custom-id-property):
