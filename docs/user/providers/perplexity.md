@@ -62,10 +62,18 @@ questions are left as they are.
 ### Mixing both sources
 
 The plugin identifies conversations and answers by Perplexity's own IDs in every
-format. When you import one source over notes created from the other, an existing
-note receives only the answers it does not have yet; what it already holds is not
-rewritten. An export that names no model or mode leaves the note's `models:` and
-`mode:` as they were.
+format, so importing one source over notes created from the other is meant to add
+only the answers a note does not have yet, leaving what it already holds alone. An
+export that names no model or mode leaves the note's `models:` and `mode:` as they
+were.
+
+Conversations are matched reliably. **Answers have not been verified across
+sources**: it has not been possible to compare an official export and an extension
+archive of the same thread. If a note gains a second copy of answers it already
+had, please [open an
+issue](https://github.com/Superkikim/nexus-ai-chat-importer/issues) and attach one
+affected note — remove anything private from it first. That example is what makes
+the problem fixable.
 
 A **rebuild** regenerates the whole note from the archive you import — see
 [Updates and rebuilds](../importing.md#updates-and-rebuilds). Rebuilding from the official export
