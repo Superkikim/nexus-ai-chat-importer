@@ -140,6 +140,13 @@ export interface ProviderSpecificColumn {
      * semantics — Claude artifacts, Perplexity turns — keep using `getValue`.
      */
     countsImportedAttachments?: boolean;
+    /**
+     * The column counts files the provider generated (Claude's artifacts), so
+     * the completion dialog reports them beside the attachments. Left unset, a
+     * column is only a figure for the report table — Perplexity's turns are
+     * not artifacts.
+     */
+    countsArtifacts?: boolean;
 }
 
 export interface ReportNamingStrategy {

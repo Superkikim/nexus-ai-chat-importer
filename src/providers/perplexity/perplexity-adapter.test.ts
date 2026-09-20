@@ -173,6 +173,15 @@ describe("PerplexityAdapter", () => {
         expect(converted.metadata?.models).toEqual([]);
     });
 
+    it("does not present its turns as artifacts or attachments", () => {
+        const column = adapter
+            .getReportNamingStrategy()
+            .getProviderSpecificColumn();
+
+        expect(column.countsArtifacts).toBeFalsy();
+        expect(column.countsImportedAttachments).toBeFalsy();
+    });
+
     it("counts turns for the report in every export shape", () => {
         const column = adapter
             .getReportNamingStrategy()

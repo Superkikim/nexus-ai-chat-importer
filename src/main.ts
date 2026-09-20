@@ -1220,7 +1220,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const columnInfo = strategy.getProviderSpecificColumn();
             report.setProviderSpecificColumnHeader(
                 columnInfo.header,
-                !!columnInfo.countsImportedAttachments
+                !!columnInfo.countsImportedAttachments,
+                !!columnInfo.countsArtifacts
             );
         }
 

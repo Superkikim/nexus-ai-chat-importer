@@ -42,6 +42,7 @@ export class ClaudeReportNamingStrategy implements ReportNamingStrategy {
     getProviderSpecificColumn(): ProviderSpecificColumn {
         return {
             header: "Artifacts",
+            countsArtifacts: true,
             getValue: (adapter: unknown, chat: unknown) => {
                 const a = adapter as {
                     countArtifacts?: (c: unknown) => number;

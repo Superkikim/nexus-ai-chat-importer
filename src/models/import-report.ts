@@ -170,6 +170,8 @@ export class ImportReport {
      * duplicate of what attachmentStats holds, the other is extra files.
      */
     private providerSpecificCountsAttachments = false;
+    /** Whether `providerSpecificCount` is a tally of generated files. */
+    private providerSpecificCountsArtifacts = false;
     private operationStartTime: number = Date.now();
     private fileStats?: Map<string, FileAnalysisStats>;
     private analysisInfo?: AnalysisInfo;
@@ -241,9 +243,14 @@ export class ImportReport {
         return this.fileSections.get(this.currentFileName);
     }
 
-    setProviderSpecificColumnHeader(header: string, countsAttachments = false) {
+    setProviderSpecificColumnHeader(
+        header: string,
+        countsAttachments = false,
+        countsArtifacts = false
+    ) {
         this.providerSpecificColumnHeader = header;
         this.providerSpecificCountsAttachments = countsAttachments;
+        this.providerSpecificCountsArtifacts = countsArtifacts;
     }
 
     setCustomTimestampFormat(format?: MessageTimestampFormat) {
@@ -285,11 +292,12 @@ export class ImportReport {
 
     /**
      * Files the provider generated, which exist beside the attachments rather
-     * than among them. Claude's artifacts are the only ones today; providers
-     * whose column merely re-counts attachments contribute nothing here.
+     * than among them. Claude's artifacts are the only ones today; a provider
+     * whose column is anything else — an attachment tally, Perplexity's turns —
+     * contributes nothing here.
      */
     private getTotalArtifacts(): number {
-        if (this.providerSpecificCountsAttachments) return 0;
+        if (!this.providerSpecificCountsArtifacts) return 0;
 
         let count = 0;
         this.fileSections.forEach((section) => {

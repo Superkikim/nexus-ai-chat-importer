@@ -378,12 +378,20 @@ describe("import report — attachments and artifacts are counted apart", () => 
      * "extracted" — and Claude's artifacts vanished inside a number labelled
      * attachments.
      */
-    function reportWith(counts: number, countsAttachments: boolean) {
+    function reportWith(
+        counts: number,
+        column: "attachments" | "artifacts" | "turns"
+    ) {
         const report = new ImportReport();
         report.startFileSection("export.zip");
         report.setProviderSpecificColumnHeader(
-            countsAttachments ? "Attachments" : "Artifacts",
-            countsAttachments
+            {
+                attachments: "Attachments",
+                artifacts: "Artifacts",
+                turns: "Turns",
+            }[column],
+            column === "attachments",
+            column === "artifacts"
         );
         report.addCreated(
             "A",
@@ -405,7 +413,7 @@ describe("import report — attachments and artifacts are counted apart", () => 
     }
 
     it("does not count a ChatGPT attachment twice", () => {
-        const stats = reportWith(3, true);
+        const stats = reportWith(3, "attachments");
 
         expect(stats.attachmentsTotal).toBe(3);
         expect(stats.attachmentsFound).toBe(2);
@@ -414,11 +422,18 @@ describe("import report — attachments and artifacts are counted apart", () => 
     });
 
     it("keeps Claude artifacts out of the attachment numbers", () => {
-        const stats = reportWith(7, false);
+        const stats = reportWith(7, "artifacts");
 
         expect(stats.attachmentsTotal).toBe(3);
         expect(stats.attachmentsFound).toBe(2);
         expect(stats.artifacts).toBe(7);
+    });
+
+    it("never reports Perplexity's turns as artifacts", () => {
+        const stats = reportWith(2010, "turns");
+
+        expect(stats.artifacts).toBe(0);
+        expect(stats.attachmentsTotal).toBe(3);
     });
 });
 
