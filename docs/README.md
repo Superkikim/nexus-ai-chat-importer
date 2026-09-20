@@ -42,8 +42,9 @@ handling](architecture/attachment-handling.md), [link
 updates](architecture/link-updates.md), the [settings
 UI](architecture/settings-ui.md), the [custom ID
 property](architecture/custom-id-property.md), and the observed export formats for
-[ChatGPT](architecture/providers/chatgpt-export-format.md) and
-[Claude](architecture/providers/claude-export-format.md).
+[ChatGPT](architecture/providers/chatgpt-export-format.md),
+[Claude](architecture/providers/claude-export-format.md) and
+[Perplexity](architecture/providers/perplexity-export-format.md).
 
 ## Editorial rules
 

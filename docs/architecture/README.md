@@ -17,6 +17,7 @@ Where a page and the code disagree, the code wins — please fix the page.
 | [Custom ID property](custom-id-property.md) | The optional user-named copy of `conversation_id`: line-by-line frontmatter editing (and why not `processFrontMatter`), note discovery, and vault-wide add, rename and remove. |
 | [Providers / ChatGPT export format](providers/chatgpt-export-format.md) | Observed structure of the 2026 ChatGPT export (undocumented by OpenAI) that the importer relies on. |
 | [Providers / Claude export format](providers/claude-export-format.md) | Observed Claude export delivery and archive structure, and the data shape the adapter relies on. |
+| [Providers / Perplexity export formats](providers/perplexity-export-format.md) | The three Perplexity archives, what the official export leaves out, and how a note is reconciled against the other source. |
 
 ## The provider adapter model
 

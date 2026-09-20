@@ -58,36 +58,45 @@ The sources differ in what else they carry:
 |---|---|---|
 | Model of each answer (`models:`) | — | ✅ |
 | **Related Queries** list at the end | — | ✅ |
-| **References** section (title, URL, snippet) | — | Older form only, when its `sources[]` field is filled |
+| **References** section (title, URL, snippet) | — | Older form only, when the answer searched the web |
 
 **Citation markers** such as `[1][2]` are removed from an answer that has no
 References section: without their sources they point nowhere. Code, links and
 questions are left as they are.
 
-### Mixing both sources
+### Using both sources
 
-The plugin identifies conversations and answers by Perplexity's own IDs in every
-format, so importing one source over notes created from the other is meant to add
-only the answers a note does not have yet, leaving what it already holds alone. An
-export that names no model or mode leaves the note's `models:` and `mode:` as they
-were.
+The two exports describe the same conversations, but they number their answers
+differently, so a conversation is matched on its identifier and an answer on the
+words of the question that asked for it. You can import either source over notes
+created from the other:
 
-Conversations are matched reliably. **Answers have not been verified across
-sources**: it has not been possible to compare an official export and an extension
-archive of the same thread. If a note gains a second copy of answers it already
-had, please [open an
-issue](https://github.com/Superkikim/nexus-ai-chat-importer/issues) and attach one
-affected note — remove anything private from it first. That example is what makes
-the problem fixable.
+- an answer the note does not have is **added**;
+- an answer the note has **without its sources** is rewritten from the
+  extension's archive, which brings its sources, its model and its citation
+  markers;
+- everything else is left untouched, and a note nothing changes in is not
+  rewritten at all.
 
-A **rebuild** regenerates the whole note from the archive you import — see
-[Updates and rebuilds](../importing.md#updates-and-rebuilds). Rebuilding from the official export
-drops the model names, related queries and references an extension archive had
-added.
+This works in both directions, and importing the same archive twice changes
+nothing. The extension's archive is always older than Perplexity's own export,
+so it is read for what it can add rather than skipped for its date — and it
+never dates a note back.
+
+One thing it cannot do: bring sources to an answer that has none in either
+archive. Perplexity's own export has no sources at all.
+
+A **rebuild** is different — it regenerates the whole note from the archive you
+import, see [Updates and rebuilds](../importing.md#updates-and-rebuilds).
+Rebuilding from Perplexity's own export drops the sources, model names and
+related queries an extension archive had added.
 
 ## Attachments
 
 Perplexity exports carry no files. Files and images are not imported.
+
+More detail on the three archives and how they are reconciled:
+[architecture / Perplexity export formats](../../architecture/providers/perplexity-export-format.md).
 
 ## Provider-specific troubleshooting
 
