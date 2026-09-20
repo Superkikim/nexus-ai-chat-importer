@@ -226,7 +226,6 @@
 /* Global modal sizing for all plugin modals */
 .modal.nexus-installation-welcome-dialog,
 .modal.nexus-upgrade-complete-modal,
-.modal.nexus-provider-selection-dialog,
 .modal.nexus-file-selection-dialog,
 .modal.nexus-conversation-selection-dialog {
     width: 800px;
@@ -799,7 +798,6 @@
 
 .modal.nexus-installation-welcome-dialog,
 .modal.nexus-upgrade-complete-modal,
-.modal.nexus-provider-selection-dialog,
 .modal.nexus-file-selection-dialog,
 .modal.nexus-conversation-selection-dialog,
 .modal.nexus-import-completion-dialog {
@@ -1168,7 +1166,6 @@
 
     .modal.nexus-installation-welcome-dialog,
     .modal.nexus-upgrade-complete-modal,
-    .modal.nexus-provider-selection-dialog,
     .modal.nexus-file-selection-dialog,
     .modal.nexus-conversation-selection-dialog,
     .modal.nexus-import-completion-dialog {
@@ -1224,7 +1221,6 @@
 
 body.is-mobile .modal.nexus-installation-welcome-dialog,
 body.is-mobile .modal.nexus-upgrade-complete-modal,
-body.is-mobile .modal.nexus-provider-selection-dialog,
 body.is-mobile .modal.nexus-file-selection-dialog,
 body.is-mobile .modal.nexus-conversation-selection-dialog,
 body.is-mobile .modal.nexus-import-completion-dialog {

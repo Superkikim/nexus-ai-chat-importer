@@ -31,36 +31,6 @@
             "phase_error": "❌ エラー"
         }
     },
-    "provider_selection": {
-        "title": "アーカイブのプロバイダーを選択",
-        "providers": {
-            "chatgpt": {
-                "name": "ChatGPT",
-                "description": "OpenAI ChatGPT の会話エクスポート",
-                "file_formats_0": "conversations.json（旧形式）または conversations-XXX.json ファイル"
-            },
-            "claude": {
-                "name": "Claude",
-                "description": "Anthropic Claude の会話エクスポート",
-                "file_formats_0": "conversations.json + users.json",
-                "file_formats_1": "projects.json（任意）"
-            },
-            "vibe": {
-                "name": "Mistral Vibe",
-                "description": "Mistral Vibe（旧 Le Chat）会話エクスポート",
-                "file_formats_0": "chat-<uuid>.json ファイル"
-            },
-            "perplexity": {
-                "name": "Perplexity",
-                "description": "Perplexity Thread Exporter の JSON アーカイブ",
-                "file_formats_0": "perplexity_*.json ファイル（metadata + conversations[] | status + entries[]）"
-            }
-        },
-        "buttons": {
-            "select": "選択",
-            "cancel": "キャンセル"
-        }
-    },
     "file_selection": {
         "title": "{{provider}} の会話をインポート",
         "import_mode": {

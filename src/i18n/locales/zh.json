@@ -31,36 +31,6 @@
             "phase_error": "❌ 错误"
         }
     },
-    "provider_selection": {
-        "title": "选择存档来源",
-        "providers": {
-            "chatgpt": {
-                "name": "ChatGPT",
-                "description": "OpenAI ChatGPT 对话导出",
-                "file_formats_0": "conversations.json（旧格式）或 conversations-XXX.json 文件"
-            },
-            "claude": {
-                "name": "Claude",
-                "description": "Anthropic Claude 对话导出",
-                "file_formats_0": "conversations.json + users.json",
-                "file_formats_1": "projects.json（可选）"
-            },
-            "vibe": {
-                "name": "Mistral Vibe",
-                "description": "Mistral Vibe（原 Le Chat）对话导出",
-                "file_formats_0": "chat-<uuid>.json 文件"
-            },
-            "perplexity": {
-                "name": "Perplexity",
-                "description": "Perplexity Thread Exporter JSON 存档",
-                "file_formats_0": "perplexity_*.json 文件（metadata + conversations[] | status + entries[]）"
-            }
-        },
-        "buttons": {
-            "select": "选择",
-            "cancel": "取消"
-        }
-    },
     "file_selection": {
         "title": "导入 {{provider}} 对话",
         "import_mode": {

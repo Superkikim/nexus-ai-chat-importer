@@ -31,36 +31,6 @@
             "phase_error": "❌ Erreur"
         }
     },
-    "provider_selection": {
-        "title": "Sélectionner le fournisseur d'archive",
-        "providers": {
-            "chatgpt": {
-                "name": "ChatGPT",
-                "description": "Exports de conversations OpenAI ChatGPT",
-                "file_formats_0": "conversations.json (ancien format) ou fichiers conversations-XXX.json"
-            },
-            "claude": {
-                "name": "Claude",
-                "description": "Exports de conversations Anthropic Claude",
-                "file_formats_0": "conversations.json + users.json",
-                "file_formats_1": "projects.json (optionnel)"
-            },
-            "vibe": {
-                "name": "Mistral Vibe",
-                "description": "Mistral Vibe (anciennement Le Chat) exports de conversations",
-                "file_formats_0": "fichiers chat-<uuid>.json"
-            },
-            "perplexity": {
-                "name": "Perplexity",
-                "description": "Archives JSON Perplexity Thread Exporter",
-                "file_formats_0": "fichiers perplexity_*.json (metadata + conversations[] | status + entries[])"
-            }
-        },
-        "buttons": {
-            "select": "Sélectionner",
-            "cancel": "Annuler"
-        }
-    },
     "file_selection": {
         "title": "Importer les conversations {{provider}}",
         "import_mode": {

@@ -31,36 +31,6 @@
             "phase_error": "❌ Ошибка"
         }
     },
-    "provider_selection": {
-        "title": "Выберите поставщика архива",
-        "providers": {
-            "chatgpt": {
-                "name": "ChatGPT",
-                "description": "Экспорт разговоров OpenAI ChatGPT",
-                "file_formats_0": "conversations.json (старый формат) или файлы conversations-XXX.json"
-            },
-            "claude": {
-                "name": "Claude",
-                "description": "Экспорт разговоров Anthropic Claude",
-                "file_formats_0": "conversations.json + users.json",
-                "file_formats_1": "projects.json (необязательно)"
-            },
-            "vibe": {
-                "name": "Mistral Vibe",
-                "description": "Mistral Vibe (ранее Le Chat) экспорт разговоров",
-                "file_formats_0": "файлы chat-<uuid>.json"
-            },
-            "perplexity": {
-                "name": "Perplexity",
-                "description": "JSON-архивы Perplexity Thread Exporter",
-                "file_formats_0": "файлы perplexity_*.json (metadata + conversations[] | status + entries[])"
-            }
-        },
-        "buttons": {
-            "select": "Выбрать",
-            "cancel": "Отмена"
-        }
-    },
     "file_selection": {
         "title": "Импорт разговоров {{provider}}",
         "import_mode": {

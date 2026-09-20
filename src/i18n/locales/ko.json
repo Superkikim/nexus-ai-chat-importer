@@ -31,36 +31,6 @@
             "phase_error": "❌ 오류"
         }
     },
-    "provider_selection": {
-        "title": "아카이브 제공자 선택",
-        "providers": {
-            "chatgpt": {
-                "name": "ChatGPT",
-                "description": "OpenAI ChatGPT 대화 내보내기",
-                "file_formats_0": "conversations.json(레거시) 또는 conversations-XXX.json 파일"
-            },
-            "claude": {
-                "name": "Claude",
-                "description": "Anthropic Claude 대화 내보내기",
-                "file_formats_0": "conversations.json + users.json",
-                "file_formats_1": "projects.json(선택 사항)"
-            },
-            "vibe": {
-                "name": "Mistral Vibe",
-                "description": "Mistral Vibe (이전 Le Chat) 대화 내보내기",
-                "file_formats_0": "chat-<uuid>.json 파일"
-            },
-            "perplexity": {
-                "name": "Perplexity",
-                "description": "Perplexity Thread Exporter JSON 아카이브",
-                "file_formats_0": "perplexity_*.json 파일 (metadata + conversations[] | status + entries[])"
-            }
-        },
-        "buttons": {
-            "select": "선택",
-            "cancel": "취소"
-        }
-    },
     "file_selection": {
         "title": "{{provider}} 대화 가져오기",
         "import_mode": {
