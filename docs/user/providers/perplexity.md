@@ -25,6 +25,9 @@ it.
 > Installing browser extensions carries risk — review its permissions and privacy
 > policy yourself before using it.
 
+The extension offers **JSON** or **ZIP** as its export format. **Choose ZIP**: the
+plugin reads `.zip` files only, and a `.json` file exported on its own is refused.
+
 If the extension produced an outer `.zip` that holds `perplexity_*` part zips,
 **extract the outer archive first** and import the part zip(s).
 
@@ -38,7 +41,8 @@ If the extension produced an outer `.zip` that holds `perplexity_*` part zips,
   `{ metadata, conversations[] }` form or the newer `{ thread_metadata?, entries[] }`
   form.
 
-**Loose JSON is rejected** — the files must be inside a `.zip`.
+**Loose JSON is rejected** — the files must be inside a `.zip`. If you already
+exported JSON from the extension, export again and choose ZIP.
 
 ## What is imported
 
@@ -105,8 +109,9 @@ More detail on the three archives and how they are reconciled:
 
 - "Unsupported archive": the `.zip` holds neither a
   `conversations-<date>_<time>-<code>.json` file nor a `perplexity_*.json` file,
-  or you selected a loose JSON file, or an outer wrapper zip from the extension.
-  Extract that one to its part zip(s).
+  or you selected a loose JSON file (export again from the extension and choose
+  ZIP), or an outer wrapper zip from the extension (extract that one to its part
+  zip(s)).
 - No references in the notes: only the extension's older form can include a
   source list; the official export and the extension's newer form do not.
 
