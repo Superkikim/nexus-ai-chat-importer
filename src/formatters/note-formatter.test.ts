@@ -52,13 +52,13 @@ describe("NoteFormatter", () => {
                 },
             ],
             metadata: {
-                mode: "CONCISE",
+                mode: ["CONCISE", "COPILOT"],
                 models: ["sonar"],
                 related_queries: ["rq-1", "rq-2"],
             },
         } as any);
 
-        expect(rendered).toContain('mode: "CONCISE"');
+        expect(rendered).toContain('mode:\n  - "CONCISE"\n  - "COPILOT"');
         expect(rendered).toContain("models:");
         expect(rendered).toContain('- "sonar"');
         expect(rendered).toContain("## Related Queries");

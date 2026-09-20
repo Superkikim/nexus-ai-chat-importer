@@ -23,6 +23,10 @@ import {
     customIdPropertyLine,
     resolveCustomIdProperty,
 } from "../utils/custom-id-property";
+import {
+    normalizeFrontmatterList,
+    yamlListBlock,
+} from "../utils/frontmatter-lists";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
 import { URL_GENERATORS } from "../types/standard";
@@ -94,15 +98,10 @@ export class NoteFormatter {
                 );
         }
 
-        const mode = this.extractMode(conversation);
+        const modes = this.extractModes(conversation);
         const models = this.extractModels(conversation);
-        const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"\n` : "";
-        const modelsBlock =
-            models.length > 0
-                ? `models:\n${models
-                      .map((model) => `  - "${model.replace(/"/g, '\\"')}"`)
-                      .join("\n")}\n`
-                : "";
+        const modeLine = yamlListBlock("mode", modes);
+        const modelsBlock = yamlListBlock("models", models);
 
         const customIdLine = customIdPropertyLine(
             resolveCustomIdProperty(this.plugin.settings.customIdProperty),
@@ -143,13 +142,8 @@ ${modeLine}${modelsBlock}---
         return this.messageFormatter.formatMessages(conversation.messages);
     }
 
-    private extractMode(
-        conversation: StandardConversation
-    ): string | undefined {
-        const mode = conversation.metadata?.mode;
-        return typeof mode === "string" && mode.trim().length > 0
-            ? mode.trim()
-            : undefined;
+    private extractModes(conversation: StandardConversation): string[] {
+        return normalizeFrontmatterList(conversation.metadata?.mode);
     }
 
     private extractModels(conversation: StandardConversation): string[] {

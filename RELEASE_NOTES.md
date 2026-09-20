@@ -21,6 +21,7 @@
 ### 🐛 Fixed
 
 - **Perplexity citation markers no longer point nowhere.** Answers cite their sources as `[1][2]`, but exports rarely include the sources themselves. Markers are now removed from answers without a References section, so they no longer clutter the text or show up as a broken image after an exclamation mark.
+- **`mode:` is now a list, like `models:`.** A conversation that switched modes lists each of them instead of showing one or none. Notes keep their single value until an import updates or rebuilds them, so a Dataview query that compares `mode` to a text value needs to accept a list (for example `contains(mode, "CONCISE")`).
 - **Updating a Perplexity note no longer loses its new answers.** New messages were added after the note's *Related Queries* section, and refreshing that section removed them again — while the report counted the note as updated. They now go before it. Answers an earlier update lost are restored by rebuilding the note, or added back the next time the thread changes and you import it.
 - **Updating a note no longer erases its mode or models.** When the archive you import does not name them, the note keeps the ones an earlier import wrote.
 - **The *Turns* column of Perplexity reports counted 0** for archives in the Thread Exporter's newer format.

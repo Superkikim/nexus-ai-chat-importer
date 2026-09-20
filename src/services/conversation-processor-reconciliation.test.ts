@@ -439,7 +439,8 @@ describe("ConversationProcessor reconciliation", () => {
         const note = [
             "---",
             "update_time: 2026-01-01T00:00:00.000Z",
-            'mode: "CONCISE"',
+            "mode:",
+            '  - "CONCISE"',
             "models:",
             '  - "sonar"',
             "---",
@@ -467,16 +468,50 @@ describe("ConversationProcessor reconciliation", () => {
         it("keeps them when the export names neither", async () => {
             const written = await update({});
 
-            expect(written).toContain('mode: "CONCISE"');
+            expect(written).toContain('mode:\n  - "CONCISE"');
             expect(written).toContain('models:\n  - "sonar"');
         });
 
         it("replaces only what the export names", async () => {
-            const written = await update({ mode: "COPILOT", models: [] });
+            const written = await update({
+                mode: ["COPILOT", "CONCISE"],
+                models: [],
+            });
 
-            expect(written).toContain('mode: "COPILOT"');
-            expect(written).not.toContain('mode: "CONCISE"');
+            expect(written).toContain('mode:\n  - "COPILOT"\n  - "CONCISE"');
             expect(written).toContain('models:\n  - "sonar"');
+        });
+
+        it("replaces a single mode line written before mode became a list", async () => {
+            const { processor, writeToFile } = createProcessor(
+                [
+                    "---",
+                    "update_time: 2026-01-01T00:00:00.000Z",
+                    'mode: "CONCISE"',
+                    "---",
+                    "<!-- UID: m1 -->",
+                    "<!-- UID: m2 -->",
+                ].join("\n")
+            );
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+            await processor.updateExistingNote(
+                stampOnly,
+                {
+                    ...conversationOf([...EXISTING_MESSAGES]),
+                    metadata: { mode: ["COPILOT"] },
+                },
+                "note.md",
+                2,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            const written = writeToFile.mock.calls[0][1];
+
+            expect(written).toContain('mode:\n  - "COPILOT"');
+            expect(written).not.toContain('mode: "CONCISE"');
         });
     });
     describe("new messages in a note with Related Queries", () => {

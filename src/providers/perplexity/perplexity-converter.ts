@@ -82,7 +82,9 @@ export class PerplexityConverter {
             messages,
             chatUrl: this.buildThreadUrl(chat.metadata?.thread_url),
             metadata: {
-                mode: uniqueModes.length === 1 ? uniqueModes[0] : undefined,
+                // Every mode the thread used: a thread can switch between them,
+                // and a single value would hide the others.
+                mode: uniqueModes,
                 models: uniqueModels,
                 related_queries: relatedQueries,
                 thread_url: chat.metadata?.thread_url,

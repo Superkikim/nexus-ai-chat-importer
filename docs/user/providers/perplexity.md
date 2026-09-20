@@ -44,8 +44,9 @@ If the extension produced an outer `.zip` that holds `perplexity_*` part zips,
 
 Each question and its answer become a user message and an assistant message,
 sorted by time. Every note has the conversation title and its timestamps. The
-official export always adds the **mode** (for example `CONCISE` or `COPILOT`) and a
-link back to the thread; the extension adds them when its archive carries them.
+official export always adds the **modes** the thread used (for example `CONCISE` or
+`COPILOT`) and a link back to the thread; the extension adds them when its archive
+carries them.
 
 The sources differ in what else they carry:
 

@@ -127,7 +127,7 @@ describe("PerplexityAdapter", () => {
         expect(converted.provider).toBe("perplexity");
         expect(converted.messages).toHaveLength(2);
         expect(converted.messages[1].model).toBe("sonar");
-        expect(converted.metadata?.mode).toBe("CONCISE");
+        expect(converted.metadata?.mode).toEqual(["CONCISE"]);
         expect(converted.metadata?.models).toEqual(["sonar"]);
     });
     it("detects and converts a conversation from Perplexity's own export", () => {
@@ -169,7 +169,7 @@ describe("PerplexityAdapter", () => {
         expect(converted.chatUrl).toBe(
             "https://www.perplexity.ai/search/44444444-aaaa-4bbb-8ccc-000000000001"
         );
-        expect(converted.metadata?.mode).toBe("CONCISE");
+        expect(converted.metadata?.mode).toEqual(["CONCISE"]);
         expect(converted.metadata?.models).toEqual([]);
     });
 

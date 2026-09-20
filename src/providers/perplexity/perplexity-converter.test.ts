@@ -32,7 +32,7 @@ describe("PerplexityConverter", () => {
         expect(result.messages).toHaveLength(2);
         expect(result.messages[1].id).toBe("turn-1");
         expect(result.messages[1].model).toBe("sonar");
-        expect(result.metadata?.mode).toBe("CONCISE");
+        expect(result.metadata?.mode).toEqual(["CONCISE"]);
         expect(result.metadata?.models).toEqual(["sonar"]);
         expect(result.metadata?.related_queries).toEqual(["A", "B"]);
         expect(result.chatUrl).toBe(

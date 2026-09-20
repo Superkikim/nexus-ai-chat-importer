@@ -44,6 +44,11 @@ import {
 import type NexusAiChatImporterPlugin from "../main";
 import { ZipArchiveReader } from "../utils/zip-loader";
 import {
+    frontmatterListPattern,
+    normalizeFrontmatterList,
+    yamlListBlock,
+} from "../utils/frontmatter-lists";
+import {
     resolveCustomIdProperty,
     setCustomIdProperty,
 } from "../utils/custom-id-property";
@@ -1083,13 +1088,10 @@ export class ConversationProcessor {
             return content;
         }
 
-        const mode =
-            typeof conversation.metadata?.mode === "string"
-                ? conversation.metadata.mode.trim()
-                : "";
+        const modes = normalizeFrontmatterList(conversation.metadata?.mode);
         const models = this.collectConversationModels(conversation);
 
-        return this.updateFrontmatterModeAndModels(content, mode, models);
+        return this.updateFrontmatterModeAndModels(content, modes, models);
     }
 
     /**
@@ -1146,7 +1148,7 @@ export class ConversationProcessor {
 
     private updateFrontmatterModeAndModels(
         content: string,
-        mode: string,
+        modes: string[],
         models: string[]
     ): string {
         const frontmatterMatch = content.match(/^---\n[\s\S]*?\n---/);
@@ -1157,24 +1159,19 @@ export class ConversationProcessor {
         // An export that does not name the mode or the models says nothing
         // about them: the note keeps what an earlier, richer export wrote.
         let frontmatter = frontmatterMatch[0];
-        if (mode) {
+        if (modes.length > 0) {
             frontmatter = frontmatter
-                .replace(/^mode: .*$/m, "")
+                .replace(frontmatterListPattern("mode"), "")
                 .replace(/\n{3,}/g, "\n\n");
         }
         if (models.length > 0) {
             frontmatter = frontmatter
-                .replace(/^models:\n(?:\s+- .*\n?)*/m, "")
+                .replace(frontmatterListPattern("models"), "")
                 .replace(/\n{3,}/g, "\n\n");
         }
 
-        const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"\n` : "";
-        const modelsBlock =
-            models.length > 0
-                ? `models:\n${models
-                      .map((model) => `  - "${model.replace(/"/g, '\\"')}"`)
-                      .join("\n")}\n`
-                : "";
+        const modeLine = yamlListBlock("mode", modes);
+        const modelsBlock = yamlListBlock("models", models);
 
         if (modeLine || modelsBlock) {
             frontmatter = frontmatter.replace(
