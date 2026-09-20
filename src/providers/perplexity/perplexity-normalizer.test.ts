@@ -221,6 +221,42 @@ describe("PerplexityNormalizer", () => {
             ).toBe("2025-03-01T08:30:00.000Z");
         });
 
+        it("previews the title, which is the first question in full", () => {
+            const long = {
+                ...officialConversation,
+                context_title:
+                    "How do I tune the\nsecond stage of a long   pipeline when it stalls under load?",
+            };
+
+            expect(
+                normalizePerplexityConversationFile(long)?.metadata.thread_title
+            ).toBe("How do I tune the second stage of a long pipeline...");
+            expect(
+                normalizePerplexityConversationFile(officialConversation)
+                    ?.metadata.thread_title
+            ).toBe("Official Thread");
+        });
+
+        it("names a conversation with a blank title Untitled", () => {
+            expect(
+                normalizePerplexityConversationFile({
+                    ...officialConversation,
+                    context_title: "  ",
+                })?.metadata.thread_title
+            ).toBe("Untitled");
+        });
+
+        it("leaves the Thread Exporter's real titles whole", () => {
+            const title =
+                "A real title from the extension that is well over fifty characters long";
+            const normalized = normalizePerplexityConversationFile({
+                metadata: { thread_id: "t", thread_title: title },
+                conversations: [{ uuid: "u", query: "Q", answer: "A" }],
+            });
+
+            expect(normalized?.metadata.thread_title).toBe(title);
+        });
+
         it("rejects a conversation without a usable entry", () => {
             expect(
                 normalizePerplexityConversationFile({

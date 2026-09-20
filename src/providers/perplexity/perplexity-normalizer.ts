@@ -16,6 +16,7 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { truncateTitlePreview } from "../../utils/title-preview";
 import {
     PerplexityConversationFile,
     PerplexityEntry,
@@ -86,7 +87,7 @@ function tryNormalizeOfficialExport(
     return {
         metadata: {
             thread_id: contextUuid,
-            thread_title: normalizeString(raw.context_title) || "Untitled",
+            thread_title: previewTitle(raw.context_title),
             // Perplexity opens a thread at /search/<first entry's uuid>.
             thread_url: turns[0].uuid,
             total_entries: raw.entries.length,
@@ -96,6 +97,16 @@ function tryNormalizeOfficialExport(
         },
         conversations: turns,
     };
+}
+
+/**
+ * The official export has no title of its own: `context_title` is the first
+ * question, in full. It is cut to a preview, on one line, like the titles other
+ * providers derive from a message.
+ */
+function previewTitle(value: unknown): string {
+    const oneLine = typeof value === "string" ? value.replace(/\s+/g, " ") : "";
+    return truncateTitlePreview(oneLine);
 }
 
 function normalizeTurnFromOfficialEntry(

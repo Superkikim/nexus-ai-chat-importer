@@ -43,10 +43,14 @@ If the extension produced an outer `.zip` that holds `perplexity_*` part zips,
 ## What is imported
 
 Each question and its answer become a user message and an assistant message,
-sorted by time. Every note has the conversation title and its timestamps. The
-official export always adds the **modes** the thread used (for example `CONCISE` or
-`COPILOT`) and a link back to the thread; the extension adds them when its archive
-carries them.
+sorted by time. Every note has a title and the conversation's timestamps. The
+official export also always adds the **modes** the thread used (for example
+`CONCISE` or `COPILOT`) and a link back to the thread; the extension adds them when
+its archive carries them.
+
+The official export carries no title of its own — it repeats your first question —
+so the note title is that question cut to 50 characters, on one line. The
+extension's titles are kept whole.
 
 The sources differ in what else they carry:
 
