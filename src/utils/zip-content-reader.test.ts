@@ -406,6 +406,32 @@ describe("Grok archives", () => {
         ).toEqual({ supported: true, provider: "grok", reason: "supported" });
     });
 
+    it("is recognized whatever folders it sits in", () => {
+        // The nesting carries a retention window that varies between exports.
+        for (const path of [
+            "prod-grok-backend.json",
+            "ttl/7d/export_data/u1/prod-grok-backend.json",
+            "ttl/90d/export_data/whatever/deeper/prod-grok-backend.json",
+        ]) {
+            expect(classifyArchiveEntries([path])).toEqual({
+                supported: true,
+                provider: "grok",
+                reason: "supported",
+            });
+        }
+    });
+
+    it("reads the payload from a differently nested archive", async () => {
+        const reader = new MemoryZipReader({
+            "ttl/7d/export_data/u9/prod-grok-backend.json":
+                JSON.stringify(grokPayload),
+        });
+
+        const result = await extractRawConversations(reader);
+
+        expect(result.conversations.map(idOf)).toEqual(["c1", "c2", "p1"]);
+    });
+
     it("is refused, by name, when another provider was expected", () => {
         const result = classifyArchiveEntries([GROK_PATH], "claude");
         expect(result.supported).toBe(false);

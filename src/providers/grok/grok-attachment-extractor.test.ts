@@ -109,6 +109,22 @@ describe("GrokAttachmentExtractor", () => {
         expect(mock.written.has(path)).toBe(true);
     });
 
+    it("finds an asset whatever folders the archive nests it in", async () => {
+        const zip = createZipMock({
+            "ttl/90d/export_data/u9/prod-mc-asset-server/abcd1234-0000/content":
+                JPEG_BYTES,
+        });
+
+        const [result] = await extractor.extractAttachments(
+            zip,
+            CONVERSATION_ID,
+            [{ fileName: "abcd1234-0000", fileId: "abcd1234-0000" }],
+            "m1"
+        );
+
+        expect(result.status?.found).toBe(true);
+    });
+
     it("files a PDF under documents", async () => {
         const zip = createZipMock({
             [`${ASSETS}aaaaaaaa-0000/content`]: PDF_BYTES,

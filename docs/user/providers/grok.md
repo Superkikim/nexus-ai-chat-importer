@@ -20,10 +20,15 @@ select a file inside it.
 
 ## Recognised archive layout
 
-A `.zip` containing a `prod-grok-backend.json` file, nested under
-`ttl/30d/export_data/<id>/`, and next to it a `prod-mc-asset-server/` folder
-holding the files. The whole export — conversations and Imagine posts — lives in
-that one JSON file. The export's other files (account, billing) are not read.
+A `.zip` containing a `prod-grok-backend.json` file, and next to it a
+`prod-mc-asset-server/` folder holding the files. The whole export —
+conversations and Imagine posts — lives in that one JSON file. The export's
+other files (account, billing) are not read.
+
+Both are nested inside folders whose names vary between exports (they include a
+retention window, such as `ttl/30d/export_data/<id>/`), so the plugin finds them
+by name wherever they sit. Import the `.zip` as downloaded rather than
+re-packing it.
 
 ## Conversations
 
