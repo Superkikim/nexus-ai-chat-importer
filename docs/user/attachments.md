@@ -51,8 +51,8 @@ If a newer export from your provider now includes files an earlier import could
 not get, re-import that archive with **Reprocess** / **Rebuild** (see
 [updates and rebuilds](importing.md#updates-and-rebuilds)). Placeholders are
 replaced with the real files, and the operation does not create duplicates — but
-note it **regenerates the whole note**, so any manual edits to those notes are
-lost.
+note it **regenerates the note body**, so any manual edits to the body of those
+notes are lost. Properties you added to the frontmatter are kept.
 
 ## Related
 

@@ -44,7 +44,7 @@
             "label": "Vorhandene Notizen neu verarbeiten",
             "description": "Erstellt bereits im Tresor vorhandene Notizen neu, statt sie zu überspringen. Nach einer Plugin-Aktualisierung verwenden, um neue Funktionen zu übernehmen.",
             "selective_hint": "Um vorhandene Notizen neu zu erstellen, wählen Sie sie im nächsten Schritt aus und aktivieren Sie „Ausgewählte Notizen neu erstellen“.",
-            "warning": "Manuelle Änderungen an diesen Notizen gehen verloren."
+            "warning": "Änderungen am Text dieser Notizen gehen verloren. Von Ihnen hinzugefügte Eigenschaften bleiben erhalten."
         },
         "file_area": {
             "section_title": "Dateien auswählen",
@@ -71,7 +71,7 @@
             "status_label": "Status:",
             "show_label": "Anzeigen:",
             "rebuild_existing_label": "Ausgewählte Notizen neu erstellen, falls vorhanden",
-            "rebuild_help": "Deaktiviert erhält eine vorhandene Notiz nur ihre neuen Nachrichten. Aktiviert wird jede ausgewählte Notiz, die bereits im Tresor liegt, komplett neu geschrieben und manuelle Änderungen gehen verloren."
+            "rebuild_help": "Deaktiviert erhält eine vorhandene Notiz nur ihre neuen Nachrichten. Aktiviert wird jede ausgewählte Notiz, die bereits im Tresor liegt, komplett neu geschrieben und Änderungen am Notiztext gehen verloren. Von Ihnen hinzugefügte Eigenschaften bleiben erhalten."
         },
         "status_filter_options": {
             "all": "Alle",

@@ -44,7 +44,7 @@
             "label": "Retraiter les notes existantes",
             "description": "Reconstruit les notes déjà présentes dans votre coffre au lieu de les ignorer. À utiliser après une mise à jour du module pour bénéficier des nouveautés.",
             "selective_hint": "Pour recréer des notes existantes, sélectionnez-les à l'étape suivante et cochez « Recréer les notes sélectionnées ».",
-            "warning": "Les modifications manuelles apportées à ces notes seront perdues."
+            "warning": "Les modifications apportées au corps de ces notes seront perdues. Les propriétés que vous avez ajoutées sont conservées."
         },
         "file_area": {
             "section_title": "Sélectionner les fichiers",
@@ -71,7 +71,7 @@
             "status_label": "Statut :",
             "show_label": "Afficher :",
             "rebuild_existing_label": "Recréer les notes sélectionnées si elles existent",
-            "rebuild_help": "Désactivé, une note existante reçoit seulement ses nouveaux messages. Activé, chaque note sélectionnée déjà présente dans votre coffre est réécrite de zéro et les modifications manuelles sont perdues."
+            "rebuild_help": "Désactivé, une note existante reçoit seulement ses nouveaux messages. Activé, chaque note sélectionnée déjà présente dans votre coffre est réécrite de zéro et les modifications du corps de la note sont perdues. Les propriétés que vous avez ajoutées sont conservées."
         },
         "status_filter_options": {
             "all": "Tous",

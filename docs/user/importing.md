@@ -65,11 +65,14 @@ by its file path or title. Re-importing is how you keep notes current.
 | Rebuild only specific notes | Select Specific → tick the conversations → tick **Rebuild selected notes if they exist** | Only those notes are regenerated. |
 
 > **With a [custom ID property](settings.md#custom-id-property) set,** an update also
-> adds it to the note if missing, and a rebuild writes it like a new note. An update
+> adds it to the note if missing, and a rebuild rewrites it like a new note. An update
 > replaces an existing value only when **Overwrite existing values** is on.
 
-> **Rebuilding replaces the whole note.** Any manual edits you made to a rebuilt
-> note are lost. A normal update never does this.
+> **Rebuilding replaces the note body.** Any manual edits you made to the body of a
+> rebuilt note are lost. Frontmatter properties that the plugin does not write, such
+> as `tags` or ones you added yourself, are kept after the plugin's own. The plugin's
+> own properties, including the custom ID property, are regenerated, so an ID you
+> edited by hand is overwritten. A normal update never does this.
 
 The same operation has three names in the UI: **Reprocess existing notes** (the
 checkbox in Import All), **Rebuild selected notes if they exist** (the checkbox in

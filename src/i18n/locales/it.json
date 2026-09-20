@@ -44,7 +44,7 @@
             "label": "Rielabora le note esistenti",
             "description": "Ricostruisce le note già presenti nel tuo vault invece di saltarle. Da usare dopo un aggiornamento del plugin per sfruttare le novità.",
             "selective_hint": "Per ricreare note esistenti, selezionale nel passaggio successivo e spunta «Ricreare le note selezionate».",
-            "warning": "Le modifiche manuali a quelle note andranno perse."
+            "warning": "Le modifiche al corpo di quelle note andranno perse. Le proprietà che hai aggiunto vengono mantenute."
         },
         "file_area": {
             "section_title": "Seleziona file",
@@ -71,7 +71,7 @@
             "status_label": "Stato:",
             "show_label": "Mostra:",
             "rebuild_existing_label": "Ricreare le note selezionate se esistono",
-            "rebuild_help": "Disattivato, una nota esistente riceve solo i nuovi messaggi. Attivato, ogni nota selezionata già presente nel vault viene riscritta da zero e le modifiche manuali vanno perse."
+            "rebuild_help": "Disattivato, una nota esistente riceve solo i nuovi messaggi. Attivato, ogni nota selezionata già presente nel vault viene riscritta da zero e le modifiche al corpo della nota vanno perse. Le proprietà che hai aggiunto vengono mantenute."
         },
         "status_filter_options": {
             "all": "Tutti",
