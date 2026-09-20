@@ -50,6 +50,7 @@ import {
     yamlListBlock,
 } from "../utils/frontmatter-lists";
 import {
+    carryOverForeignProperties,
     resolveCustomIdProperty,
     setCustomIdProperty,
 } from "../utils/custom-id-property";
@@ -742,10 +743,15 @@ export class ConversationProcessor {
                     }
 
                     // Regenerate entire content
-                    const newContent =
+                    const newContent = carryOverForeignProperties(
+                        content,
                         this.noteFormatter.generateMarkdownContent(
                             standardConversation
-                        );
+                        ),
+                        resolveCustomIdProperty(
+                            this.plugin.settings.customIdProperty
+                        )
+                    );
                     await this.fileService.writeToFile(filePath, newContent);
 
                     // Recreated, not updated: the note that was there is

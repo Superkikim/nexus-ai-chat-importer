@@ -452,3 +452,68 @@ export function customIdPropertyLine(
 ): string {
     return key ? `${key}: ${conversationId}\n` : "";
 }
+
+// ---------------------------------------------------------------------------
+// Rebuild: carrying over properties the plugin did not write
+// ---------------------------------------------------------------------------
+
+/** Keys the plugin writes on a conversation note, regenerated on a rebuild. */
+const NEXUS_KEYS = [
+    "nexus",
+    "plugin_version",
+    "provider",
+    "aliases",
+    "conversation_id",
+    "create_time",
+    "update_time",
+    "mode",
+    "models",
+];
+
+const CARRY_OVER_KEY_LINE =
+    /^(?:"([^"]+)"|'([^']+)'|([^\s#'"\-[{][^:]*?))[ \t]*:(?=[ \t]|$)/;
+
+/**
+ * Rebuild a note, keeping the properties the plugin did not write. Each one
+ * is kept as its raw lines and added after the plugin's own properties; the
+ * plugin's own, the custom ID property included, come from `rebuilt`.
+ * Nothing is carried over when either note has no frontmatter.
+ */
+export function carryOverForeignProperties(
+    previous: string,
+    rebuilt: string,
+    customIdProperty: string | null
+): string {
+    const old = parseFrontmatter(previous);
+    const next = parseFrontmatter(rebuilt);
+    if (!old || !next) return rebuilt;
+
+    const own = new Set(
+        [...NEXUS_KEYS, customIdProperty ?? ""].map((k) => k.toLowerCase())
+    );
+
+    const carried: string[] = [];
+    let keep = false;
+    for (let i = old.open + 1; i < old.close; i++) {
+        const match = CARRY_OVER_KEY_LINE.exec(stripEol(old.lines[i]));
+        if (match) {
+            const key = (match[1] ?? match[2] ?? match[3]).trim();
+            keep = !own.has(key.toLowerCase());
+        }
+        if (keep) carried.push(stripEol(old.lines[i]));
+    }
+    while (carried.length > 0 && carried[carried.length - 1].trim() === "") {
+        carried.pop();
+    }
+    if (carried.length === 0) return rebuilt;
+
+    // The rebuilt note is written with LF; carried lines follow it.
+    const before = next.lines.slice(0, next.close);
+    const last = before.length - 1;
+    if (stripEol(before[last]) === before[last]) before[last] += next.eol;
+    return (
+        before.join("") +
+        carried.map((line) => line + next.eol).join("") +
+        next.lines.slice(next.close).join("")
+    );
+}
