@@ -1,6 +1,6 @@
 # Release Notes for Nexus AI Chat Importer
 
-## Version 1.8.0
+## Version 1.8.0 — Grok, Perplexity's official export, and a custom ID property
 
 ![Version](https://img.shields.io/badge/version-1.8.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
 
