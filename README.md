@@ -14,7 +14,7 @@ import report. Everything runs locally in your vault.
 
 ## Supported providers
 
-**ChatGPT** · **Claude** · **Mistral Vibe** (formerly Le Chat) · **Perplexity**
+**ChatGPT** · **Claude** · **Mistral Vibe** (formerly Le Chat) · **Perplexity** · **Grok**
 
 ## Features
 
@@ -29,12 +29,16 @@ import report. Everything runs locally in your vault.
   folders, and a detailed import report.
 - **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and an optional desktop [CLI](docs/user/cli.md).
 
-## What's new in 1.7.1
+## What's new in 1.8.0
 
-- **Oversized-note repair is now mandatory, and actually works** — the 1.7.0 fix's own backup file was still being indexed, quietly reintroducing the performance impact it was meant to fix.
-- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike.
-- The upgrade dialog no longer hangs when dismissed without clicking a button.
-- Content with bare CR line endings (older Mac tooling, AppleScript) now stays inside its callout and code fence instead of leaking out.
+- **Grok is supported** — import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer, citations become links to their source, and Imagine posts become notes with their images.
+- **Perplexity's official export is supported** — import the ZIP from *Export my data*. Every conversation becomes a note, titled with the start of its first question.
+- **Perplexity: the official export and the Thread Exporter extension work together** — import either over notes created from the other: it adds what a note lacks, and an extension archive fills in sources, models and citation markers, without duplicating anything.
+- **Custom ID property** — Settings → Properties adds a property of your choice (for example `uid`) holding the conversation ID to every note, and updates your existing notes.
+- **A rebuild keeps the properties you added**, such as `tags`. Edits to the note body are still lost.
+- **Settings appear in Obsidian's settings search** (Obsidian 1.13+), with a consistent layout.
+- **Reports say what was left out, and why.**
+- Plus fixes: Perplexity updates no longer lose new messages, orphan citation markers are gone, the completion dialog no longer counts Perplexity turns as artifacts, and a long block moved to a file is no longer folded.
 
 [Full release notes →](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
 

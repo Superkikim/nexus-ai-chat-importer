@@ -37,6 +37,14 @@ cross-links to the other two.
 - **Archive counters** — conversations found, duplicates removed across archives,
   kept, selected. These appear only when an analysis phase ran; the mobile
   Import All path omits them rather than showing zeros.
+- **Ignored items** — items the provider does not import, one row per reason
+  (for example *Ignored — empty prompt* for [Grok](providers/grok.md#imagine-posts)
+  Imagine posts). They count in *Found* and in nothing after it: found, minus
+  ignored, minus duplicates, gives kept. Without an analysis phase, they are
+  listed with the outcomes instead.
+- **One column per kind of item** — when an export holds more than one kind of
+  item (Grok: conversations and Imagine posts), the archive and outcome tables
+  give each kind its own column, plus a total.
 - **Outcomes**:
 
   | Outcome | Meaning |

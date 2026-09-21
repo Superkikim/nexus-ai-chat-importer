@@ -555,7 +555,17 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                     files,
                     provider,
                     existingConversations,
-                    forceReprocess ? "rebuild" : "drop"
+                    // A provider that reconciles a note by what it says, not
+                    // by message ids, decides for itself whether an unchanged
+                    // conversation has anything to bring: the Perplexity
+                    // Thread Exporter's archive can be the older of the two and
+                    // still carries the sources Perplexity's own export lacks.
+                    forceReprocess
+                        ? "rebuild"
+                        : providerRegistry.getAdapter(provider)
+                              ?.reconcileNoteMessages
+                        ? "offer"
+                        : "drop"
                 );
             this.logIgnoredArchives(
                 extractionResult.ignoredArchives,
@@ -1220,7 +1230,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             const columnInfo = strategy.getProviderSpecificColumn();
             report.setProviderSpecificColumnHeader(
                 columnInfo.header,
-                !!columnInfo.countsImportedAttachments
+                !!columnInfo.countsImportedAttachments,
+                !!columnInfo.countsArtifacts
             );
         }
 
@@ -1303,9 +1314,13 @@ export default class NexusAiChatImporterPlugin extends Plugin {
         // Archive counters come from the analysis phase, which the mobile
         // flow skips. Omitted rather than written as zeros nobody can tell
         // apart from a real count.
+        // Written only when a provider declined items, so every other report
+        // keeps its keys: found, minus ignored, minus duplicates, gives kept.
+        const ignoredFrontmatter =
+            ledger.excluded > 0 ? `totalIgnored: ${ledger.excluded}\n` : "";
         const archiveFrontmatter = ledger.analysisAvailable
             ? `totalConversationsFound: ${ledger.totalFound}
-totalDuplicatesRemoved: ${ledger.duplicates}
+${ignoredFrontmatter}totalDuplicatesRemoved: ${ledger.duplicates}
 totalConversationsKept: ${ledger.uniqueKept}
 totalSelected: ${ledger.selected}
 `
@@ -1320,7 +1335,9 @@ importMode: ${isSelectiveImport ? "selective" : "all"}
 totalFilesAnalyzed: ${files.length}
 totalFilesProcessed: ${processedFiles.length}
 totalFilesNotProcessed: ${skippedFiles.length}
-${archiveFrontmatter}totalEmpty: ${ledger.empty}
+${archiveFrontmatter}${
+            ledger.analysisAvailable ? "" : ignoredFrontmatter
+        }totalEmpty: ${ledger.empty}
 totalCreated: ${stats.created}
 totalUpdated: ${stats.updated}
 totalRecreated: ${stats.recreated}

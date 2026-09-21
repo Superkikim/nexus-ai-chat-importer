@@ -15,7 +15,7 @@ tree, file names, note structure, and the parts of a conversation it leaves out.
 
 The folders default to `Nexus/Conversations`, `Nexus/Attachments`, and
 `Nexus/Reports`, and are configurable in [Settings](settings.md). `<provider>` is
-one of `chatgpt`, `claude`, `vibe`, `perplexity`. The year and month come from the
+one of `chatgpt`, `claude`, `vibe`, `perplexity`, `grok`. The year and month come from the
 conversation's creation date **in your computer's local timezone**.
 
 ## File names
@@ -52,10 +52,14 @@ update_time: 2026-01-16T09:05:00.000Z
 ---
 ```
 
-Added only when the export provides them:
+Added only when the export provides it:
 
-- `mode:` — the provider's conversation mode, when it has one.
 - `models:` — a list of the model(s) used in the conversation.
+
+Added when you set one in [Settings → Properties](settings.md#custom-id-property):
+
+- a property of your choice (for example `uid:`) holding the same value as
+  `conversation_id`, written right after it.
 
 Timestamps in frontmatter are **always ISO 8601 UTC**.
 
@@ -101,8 +105,8 @@ complete history visible in your provider account.
 To keep a note readable, a very long block — a single message line of roughly
 10,000+ characters, or a large extracted text attachment — is moved to a file
 under `<Attachment folder>/<provider>/documents/<note name>/` and linked from the
-message instead of inlined. If the file cannot be written, the content stays in
-the note.
+message instead of inlined, in a callout that is left open because all it holds
+is that link. If the file cannot be written, the content stays in the note.
 
 ## Related
 

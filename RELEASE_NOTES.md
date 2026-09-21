@@ -1,5 +1,37 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.8.0 — Grok, Perplexity's official export, and a custom ID property
+
+![Version](https://img.shields.io/badge/version-1.8.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
+
+### ✨ New
+
+- **Grok — conversations and Imagine posts.** Import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer in order, citations become links to their source, and artifacts show inline. Each Imagine post with a prompt becomes a note titled *Imagine - …* with the images the export carries — including the variants found through Grok's signature in the image metadata — and a link to the post for the rest. See [Grok](docs/user/providers/grok.md).
+
+- **Perplexity — official data export.** Import the ZIP from Perplexity's own *Export my data* as-is: every conversation it holds becomes a note, with a link back to the thread. That export has no titles, so a note is titled with the start of its first question. It works alongside the Thread Exporter extension, as the next entry describes. See [Perplexity](docs/user/providers/perplexity.md).
+
+- **Perplexity — both export sources work together.** Perplexity's own export and the Thread Exporter extension number their answers differently, so a conversation held in both is now matched on its identifier and its questions rather than on those numbers. Importing either over notes created from the other adds the messages a note lacks, and an extension archive fills in the sources, models and citation markers that Perplexity's own export never carries. Importing the same archive twice changes nothing.
+
+- **Custom ID property.** Settings → Properties adds a property of your choice (for example `uid`) to every conversation note, holding the conversation ID, so imported notes fit a vault that identifies notes by a property of its own. Enabling, renaming or clearing it asks first, updates your existing notes with progress and a summary, and touches nothing else in them — comments, quotes and line endings stay exactly as they were. **Overwrite existing values** decides what happens when a note already has a property with that name. See [Settings](docs/user/settings.md#custom-id-property).
+
+### 🔧 Improved
+
+- **A rebuild keeps the properties you added.** Rebuilding a note used to drop every frontmatter property the plugin did not write. Properties added by you or another plugin, such as `tags`, are now kept as written and placed after the plugin's own. The plugin's own properties, including the custom ID property, are regenerated, and edits to the note body are still lost.
+- **Settings are laid out consistently.** The date prefix, message timestamp format and custom ID property settings put their controls beside the name and their description across the full width, and wrap cleanly on narrow panes. The two date settings now share one **Date Format** section, and switching one of them no longer scrolls Settings back to the top.
+- **The plugin's settings appear in Obsidian's settings search** (Obsidian 1.13 and later). They are now declared through Obsidian's settings API instead of being drawn by hand, so searching for a setting — by name, by a word from its description, or by a term such as `uid` or `folder` — finds it. Older versions of Obsidian keep the same settings tab as before.
+- **A long block moved to a file is no longer folded.** When a callout was left holding only a link to the file, expanding it revealed nothing but that link. It now stays open. Notes you have already imported keep their folded callout until you rebuild them.
+- **Reports say what was left out, and why.** Items a provider does not import are listed under their reason (for example *Ignored — empty prompt*), and an export holding more than one kind of item gets one column per kind.
+
+### 🐛 Fixed
+
+- **Perplexity citation markers no longer point nowhere.** Answers cite their sources as `[1][2]`, but exports rarely include the sources themselves. Markers are now removed from answers without a References section, so they no longer clutter the text or show up as a broken image after an exclamation mark.
+- **A note's "Last Updated" header line stays readable.** Every update rewrote it with the raw timestamp from the note's properties (`2024-03-17T13:25:55.000Z`) instead of the date and time as you read them.
+- **The completion dialog no longer reports Perplexity turns as artifacts.** After a Perplexity import it showed a 🎨 *Artifacts* card holding the number of questions and answers. Only providers that generate files — Claude — show that card now.
+- **Perplexity notes no longer carry a `mode:` property.** Perplexity's two exports fill it in differently — for seven of ten threads held in both they disagreed, and it follows neither the model nor the kind of search — so it said nothing reliable. Notes you have already imported keep the value they have.
+- **Updating a Perplexity note no longer loses its new answers.** New messages were added after the note's *Related Queries* section, and refreshing that section removed them again — while the report counted the note as updated. They now go before it. Answers an earlier update lost are restored by rebuilding the note, or added back the next time the thread changes and you import it.
+- **Updating a note no longer erases its models.** When the archive you import names none, the note keeps the ones an earlier import wrote.
+- **The *Turns* column of Perplexity reports counted 0** for archives in the Thread Exporter's newer format.
+
 ## Version 1.7.1 — Forbidden characters, oversized notes and hanging upgrade dialog
 
 ![Version](https://img.shields.io/badge/version-1.7.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)

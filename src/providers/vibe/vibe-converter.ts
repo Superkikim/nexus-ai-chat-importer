@@ -30,7 +30,7 @@ import {
     MistralVibeCanvasItem,
 } from "./vibe-types";
 import { deriveMistralVibeConversationTitle } from "./vibe-title";
-import { splitLines } from "../../utils";
+import { renderCollapsedCallout } from "../../utils/collapsed-callout";
 
 /**
  * Converter for Mistral Vibe (formerly Le Chat) export format
@@ -321,21 +321,11 @@ export class MistralVibeConverter {
             const isSlides = item.type === "slides";
             const label = isSlides ? `${title} *(presentation)*` : title;
 
-            const lines: string[] = [`>[!nexus_canvas]- **${label}**`];
-
-            if (isSlides) {
-                lines.push("> ```");
-                for (const line of splitLines(item.content || "")) {
-                    lines.push(line === "" ? ">" : `> ${line}`);
-                }
-                lines.push("> ```");
-            } else {
-                for (const line of splitLines(item.content || "")) {
-                    lines.push(line === "" ? ">" : `> ${line}`);
-                }
-            }
-
-            callouts.push(lines.join("\n"));
+            callouts.push(
+                renderCollapsedCallout("nexus_canvas", label, item.content, {
+                    fence: isSlides,
+                })
+            );
         }
 
         return callouts.join("\n\n");

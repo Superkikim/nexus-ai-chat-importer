@@ -60,12 +60,19 @@ by its file path or title. Re-importing is how you keep notes current.
 
 | You want to… | Do this | Result |
 |---|---|---|
-| Add new messages from a fresh export | Re-import (Import All, or Select Specific with the conversation ticked) | New messages are **appended**; earlier messages, formatting, and your manual edits are left untouched. The note is recorded as **Updated**. |
-| Rebuild notes after a plugin update, to pick up new features | Import All with **Reprocess existing notes** ticked | Each existing note is **regenerated from scratch** from the archive. Recorded as **Recreated**. |
+| Add new messages from a fresh export | Re-import (Import All, or Select Specific with the conversation ticked) | New messages are **appended**; earlier messages, formatting, and your manual edits are left untouched. The note is recorded as **Updated**. [Perplexity](providers/perplexity.md#using-both-sources) also rewrites an answer that lacks its sources. |
+| Rebuild notes after a plugin update, to pick up new features | Import All with **Reprocess existing notes** ticked | Each existing note is **regenerated from scratch** from the archive; properties you added are kept. Recorded as **Recreated**. |
 | Rebuild only specific notes | Select Specific → tick the conversations → tick **Rebuild selected notes if they exist** | Only those notes are regenerated. |
 
-> **Rebuilding replaces the whole note.** Any manual edits you made to a rebuilt
-> note are lost. A normal update never does this.
+> **With a [custom ID property](settings.md#custom-id-property) set,** an update also
+> adds it to the note if missing, and a rebuild rewrites it like a new note. An update
+> replaces an existing value only when **Overwrite existing values** is on.
+
+> **Rebuilding replaces the note body.** Any manual edits you made to the body of a
+> rebuilt note are lost. Frontmatter properties that the plugin does not write, such
+> as `tags` or ones you added yourself, are kept after the plugin's own. The plugin's
+> own properties, including the custom ID property, are regenerated, so an ID you
+> edited by hand is overwritten. A normal update never does this.
 
 The same operation has three names in the UI: **Reprocess existing notes** (the
 checkbox in Import All), **Rebuild selected notes if they exist** (the checkbox in

@@ -143,4 +143,149 @@ describe("StreamingJsonArrayParser", () => {
 
         expect(uuids).toEqual(["ca", "cb"]);
     });
+
+    async function collect(
+        parts: string[],
+        arrayKey?: string
+    ): Promise<unknown[]> {
+        const items: unknown[] = [];
+        for await (const item of StreamingJsonArrayParser.streamConversationsFromChunks(
+            chunksFrom(parts),
+            arrayKey
+        )) {
+            items.push(item);
+        }
+        return items;
+    }
+
+    function splitEvery(text: string, size: number): string[] {
+        const parts: string[] = [];
+        for (let i = 0; i < text.length; i += size) {
+            parts.push(text.slice(i, i + size));
+        }
+        return parts;
+    }
+
+    it("streams a named array that follows a large one", async () => {
+        const payload = {
+            conversations: Array.from({ length: 2000 }, (_, i) => ({
+                id: `c${i}`,
+                text: "x".repeat(5000),
+            })),
+            media_posts: [{ id: "p1" }, { id: "p2" }],
+        };
+        const json = JSON.stringify(payload);
+        expect(json.length).toBeGreaterThan(8 * 1024 * 1024);
+
+        const posts = await collect(splitEvery(json, 64 * 1024), "media_posts");
+
+        expect(posts).toEqual([{ id: "p1" }, { id: "p2" }]);
+    });
+
+    it("finds a named array one character at a time", async () => {
+        const json = JSON.stringify({
+            conversations: [{ id: "c1" }],
+            media_posts: [{ id: "p1", prompt: 'say "media_posts": [1]' }],
+        });
+
+        const conversations = await collect(splitEvery(json, 1));
+        const posts = await collect(splitEvery(json, 1), "media_posts");
+
+        expect(conversations).toEqual([{ id: "c1" }]);
+        expect(posts).toEqual([{ id: "p1", prompt: 'say "media_posts": [1]' }]);
+    });
+
+    it("ignores a nested property with the same name", async () => {
+        const json = JSON.stringify({
+            conversations: [{ media_posts: [{ id: "nested" }] }],
+            media_posts: [{ id: "top" }],
+        });
+
+        expect(await collect([json], "media_posts")).toEqual([{ id: "top" }]);
+    });
+
+    it("ignores a string value equal to the key", async () => {
+        const json = JSON.stringify({
+            label: "media_posts",
+            media_posts: [{ id: "top" }],
+        });
+
+        expect(await collect([json], "media_posts")).toEqual([{ id: "top" }]);
+    });
+
+    it("rejects a named array that is absent", async () => {
+        const json = JSON.stringify({ conversations: [{ id: "c1" }] });
+
+        await expect(collect([json], "media_posts")).rejects.toThrow(
+            "Could not find media_posts array"
+        );
+    });
+
+    it("matches a bare top-level array only for the default key", async () => {
+        const json = JSON.stringify([{ id: "c1" }]);
+
+        expect(await collect([json])).toEqual([{ id: "c1" }]);
+        await expect(collect([json], "media_posts")).rejects.toThrow(
+            "Could not find media_posts array"
+        );
+    });
+
+    it("yields nothing for an empty named array", async () => {
+        const json = JSON.stringify({ conversations: [], media_posts: [] });
+
+        expect(await collect([json], "media_posts")).toEqual([]);
+    });
+
+    it("closes its source when it stops before the end", async () => {
+        let closed = false;
+        async function* source(): AsyncGenerator<string> {
+            try {
+                yield '{"conversations": [{"id": "c1"}], ';
+                yield '"media_posts": [{"id": "p1"}]}';
+            } finally {
+                closed = true;
+            }
+        }
+
+        const items: unknown[] = [];
+        for await (const item of StreamingJsonArrayParser.streamConversationsFromChunks(
+            source()
+        )) {
+            items.push(item);
+        }
+
+        expect(items).toEqual([{ id: "c1" }]);
+        expect(closed).toBe(true);
+    });
+
+    it("closes its source when the array is absent", async () => {
+        let closed = false;
+        async function* source(): AsyncGenerator<string> {
+            try {
+                yield '{"a": 1}';
+                yield " ";
+            } finally {
+                closed = true;
+            }
+        }
+
+        await expect(collectFrom(source(), "media_posts")).rejects.toThrow(
+            "Could not find media_posts array"
+        );
+        expect(closed).toBe(true);
+    });
+
+    async function collectFrom(
+        chunks: AsyncIterable<string>,
+        arrayKey: string
+    ): Promise<unknown[]> {
+        const items: unknown[] = [];
+        for await (const item of StreamingJsonArrayParser.streamConversationsFromChunks(
+            chunks,
+            arrayKey
+        )) {
+            items.push(item);
+        }
+        return items;
+    }
 });

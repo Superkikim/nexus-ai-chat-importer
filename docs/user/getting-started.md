@@ -5,7 +5,7 @@
 - **Obsidian 1.6.6 or newer** (the plugin's declared minimum).
 - **Desktop or mobile.** The plugin runs on both. On mobile, some steps are more
   limited — see [desktop vs mobile](importing.md#desktop-vs-mobile).
-- A data export (`.zip`) from ChatGPT, Claude, Mistral Vibe, or Perplexity. Each
+- A data export (`.zip`) from ChatGPT, Claude, Mistral Vibe, Perplexity, or Grok. Each
   [provider page](README.md#supported-providers) explains how to request one.
 
 ## Install
@@ -35,8 +35,9 @@ front.
 1. Get your export from your provider and note where the `.zip` was saved — see
    [ChatGPT](providers/chatgpt.md#get-your-export),
    [Claude](providers/claude.md#get-your-export),
-   [Mistral Vibe](providers/mistral-vibe.md#get-your-export), or
-   [Perplexity](providers/perplexity.md#getting-a-compatible-export). Do **not**
+   [Mistral Vibe](providers/mistral-vibe.md#get-your-export),
+   [Perplexity](providers/perplexity.md#get-your-export), or
+   [Grok](providers/grok.md#get-your-export). Do **not**
    unzip it.
 2. In Obsidian, run **Import AI conversations** — from the command palette, or the
    ribbon icon in the left sidebar.

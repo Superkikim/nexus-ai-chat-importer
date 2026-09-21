@@ -58,10 +58,9 @@ Conventions for triaging, labeling, and tracking issues in this repository.
 | `status: pending user insight` | Blocked — waiting for information from the reporter |
 | `status: in progress` | Actively being worked on |
 | `status: suspended` | Paused — external dependency or deprioritized |
+| `status: pending release` | Done on the dev branch (feature or fix); ships with the `target: X.Y.Z` release |
 | `status: released` | Shipped in a published release |
 | `fixed` | Bug confirmed fixed (use alongside `status: released`) |
-| `fixed-in-dev` | Fixed in a branch, not yet released |
-| `pending-release` | Ready, waiting for the next release cycle |
 | `partially-implemented` | Partially addressed — follow-up needed |
 
 ### Target
@@ -79,15 +78,18 @@ Conventions for triaging, labeling, and tracking issues in this repository.
 1. **Triage** → `bug` + `status: evaluation in progress`
 2. **Information missing** → `status: pending user insight`, comment tagging the reporter with specific questions
 3. **Information received** → `status: in progress`, assign to a branch, add `target: X.Y.Z`
-4. **Fix merged to dev branch** → add `fixed-in-dev`, keep `target: X.Y.Z`
-5. **Released** → `status: released` + `fixed`, close
+4. **Fix done on the dev branch** → `status: pending release`, keep `target: X.Y.Z`,
+   comment what changed, close
+5. **Released** → `status: released` + `fixed`
 
 ### Feature / enhancement
 
 1. **Triage** → `enhancement` + `status: evaluation in progress`
 2. **Accepted** → `status: in progress` + `target: X.Y.Z`
-3. **Shipped** → `status: released`, close
-4. **Rejected** → `wontimplement`, close with a short explanation
+3. **Done on the dev branch** → `status: pending release`, keep `target: X.Y.Z`,
+   comment what shipped, close
+4. **Released** → `status: released`
+5. **Rejected** → `wontimplement`, close with a short explanation
 
 ### Chore / arch / doc
 

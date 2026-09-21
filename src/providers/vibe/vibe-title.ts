@@ -1,13 +1,5 @@
 import { MistralVibeConversation } from "./vibe-types";
-
-export const VIBE_VISIBLE_TITLE_MAX_CHARS = 50;
-
-export function truncateMistralVibeTitle(content: string): string {
-    const trimmed = (content || "").trim();
-    if (!trimmed) return "Untitled";
-    if (trimmed.length <= VIBE_VISIBLE_TITLE_MAX_CHARS) return trimmed;
-    return `${trimmed.substring(0, VIBE_VISIBLE_TITLE_MAX_CHARS).trim()}...`;
-}
+import { truncateTitlePreview } from "../../utils/title-preview";
 
 export function deriveMistralVibeConversationTitle(
     messages: MistralVibeConversation,
@@ -27,5 +19,5 @@ export function deriveMistralVibeConversationTitle(
 
     const firstUserMessage = source.find((msg) => msg.role === "user");
     const content = firstUserMessage?.content || "";
-    return truncateMistralVibeTitle(content);
+    return truncateTitlePreview(content);
 }

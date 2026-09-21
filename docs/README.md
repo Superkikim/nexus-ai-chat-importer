@@ -23,7 +23,8 @@ navigation.
 - **Per provider:** [ChatGPT](user/providers/chatgpt.md),
   [Claude](user/providers/claude.md),
   [Mistral Vibe](user/providers/mistral-vibe.md),
-  [Perplexity](user/providers/perplexity.md) — each covers only provider-specific
+  [Perplexity](user/providers/perplexity.md),
+  [Grok](user/providers/grok.md) — each covers only provider-specific
   behaviour and links back to the common pages.
 
 ## Development — [`development/`](development/README.md)
@@ -38,9 +39,13 @@ workflow](development/release-workflow.md).
 How the plugin is built: the [import pipeline](architecture/import-pipeline.md),
 the [archive pipeline](architecture/archive-pipeline.md), [attachment
 handling](architecture/attachment-handling.md), [link
-updates](architecture/link-updates.md), and the observed export formats for
-[ChatGPT](architecture/providers/chatgpt-export-format.md) and
-[Claude](architecture/providers/claude-export-format.md).
+updates](architecture/link-updates.md), the [settings
+UI](architecture/settings-ui.md), the [custom ID
+property](architecture/custom-id-property.md), and the observed export formats for
+[ChatGPT](architecture/providers/chatgpt-export-format.md),
+[Claude](architecture/providers/claude-export-format.md),
+[Perplexity](architecture/providers/perplexity-export-format.md) and
+[Grok](architecture/providers/grok-export-format.md).
 
 ## Editorial rules
 

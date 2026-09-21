@@ -38,6 +38,12 @@ export const DEFAULT_SETTINGS: PluginSettings = {
     messageTimestampFormat: "locale",
 
     // ========================================
+    // 🏷️ PROPERTIES
+    // ========================================
+    customIdProperty: "",
+    customIdPropertyOverwrite: false,
+
+    // ========================================
     // 🔧 INTERNAL SETTINGS
     // ========================================
     lastConversationsPerPage: 50,
@@ -79,6 +85,11 @@ export const PROVIDER_URLS = {
         BASE: "https://www.perplexity.ai",
         CHAT: (id: string) => `https://www.perplexity.ai/search/${id}`,
     },
+    GROK: {
+        BASE: "https://grok.com",
+        CHAT: (id: string) => `https://grok.com/c/${id}`,
+        IMAGINE_POST: (id: string) => `https://grok.com/imagine/post/${id}`,
+    },
 } as const;
 
 /**
@@ -89,6 +100,7 @@ export const PROVIDERS = {
     CLAUDE: "claude",
     VIBE: "vibe",
     PERPLEXITY: "perplexity",
+    GROK: "grok",
 } as const;
 
 export type Provider = (typeof PROVIDERS)[keyof typeof PROVIDERS];

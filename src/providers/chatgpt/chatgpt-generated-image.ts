@@ -23,10 +23,11 @@
 // keys off message role (user request vs assistant claim).
 
 import { Chat, ChatMessage } from "./chatgpt-types";
-import { StandardMessage, StandardAttachment } from "../../types/standard";
+import { StandardMessage } from "../../types/standard";
 import { ChatGPTDalleProcessor } from "./chatgpt-dalle-processor";
 import { isImageFile } from "../../utils/file-utils";
 import { splitLines } from "../../utils";
+import { createMissingGeneratedImageAttachment } from "../../utils/generated-image-placeholder";
 
 // A user asking for an image: a generation verb followed (closely) by an
 // image noun. Matched per line to keep the window tight.
@@ -95,42 +96,9 @@ export function hasStructuredGeneratedImage(chat: Chat): boolean {
     return false;
 }
 
-/** Build a placeholder attachment for an image that the export omitted. */
-export function createMissingGeneratedImageAttachment(
-    promptText?: string
-): StandardAttachment {
-    const trimmed = (promptText || "").trim();
-    const warning = "this export did not include the image";
-
-    let extractedContent: string;
-    if (trimmed) {
-        const formattedPrompt = splitLines(trimmed).join("\n>> ");
-        extractedContent = `>>[!nexus_prompt] **Image prompt**
->> \`\`\`
->> ${formattedPrompt}
->> \`\`\`
->
->>[!nexus_attachment] **Generated image — not in export**
->> ${warning}`;
-    } else {
-        extractedContent = `>>[!nexus_attachment] **Generated image — not in export**
->> ${warning}`;
-    }
-
-    return {
-        fileName: "generated_image_not_in_export.png",
-        fileType: "image/png",
-        attachmentType: "generated_image",
-        generationPrompt: trimmed || undefined,
-        extractedContent,
-        status: {
-            processed: true,
-            found: false,
-            reason: "not_in_export",
-            note: "This export did not include the generated image. Exports that ship it through library_files.json are reconciled instead.",
-        },
-    };
-}
+/** Why a ChatGPT generated image is absent from the export. */
+const CHATGPT_MISSING_IMAGE_NOTE =
+    "This export did not include the generated image. Exports that ship it through library_files.json are reconciled instead.";
 
 function messageHasImageAttachment(message: StandardMessage): boolean {
     return (message.attachments ?? []).some(
@@ -146,7 +114,9 @@ function appendPlaceholder(
         ...message,
         attachments: [
             ...(message.attachments ?? []),
-            createMissingGeneratedImageAttachment(promptText),
+            createMissingGeneratedImageAttachment(promptText, {
+                note: CHATGPT_MISSING_IMAGE_NOTE,
+            }),
         ],
     };
 }
@@ -161,7 +131,11 @@ function makeSyntheticPlaceholderMessage(
         role: "assistant",
         content: "",
         timestamp,
-        attachments: [createMissingGeneratedImageAttachment(promptText)],
+        attachments: [
+            createMissingGeneratedImageAttachment(promptText, {
+                note: CHATGPT_MISSING_IMAGE_NOTE,
+            }),
+        ],
     };
 }
 

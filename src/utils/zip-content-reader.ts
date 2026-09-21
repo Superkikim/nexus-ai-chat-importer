@@ -11,7 +11,8 @@ export type SupportedArchiveProvider =
     | "chatgpt"
     | "claude"
     | "vibe"
-    | "perplexity";
+    | "perplexity"
+    | "grok";
 
 export type ArchiveClassification =
     | {
@@ -73,6 +74,39 @@ export function findPerplexityJsonFiles(fileNames: string[]): string[] {
     });
 }
 
+/**
+ * Perplexity's own data export ("Export my data") ships every conversation in
+ * one `conversations-<YYYYMMDD>_<HHMMSS>-<hash>.json`, next to a spreadsheet
+ * of account data that is never read. The date-and-hash name keeps it apart
+ * from ChatGPT's `conversations-<n>.json`.
+ */
+export function findPerplexityOfficialJsonFiles(fileNames: string[]): string[] {
+    return fileNames.filter((name) =>
+        /^conversations-\d{8}_\d{6}-[0-9a-f]+\.json$/i.test(
+            name.split("/").pop() ?? name
+        )
+    );
+}
+
+/** Top-level array of a Perplexity data export that holds its conversations. */
+const PERPLEXITY_OFFICIAL_ITEM_ARRAY = "conversations";
+
+/**
+ * Grok exports nest their single JSON payload under per-user folders
+ * (`ttl/30d/export_data/<user>/prod-grok-backend.json`), so it is found by
+ * base name.
+ */
+export function findGrokBackendJsonFiles(fileNames: string[]): string[] {
+    return fileNames.filter(
+        (name) =>
+            (name.split("/").pop() ?? name).toLowerCase() ===
+            "prod-grok-backend.json"
+    );
+}
+
+/** Top-level arrays of a Grok payload that hold importable items. */
+const GROK_ITEM_ARRAYS = ["conversations", "media_posts"] as const;
+
 function hasNestedZipContainerSignature(fileNames: string[]): boolean {
     const zipEntries = fileNames.filter((name) =>
         name.toLowerCase().endsWith(".zip")
@@ -104,11 +138,16 @@ export function classifyArchiveEntries(
     const hasMistralVibeFiles = fileNames.some((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
-    const hasPerplexityFiles = findPerplexityJsonFiles(fileNames).length > 0;
+    const hasPerplexityFiles =
+        findPerplexityJsonFiles(fileNames).length > 0 ||
+        findPerplexityOfficialJsonFiles(fileNames).length > 0;
+    const hasGrokFiles = findGrokBackendJsonFiles(fileNames).length > 0;
     const nestedZipContainer = hasNestedZipContainerSignature(fileNames);
 
     const detectedProvider: SupportedArchiveProvider | undefined =
-        hasMistralVibeFiles && !hasConversationsJson
+        hasGrokFiles && !hasConversationsJson
+            ? "grok"
+            : hasMistralVibeFiles && !hasConversationsJson
             ? "vibe"
             : hasPerplexityFiles &&
               !hasConversationsJson &&
@@ -304,10 +343,13 @@ async function listFileNames(zip: ZipArchiveReader): Promise<string[]> {
     return entries.map((entry) => entry.path);
 }
 
-async function collectJsonArrayFromEntry(entry: {
-    readText(): Promise<string>;
-    readTextChunks?: () => AsyncGenerator<string>;
-}): Promise<{ items: unknown[]; uncompressedBytes: number }> {
+async function collectJsonArrayFromEntry(
+    entry: {
+        readText(): Promise<string>;
+        readTextChunks?: () => AsyncGenerator<string>;
+    },
+    arrayKey?: string
+): Promise<{ items: unknown[]; uncompressedBytes: number }> {
     const items: unknown[] = [];
     let uncompressedBytes = 0;
     const chunkReader = entry.readTextChunks?.bind(entry);
@@ -322,7 +364,8 @@ async function collectJsonArrayFromEntry(entry: {
         }
 
         for await (const value of StreamingJsonArrayParser.streamConversationsFromChunks(
-            countingChunks()
+            countingChunks(),
+            arrayKey
         )) {
             items.push(value);
         }
@@ -384,6 +427,39 @@ async function collectJsonObjectFromEntry(entry: {
     return { item: parsed, uncompressedBytes };
 }
 
+/**
+ * Every importable item of a Grok payload: its conversations, then its
+ * Imagine posts. The file is read once per array; an array the export does
+ * not carry is simply empty.
+ */
+async function* streamGrokItems(
+    entry: ZipEntryHandle
+): AsyncGenerator<unknown> {
+    const chunkReader = entry.readTextChunks?.bind(entry);
+    if (!chunkReader) {
+        throw new NexusAiChatImporterError(
+            "ZIP_TEXT_STREAM_REQUIRED",
+            "ZIP entry text streaming is unavailable for this archive reader."
+        );
+    }
+
+    for (const arrayKey of GROK_ITEM_ARRAYS) {
+        try {
+            for await (const item of StreamingJsonArrayParser.streamConversationsFromChunks(
+                chunkReader(),
+                arrayKey
+            )) {
+                yield item;
+            }
+        } catch (error) {
+            const message = error instanceof Error ? error.message : "";
+            if (!message.startsWith(`Could not find ${arrayKey} array`)) {
+                throw error;
+            }
+        }
+    }
+}
+
 function formatRuntimeMemorySnapshot(): string {
     const perf = window.performance as Performance & {
         memory?: {
@@ -412,6 +488,26 @@ export async function extractRawConversations(
 ): Promise<RawConversationExtractionResult> {
     const fileNames = await listFileNames(zip);
 
+    const grokFiles = findGrokBackendJsonFiles(fileNames).sort();
+    if (grokFiles.length > 0) {
+        const entrySizes = new Map(
+            (await zip.listEntries()).map((e) => [e.path, e.size])
+        );
+        const conversations: unknown[] = [];
+        let uncompressedBytes = 0;
+
+        for (const fileName of grokFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            for await (const item of streamGrokItems(entry)) {
+                conversations.push(item);
+            }
+            uncompressedBytes += entrySizes.get(fileName) ?? 0;
+        }
+
+        return { conversations, uncompressedBytes };
+    }
+
     const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
@@ -431,10 +527,24 @@ export async function extractRawConversations(
         return { conversations, uncompressedBytes };
     }
 
+    const perplexityOfficialFiles =
+        findPerplexityOfficialJsonFiles(fileNames).sort();
     const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
-    if (perplexityJsonFiles.length > 0) {
+    if (perplexityOfficialFiles.length > 0 || perplexityJsonFiles.length > 0) {
         const conversations: unknown[] = [];
         let uncompressedBytes = 0;
+
+        for (const fileName of perplexityOfficialFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            const { items, uncompressedBytes: fileBytes } =
+                await collectJsonArrayFromEntry(
+                    entry,
+                    PERPLEXITY_OFFICIAL_ITEM_ARRAY
+                );
+            uncompressedBytes += fileBytes;
+            conversations.push(...items);
+        }
 
         for (const fileName of perplexityJsonFiles) {
             const entry = zip.get(fileName);
@@ -487,7 +597,7 @@ export async function extractRawConversations(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Grok prod-grok-backend.json file."
         );
     }
 
@@ -540,6 +650,28 @@ export async function* extractConversationsStream(
         durationMs: Date.now() - startedAt,
     });
 
+    const grokFiles = findGrokBackendJsonFiles(fileNames).sort();
+    if (grokFiles.length > 0) {
+        streamLogger.debug("Using Grok conversation stream", {
+            fileCount: grokFiles.length,
+        });
+        let yieldedCount = 0;
+        for (const fileName of grokFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            for await (const item of streamGrokItems(entry)) {
+                yieldedCount++;
+                yield item;
+                await yieldToEventLoopIfNeeded(yieldedCount);
+            }
+        }
+        streamLogger.debug("Grok conversation stream complete", {
+            yieldedCount,
+            durationMs: Date.now() - startedAt,
+        });
+        return;
+    }
+
     const vibeFiles = fileNames.filter((name) =>
         /^chat-[a-f0-9-]+\.json$/.test(name)
     );
@@ -570,12 +702,34 @@ export async function* extractConversationsStream(
         return;
     }
 
+    const perplexityOfficialFiles =
+        findPerplexityOfficialJsonFiles(fileNames).sort();
     const perplexityJsonFiles = findPerplexityJsonFiles(fileNames).sort();
-    if (perplexityJsonFiles.length > 0) {
+    if (perplexityOfficialFiles.length > 0 || perplexityJsonFiles.length > 0) {
         streamLogger.debug("Using Perplexity conversation stream", {
-            fileCount: perplexityJsonFiles.length,
+            fileCount:
+                perplexityOfficialFiles.length + perplexityJsonFiles.length,
         });
         let yieldedCount = 0;
+        for (const fileName of perplexityOfficialFiles) {
+            const entry = zip.get(fileName);
+            if (!entry) continue;
+            const chunkReader = entry.readTextChunks?.bind(entry);
+            if (!chunkReader) {
+                throw new NexusAiChatImporterError(
+                    "ZIP_TEXT_STREAM_REQUIRED",
+                    "ZIP entry text streaming is unavailable for this archive reader."
+                );
+            }
+            for await (const item of StreamingJsonArrayParser.streamConversationsFromChunks(
+                chunkReader(),
+                PERPLEXITY_OFFICIAL_ITEM_ARRAY
+            )) {
+                yieldedCount++;
+                yield item;
+                await yieldToEventLoopIfNeeded(yieldedCount);
+            }
+        }
         for (const fileName of perplexityJsonFiles) {
             const entry = zip.get(fileName);
             if (!entry) continue;
@@ -691,7 +845,7 @@ export async function* extractConversationsStream(
     if (!conversationsFile) {
         throw new NexusAiChatImporterError(
             "Missing conversations.json",
-            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, or Perplexity thread JSON files."
+            "The ZIP file does not contain a conversations.json file, chat-{uuid}.json files, Perplexity thread JSON files, or a Grok prod-grok-backend.json file."
         );
     }
 

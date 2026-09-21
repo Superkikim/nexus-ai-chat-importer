@@ -23,6 +23,17 @@ import {
     StandardMessage,
 } from "../types/standard";
 import { ZipArchiveReader } from "../utils/zip-loader";
+import { NoteMessageBlock } from "../utils/note-message-blocks";
+
+/**
+ * What an existing note is missing, worked out by a provider that cannot rely
+ * on message ids: messages to add at the end, and stretches of the note to
+ * rewrite from a richer export.
+ */
+export interface NoteMergePlan {
+    append: StandardMessage[];
+    rewrites: { start: number; end: number; messages: StandardMessage[] }[];
+}
 
 // Minimal provider-agnostic adapter contract
 export interface ProviderAdapter<TChat = unknown> {
@@ -45,6 +56,17 @@ export interface ProviderAdapter<TChat = unknown> {
 
     // New messages detection given existing message IDs extracted from note
     getNewMessages(chat: TChat, existingMessageIds: string[]): unknown[];
+
+    // Optional: decide what an existing note is missing, when message ids
+    // cannot answer that question. Perplexity's two exports of one thread
+    // number their answers differently, so a note imported from one is
+    // reconciled against the other by what its messages say, not by their ids.
+    //
+    // Returning null falls back to the id comparison every other provider uses.
+    reconcileNoteMessages?(
+        existing: NoteMessageBlock[],
+        messages: StandardMessage[]
+    ): NoteMergePlan | null;
 
     // Optional reconciliation pass, run on the WHOLE conversation after
     // conversion and before attachment extraction. Providers that ship content
@@ -77,7 +99,19 @@ export interface ProviderAdapter<TChat = unknown> {
         entryName: string,
         uncompressedSize: number
     ): boolean;
+
+    // Optional: the kind of item this raw entry is, when an export mixes
+    // several (Grok: conversations and Imagine posts). The label heads the
+    // report columns. If absent, every item is DEFAULT_ITEM_CATEGORY.
+    getItemCategory?(chat: TChat): string;
+
+    // Optional: why this raw entry is not imported at all, or null to import
+    // it. The reason is shown in the report next to its count.
+    getExclusionReason?(chat: TChat): string | null;
 }
+
+/** Report label for items of a provider that exports a single kind. */
+export const DEFAULT_ITEM_CATEGORY = "Conversations";
 
 export interface ProviderRegistry {
     // Return adapter for a provider name

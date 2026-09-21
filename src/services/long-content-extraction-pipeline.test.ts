@@ -90,11 +90,11 @@ describe("LongContentExtractor", () => {
         expect(out[0].content).toContain("Qu'en penses-tu ?");
         expect(out[0].content).not.toContain("postgres Pulling");
 
-        // And it leaves behind a collapsed callout, in place — the formatter
+        // And it leaves behind an open callout, in place — the formatter
         // quotes these lines, making it the nested callout attachments use.
         const lines = out[0].content.split("\n");
         const at = lines.findIndex((l) =>
-            l.startsWith(">[!nexus_attachment]-")
+            l.startsWith(">[!nexus_attachment] ")
         );
         expect(at).toBeGreaterThan(0);
         expect(lines[at]).toContain("(txt)");
@@ -152,7 +152,11 @@ describe("LongContentExtractor", () => {
         expect(attachment?.extractedContent).toContain(
             `>> [[${created[0].path}]]`
         );
-        expect(attachment?.extractedContent).toContain("[!nexus_attachment]");
+        // Its body is only that link, so the callout is not collapsed.
+        expect(attachment?.extractedContent).toContain("[!nexus_attachment] ");
+        expect(attachment?.extractedContent).not.toContain(
+            "[!nexus_attachment]-"
+        );
         // And the report counts it as a file, not as text left in the note.
         expect(attachment?.status?.localPath).toBe(created[0].path);
     });

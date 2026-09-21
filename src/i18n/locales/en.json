@@ -31,36 +31,6 @@
             "phase_error": "❌ Error"
         }
     },
-    "provider_selection": {
-        "title": "Select Archive Provider",
-        "providers": {
-            "chatgpt": {
-                "name": "ChatGPT",
-                "description": "OpenAI ChatGPT conversation exports",
-                "file_formats_0": "conversations.json (legacy) or conversations-XXX.json files"
-            },
-            "claude": {
-                "name": "Claude",
-                "description": "Anthropic Claude conversation exports",
-                "file_formats_0": "conversations.json + users.json",
-                "file_formats_1": "projects.json (optional)"
-            },
-            "vibe": {
-                "name": "Mistral Vibe",
-                "description": "Mistral Vibe (formerly Le Chat) conversation exports",
-                "file_formats_0": "chat-<uuid>.json files"
-            },
-            "perplexity": {
-                "name": "Perplexity",
-                "description": "Perplexity Thread Exporter JSON archives",
-                "file_formats_0": "perplexity_*.json files (metadata + conversations[] | status + entries[])"
-            }
-        },
-        "buttons": {
-            "select": "Select",
-            "cancel": "Cancel"
-        }
-    },
     "file_selection": {
         "title": "Import {{provider}} Conversations",
         "import_mode": {
@@ -74,7 +44,7 @@
             "label": "Reprocess existing notes",
             "description": "Rebuilds notes already in your vault instead of skipping them. Use this after a plugin update to pick up new features.",
             "selective_hint": "To rebuild existing notes, select them in the next step and tick “Rebuild selected notes”.",
-            "warning": "Manual edits to those notes will be lost."
+            "warning": "Edits to the body of those notes will be lost. Properties you added are kept."
         },
         "file_area": {
             "section_title": "Select Files",
@@ -101,7 +71,7 @@
             "status_label": "Status:",
             "show_label": "Show:",
             "rebuild_existing_label": "Rebuild selected notes if they exist",
-            "rebuild_help": "Off, an existing note only receives its new messages. On, every selected note already in your vault is rewritten from scratch and manual edits are lost."
+            "rebuild_help": "Off, an existing note only receives its new messages. On, every selected note already in your vault is rewritten from scratch and edits to the note body are lost. Properties you added are kept."
         },
         "status_filter_options": {
             "all": "All",
@@ -223,7 +193,7 @@
             }
         },
         "display": {
-            "section_title": "📅 Date Prefix",
+            "section_title": "📅 Date Format",
             "add_date_prefix": {
                 "name": "Add date prefix to filenames",
                 "desc": "Add creation date as a prefix to conversation filenames",
@@ -231,7 +201,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 Message Date Format",
             "custom_format": {
                 "name": "Custom message timestamp format",
                 "desc": "Override the default locale-based timestamp format in message headers. When disabled, timestamps follow Obsidian's language setting."
@@ -241,6 +210,64 @@
                 "desc": "Choose the format for message timestamps in conversation notes"
             },
             "preview_label": "Preview: "
+        },
+        "properties": {
+            "section_title": "🏷️ Properties",
+            "custom_id": {
+                "name": "Custom ID property",
+                "desc": "Adds a property to every conversation note that Nexus AI Chat Importer creates, holding the conversation ID. Leave empty to add nothing.\nUseful if your vault relies on a property such as `uid`.",
+                "invalid_format": "\"{{value}}\" is not a valid property name. Start with a Latin letter (A–Z, a–z) or _, then use only Latin letters, digits, _ or -.",
+                "invalid_reserved": "\"{{value}}\" cannot be used: Obsidian or Nexus AI Chat Importer already uses a property with this name."
+            },
+            "overwrite": {
+                "name": "Overwrite existing values",
+                "desc": "Overwrite existing values: when a note already has this property, Nexus AI Chat Importer replaces its value with the conversation ID. Off, it leaves that property as is."
+            },
+            "enable": {
+                "title": "Add the \"{{name}}\" property to existing notes?",
+                "body": "Nexus AI Chat Importer will add the \"{{name}}\" property to {{count}} notes.",
+                "existing_keep": "{{existing}} of these already have a \"{{name}}\" property: Nexus AI Chat Importer will leave that property unchanged.",
+                "existing_overwrite": "{{existing}} of these already have a \"{{name}}\" property: Nexus AI Chat Importer will replace the value of that property with the conversation ID.",
+                "confirm": "Add property"
+            },
+            "rename": {
+                "title": "Rename the \"{{oldName}}\" property to \"{{newName}}\" on existing notes?",
+                "body": "Nexus AI Chat Importer renames the property where it holds the conversation ID, and adds \"{{newName}}\" to the notes that lack it. A \"{{oldName}}\" value you set yourself stays where it is. Nothing else in your notes changes.",
+                "confirm": "Rename property"
+            },
+            "clear": {
+                "title": "Remove the \"{{name}}\" property from existing notes?",
+                "body_stop": "Nexus AI Chat Importer will stop adding the \"{{name}}\" property.",
+                "body_scope": "Only the property is affected: no note is deleted.",
+                "remove_plugin": "Remove where the value is an ID from Nexus AI Chat Importer",
+                "recommended": "(recommended)",
+                "remove_all": "Remove from all notes, whatever the value",
+                "keep": "Keep on existing notes",
+                "note": "Keeping the property is not permanent: a rebuilt note is regenerated without it."
+            },
+            "progress": {
+                "add": "Adding the \"{{name}}\" property",
+                "rename": "Renaming the \"{{oldName}}\" property to \"{{newName}}\"",
+                "remove": "Removing the \"{{name}}\" property"
+            },
+            "summary": {
+                "title": "Property update finished",
+                "context": "\"{{name}}\" property · {{count}} notes checked",
+                "added": "Added",
+                "overwritten": "Overwritten",
+                "renamed": "Renamed",
+                "removed": "Removed",
+                "skipped": "Left unchanged",
+                "failed": "Failed",
+                "failures": "Nexus AI Chat Importer could not update the property on these notes. Their property is unchanged:",
+                "more_failures": "…and {{count}} more. The full list is in the developer console.",
+                "reasons": {
+                    "no_frontmatter": "no frontmatter",
+                    "no_conversation_id": "no conversation_id in the frontmatter",
+                    "ambiguous_value": "the property's value spans several lines in a way that cannot be edited safely",
+                    "other": "could not be read or written"
+                }
+            }
         },
         "attachments": {
             "section_title": "Attachment Settings",
@@ -339,7 +366,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade Complete - v{{version}}",
-            "fallback_content": "## ✨ What's New in v{{version}}\n\n### 🐛 Fixed\n- **Oversized-note repair now actually works** — 1.7.0's fix was optional, and its backup file was still indexed by Obsidian either way; the repair is now mandatory, and old backups are renamed too\n- **Filenames with `#`, `^`, `[` or `]` are fixed, not just avoided** — these characters break wikilinks, so they're now substituted rather than dropped, for new imports and existing notes alike\n- **The upgrade dialog no longer hangs** when dismissed without clicking a button\n- **Content with bare CR line endings** (older Mac tooling, AppleScript) now stays inside its callout and code fence\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ What's New in v{{version}}\n\n- **Grok is supported** — import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer, citations become links to their source, and Imagine posts become notes with their images.\n- **Perplexity's official export is supported** — import the ZIP from *Export my data*. Every conversation becomes a note, titled with the start of its first question.\n- **Perplexity: the official export and the Thread Exporter extension work together** — import either over notes created from the other: it adds what a note lacks, and an extension archive fills in sources, models and citation markers, without duplicating anything.\n- **Custom ID property** — Settings → Properties adds a property of your choice (for example `uid`) holding the conversation ID to every note, and updates your existing notes.\n- **A rebuild keeps the properties you added**, such as `tags`. Edits to the note body are still lost.\n- **Settings appear in Obsidian's settings search** (Obsidian 1.13+), with a consistent layout.\n- **Reports say what was left out, and why.**\n- Plus fixes: Perplexity updates no longer lose new messages, orphan citation markers are gone, the completion dialog no longer counts Perplexity turns as artifacts, and a long block moved to a file is no longer folded.\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Got it!"
             }
@@ -484,7 +511,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "Thank you for installing Nexus AI Chat Importer!",
-        "description": "Import and manage your ChatGPT, Claude, Mistral Vibe, and Perplexity conversations directly in your Obsidian vault.",
+        "description": "Import and manage your ChatGPT, Claude, Mistral Vibe, Perplexity, and Grok conversations directly in your Obsidian vault.",
         "resources_title": "Resources",
         "resources": {
             "documentation": {
@@ -543,7 +570,8 @@
             "chatgpt": "ChatGPT",
             "claude": "Claude",
             "vibe": "Mistral Vibe",
-            "perplexity": "Perplexity"
+            "perplexity": "Perplexity",
+            "grok": "Grok"
         }
     },
     "commands": {

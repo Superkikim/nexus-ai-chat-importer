@@ -19,6 +19,11 @@
 // src/formatters/note-formatter.ts
 import { StandardConversation } from "../types/standard";
 import { formatTimestamp, generateSafeAlias } from "../utils";
+import {
+    customIdPropertyLine,
+    resolveCustomIdProperty,
+} from "../utils/custom-id-property";
+import { yamlListBlock } from "../utils/frontmatter-lists";
 import { MessageFormatter } from "./message-formatter";
 import { Logger } from "../logger";
 import { URL_GENERATORS } from "../types/standard";
@@ -90,15 +95,13 @@ export class NoteFormatter {
                 );
         }
 
-        const mode = this.extractMode(conversation);
         const models = this.extractModels(conversation);
-        const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"\n` : "";
-        const modelsBlock =
-            models.length > 0
-                ? `models:\n${models
-                      .map((model) => `  - "${model.replace(/"/g, '\\"')}"`)
-                      .join("\n")}\n`
-                : "";
+        const modelsBlock = yamlListBlock("models", models);
+
+        const customIdLine = customIdPropertyLine(
+            resolveCustomIdProperty(this.plugin.settings.customIdProperty),
+            conversationId
+        );
 
         // Build frontmatter with plugin_version after nexus
         // Timestamps in ISO 8601 format (v1.3.0+)
@@ -108,9 +111,9 @@ plugin_version: "${this.pluginVersion}"
 provider: ${conversation.provider}
 aliases: ${title}
 conversation_id: ${conversationId}
-create_time: ${createTimeStr}
+${customIdLine}create_time: ${createTimeStr}
 update_time: ${updateTimeStr}
-${modeLine}${modelsBlock}---
+${modelsBlock}---
 `;
 
         // Build header content - use original title for display, safe title for frontmatter
@@ -132,15 +135,6 @@ ${modeLine}${modelsBlock}---
         conversation: StandardConversation
     ): string {
         return this.messageFormatter.formatMessages(conversation.messages);
-    }
-
-    private extractMode(
-        conversation: StandardConversation
-    ): string | undefined {
-        const mode = conversation.metadata?.mode;
-        return typeof mode === "string" && mode.trim().length > 0
-            ? mode.trim()
-            : undefined;
     }
 
     private extractModels(conversation: StandardConversation): string[] {

@@ -227,7 +227,7 @@ export class OversizedNotesRepairer {
 
             const name = path.slice(path.lastIndexOf("/") + 1);
             out.push(
-                `> >[!nexus_attachment]- **${name}** (${name.slice(
+                `> >[!nexus_attachment] **${name}** (${name.slice(
                     name.lastIndexOf(".") + 1
                 )})`,
                 "> >",

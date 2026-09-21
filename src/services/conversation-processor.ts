@@ -26,6 +26,7 @@ import { NoteFormatter } from "../formatters/note-formatter";
 import { FileService } from "./file-service";
 import { LongContentExtractor } from "./long-content-extractor";
 import {
+    DEFAULT_ITEM_CATEGORY,
     ProviderRegistry,
     ProviderAdapter,
 } from "../providers/provider-adapter";
@@ -38,10 +39,21 @@ import {
     generateConversationFileName,
     CONVERSATION_NOTE_FILENAME_MAX_BYTES,
     compareTimestampsIgnoringSeconds,
+    formatTimestamp,
     getErrorMessage,
 } from "../utils";
 import type NexusAiChatImporterPlugin from "../main";
 import { ZipArchiveReader } from "../utils/zip-loader";
+import { readNoteMessageBlocks } from "../utils/note-message-blocks";
+import {
+    frontmatterListPattern,
+    yamlListBlock,
+} from "../utils/frontmatter-lists";
+import {
+    carryOverForeignProperties,
+    resolveCustomIdProperty,
+    setCustomIdProperty,
+} from "../utils/custom-id-property";
 
 export class ConversationProcessor {
     private messageFormatter: MessageFormatter;
@@ -317,6 +329,21 @@ export class ConversationProcessor {
             const isStandardConversation = this.isStandardConversation(chat);
             const std = chat as StandardConversation;
 
+            if (!isStandardConversation) {
+                const category = adapter.getItemCategory?.(chat);
+                importReport.setCurrentCategory(category);
+                const exclusionReason = adapter.getExclusionReason?.(chat);
+                if (exclusionReason) {
+                    importReport.addExcluded(
+                        category || DEFAULT_ITEM_CATEGORY,
+                        exclusionReason
+                    );
+                    return;
+                }
+            } else {
+                importReport.setCurrentCategory();
+            }
+
             const chatId = isStandardConversation
                 ? std.id
                 : adapter.getId(chat);
@@ -496,7 +523,12 @@ export class ConversationProcessor {
             updateTime,
             existingRecord.updateTime
         );
-        if (comparison <= 0) {
+        // A provider that reconciles a note by what it says, not by message
+        // ids, is asked even when its archive is older: the Perplexity Thread
+        // Exporter ships sources that Perplexity's own export never has, and
+        // its archive can be the older of the two. The note is only written
+        // if something actually changed.
+        if (comparison <= 0 && !adapter.reconcileNoteMessages) {
             // ZIP is older or same as vault (ignoring seconds) → Skip
             importReport.addSkipped(
                 chatTitle,
@@ -664,10 +696,22 @@ export class ConversationProcessor {
                 // New messages are decided on the reconciled conversation, so a
                 // newly available library artifact counts as new content even
                 // when ChatGPT omitted the raw message that carried it.
-                const newMessages = standardConversation.messages.filter(
-                    (msg: StandardMessage) =>
-                        !existingMessageIds.includes(msg.id)
-                );
+                //
+                // A provider whose exports number the same messages
+                // differently — Perplexity ships two — answers that question
+                // itself, from what the note says rather than from ids.
+                const mergePlan = adapter.reconcileNoteMessages
+                    ? adapter.reconcileNoteMessages(
+                          readNoteMessageBlocks(content),
+                          standardConversation.messages
+                      )
+                    : null;
+                const newMessages =
+                    mergePlan?.append ??
+                    standardConversation.messages.filter(
+                        (msg: StandardMessage) =>
+                            !existingMessageIds.includes(msg.id)
+                    );
 
                 let attachmentStats: AttachmentStats | undefined = undefined;
 
@@ -699,10 +743,15 @@ export class ConversationProcessor {
                     }
 
                     // Regenerate entire content
-                    const newContent =
+                    const newContent = carryOverForeignProperties(
+                        content,
                         this.noteFormatter.generateMarkdownContent(
                             standardConversation
-                        );
+                        ),
+                        resolveCustomIdProperty(
+                            this.plugin.settings.customIdProperty
+                        )
+                    );
                     await this.fileService.writeToFile(filePath, newContent);
 
                     // Recreated, not updated: the note that was there is
@@ -725,6 +774,26 @@ export class ConversationProcessor {
                     return;
                 }
 
+                // Stretches the provider asked to rewrite, from a richer
+                // export of the same turns. Applied last to first, so the
+                // offsets the plan carries stay valid, and before anything
+                // else edits the note for the same reason.
+                if (mergePlan && mergePlan.rewrites.length > 0) {
+                    for (const rewrite of [...mergePlan.rewrites].sort(
+                        (a, b) => b.start - a.start
+                    )) {
+                        const rewritten =
+                            await this.longContentExtractor.extract(
+                                rewrite.messages,
+                                standardConversation
+                            );
+                        content =
+                            content.slice(0, rewrite.start) +
+                            this.messageFormatter.formatMessages(rewritten) +
+                            content.slice(rewrite.end);
+                    }
+                }
+
                 // The archive is newer than the note — that is the only way
                 // this path runs — so the note's stamp follows it even when no
                 // message came with it. Providers move update_time for things
@@ -734,7 +803,8 @@ export class ConversationProcessor {
                 content = this.updateMetadata(
                     content,
                     chatUpdateTime,
-                    standardConversation
+                    standardConversation,
+                    !!adapter.reconcileNoteMessages
                 );
 
                 // Unified update logic - append only what the note lacks
@@ -765,21 +835,28 @@ export class ConversationProcessor {
                     attachmentStats =
                         this.calculateAttachmentStats(processedNewMessages);
 
-                    content +=
-                        "\n\n" +
+                    content = this.appendMessagesToNote(
+                        content,
                         this.messageFormatter.formatMessages(
                             processedNewMessages
-                        );
-                    content = this.updateRelatedQueriesSection(
-                        content,
-                        standardConversation
+                        )
                     );
-                    this.counters.totalConversationsActuallyUpdated++;
                     this.counters.totalNonEmptyMessagesAdded +=
                         newMessages.length;
                 }
 
+                // Also after a rewrite that added no message: the export that
+                // brings a turn its sources brings the thread's follow-up
+                // questions with them.
                 if (content !== originalContent) {
+                    content = this.updateRelatedQueriesSection(
+                        content,
+                        standardConversation
+                    );
+                }
+
+                if (content !== originalContent) {
+                    this.counters.totalConversationsActuallyUpdated++;
                     await this.fileService.writeToFile(filePath, content);
 
                     importReport.addUpdated(
@@ -1041,32 +1118,75 @@ export class ConversationProcessor {
     private updateMetadata(
         content: string,
         updateTime: number,
-        conversation?: StandardConversation
+        conversation?: StandardConversation,
+        forwardOnly = false
     ): string {
         // Use ISO 8601 format for frontmatter (consistent with create_time)
         const updateTimeStr = new Date(updateTime * 1000).toISOString();
-        content = content.replace(
-            /^update_time: .*$/m,
-            `update_time: ${updateTimeStr}`
-        );
+        // A note reached by an older archive — only providers reconciling by
+        // content are — keeps its stamp: dating it back would offer it as
+        // "Updated" at every later import of the newer export.
+        if (!forwardOnly || !this.noteIsNewerThan(content, updateTime)) {
+            content = content.replace(
+                /^update_time: .*$/m,
+                `update_time: ${updateTimeStr}`
+            );
 
-        // Note: "Last Updated" field is not used in current note format, but kept for backward compatibility
-        content = content.replace(
-            /^Last Updated: .*$/m,
-            `Last Updated: ${updateTimeStr}`
-        );
+            // The header line a reader sees, in the same readable form the
+            // note was created with — it used to be overwritten with the raw
+            // ISO stamp that belongs in the frontmatter, on every update. It
+            // follows the stamp, or the two would disagree.
+            content = content.replace(
+                /^Last Updated: .*$/m,
+                `Last Updated: ${formatTimestamp(
+                    updateTime,
+                    "date"
+                )} at ${formatTimestamp(updateTime, "time")}`
+            );
+        }
+
+        content = this.ensureCustomIdProperty(content);
 
         if (!conversation) {
             return content;
         }
 
-        const mode =
-            typeof conversation.metadata?.mode === "string"
-                ? conversation.metadata.mode.trim()
-                : "";
         const models = this.collectConversationModels(conversation);
 
-        return this.updateFrontmatterModeAndModels(content, mode, models);
+        return this.updateFrontmatterModels(content, models);
+    }
+
+    private noteIsNewerThan(content: string, updateTime: number): boolean {
+        const stamp = /^update_time: (.*)$/m.exec(content)?.[1]?.trim();
+        if (!stamp) return false;
+        const noteTime = new Date(stamp).getTime();
+        return Number.isFinite(noteTime) && noteTime > updateTime * 1000;
+    }
+
+    /**
+     * Give an updated note the custom ID property, as a new note gets it.
+     * A note the property cannot be written to is still updated.
+     */
+    private ensureCustomIdProperty(content: string): string {
+        const key = resolveCustomIdProperty(
+            this.plugin.settings.customIdProperty
+        );
+        if (!key) {
+            return content;
+        }
+        try {
+            return setCustomIdProperty(
+                content,
+                key,
+                this.plugin.settings.customIdPropertyOverwrite
+            ).content;
+        } catch (error: unknown) {
+            this.plugin.logger.warn(
+                "Custom ID property not written on update",
+                { property: key, message: getErrorMessage(error) }
+            );
+            return content;
+        }
     }
 
     private collectConversationModels(
@@ -1095,40 +1215,43 @@ export class ConversationProcessor {
         return models;
     }
 
-    private updateFrontmatterModeAndModels(
-        content: string,
-        mode: string,
-        models: string[]
-    ): string {
+    private updateFrontmatterModels(content: string, models: string[]): string {
         const frontmatterMatch = content.match(/^---\n[\s\S]*?\n---/);
         if (!frontmatterMatch) {
             return content;
         }
 
+        // An export that names no model says nothing about them: the note
+        // keeps what an earlier, richer export wrote.
         let frontmatter = frontmatterMatch[0];
-        frontmatter = frontmatter
-            .replace(/^mode: .*$/m, "")
-            .replace(/\n{3,}/g, "\n\n");
-        frontmatter = frontmatter
-            .replace(/^models:\n(?:\s+- .*\n?)*/m, "")
-            .replace(/\n{3,}/g, "\n\n");
+        if (models.length > 0) {
+            frontmatter = frontmatter
+                .replace(frontmatterListPattern("models"), "")
+                .replace(/\n{3,}/g, "\n\n");
+        }
 
-        const modeLine = mode ? `mode: "${mode.replace(/"/g, '\\"')}"\n` : "";
-        const modelsBlock =
-            models.length > 0
-                ? `models:\n${models
-                      .map((model) => `  - "${model.replace(/"/g, '\\"')}"`)
-                      .join("\n")}\n`
-                : "";
+        const modelsBlock = yamlListBlock("models", models);
 
-        if (modeLine || modelsBlock) {
-            frontmatter = frontmatter.replace(
-                /\n---$/,
-                `\n${modeLine}${modelsBlock}---`
-            );
+        if (modelsBlock) {
+            frontmatter = frontmatter.replace(/\n---$/, `\n${modelsBlock}---`);
         }
 
         return content.replace(frontmatterMatch[0], frontmatter);
+    }
+
+    /**
+     * New messages go after the last message, which is before a closing
+     * Related Queries section when the note has one: that section is rewritten
+     * from its heading to the end of the note, and would take them with it.
+     */
+    private appendMessagesToNote(content: string, messages: string): string {
+        const relatedQueries = /\n+## Related Queries\n[\s\S]*$/.exec(content);
+        if (!relatedQueries) {
+            return `${content}\n\n${messages}`;
+        }
+
+        const before = content.slice(0, relatedQueries.index);
+        return `${before}\n\n${messages}${relatedQueries[0]}`;
     }
 
     private updateRelatedQueriesSection(

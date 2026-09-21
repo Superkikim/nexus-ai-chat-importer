@@ -369,3 +369,153 @@ describe("resolveArchiveClassification", () => {
         expect(memories.supported).toBe(false);
     });
 });
+
+describe("Grok archives", () => {
+    const GROK_PATH = "ttl/30d/export_data/u1/prod-grok-backend.json";
+    const grokPayload = {
+        conversations: [
+            { conversation: { id: "c1" }, responses: [] },
+            { conversation: { id: "c2" }, responses: [] },
+        ],
+        projects: [],
+        tasks: [],
+        media_posts: [{ id: "p1", original_prompt: "a cat" }],
+    };
+
+    function grokReader(payload: unknown = grokPayload): MemoryZipReader {
+        return new MemoryZipReader({
+            [GROK_PATH]: JSON.stringify(payload),
+            "ttl/30d/export_data/u1/prod-mc-asset-server//a1/content": "x",
+        });
+    }
+
+    function idOf(item: unknown): string {
+        const record = item as {
+            id?: string;
+            conversation?: { id: string };
+        };
+        return record.conversation?.id ?? record.id ?? "";
+    }
+
+    it("is recognized by its nested backend JSON", () => {
+        expect(
+            classifyArchiveEntries([
+                GROK_PATH,
+                "ttl/30d/export_data/u1/prod-mc-billing.json",
+            ])
+        ).toEqual({ supported: true, provider: "grok", reason: "supported" });
+    });
+
+    it("is recognized whatever folders it sits in", () => {
+        // The nesting carries a retention window that varies between exports.
+        for (const path of [
+            "prod-grok-backend.json",
+            "ttl/7d/export_data/u1/prod-grok-backend.json",
+            "ttl/90d/export_data/whatever/deeper/prod-grok-backend.json",
+        ]) {
+            expect(classifyArchiveEntries([path])).toEqual({
+                supported: true,
+                provider: "grok",
+                reason: "supported",
+            });
+        }
+    });
+
+    it("reads the payload from a differently nested archive", async () => {
+        const reader = new MemoryZipReader({
+            "ttl/7d/export_data/u9/prod-grok-backend.json":
+                JSON.stringify(grokPayload),
+        });
+
+        const result = await extractRawConversations(reader);
+
+        expect(result.conversations.map(idOf)).toEqual(["c1", "c2", "p1"]);
+    });
+
+    it("is refused, by name, when another provider was expected", () => {
+        const result = classifyArchiveEntries([GROK_PATH], "claude");
+        expect(result.supported).toBe(false);
+        expect(result.reason).toBe("provider-mismatch");
+    });
+
+    it("extracts conversations, then Imagine posts", async () => {
+        const result = await extractRawConversations(grokReader());
+
+        expect(result.conversations.map(idOf)).toEqual(["c1", "c2", "p1"]);
+    });
+
+    it("streams conversations, then Imagine posts", async () => {
+        const ids: string[] = [];
+        for await (const item of extractConversationsStream(grokReader())) {
+            ids.push(idOf(item));
+        }
+
+        expect(ids).toEqual(["c1", "c2", "p1"]);
+    });
+
+    it("accepts a payload without Imagine posts", async () => {
+        const withoutPosts = { ...grokPayload, media_posts: undefined };
+        const result = await extractRawConversations(grokReader(withoutPosts));
+
+        expect(result.conversations.map(idOf)).toEqual(["c1", "c2"]);
+    });
+});
+
+describe("Perplexity data export archives", () => {
+    const CONVERSATIONS_FILE = "conversations-20250301_080000-0a1b2c3d.json";
+    const payload = {
+        conversations: [
+            { context_uuid: "ctx-1", entries: [] },
+            { context_uuid: "ctx-2", entries: [] },
+        ],
+    };
+
+    function officialReader(): MemoryZipReader {
+        return new MemoryZipReader({
+            "user-data-20250301_080000-0a1b2c3d.xlsx": "not read",
+            [CONVERSATIONS_FILE]: JSON.stringify(payload),
+        });
+    }
+
+    function idOf(item: unknown): string {
+        return (item as { context_uuid: string }).context_uuid;
+    }
+
+    it("is recognized as Perplexity, detected or chosen", () => {
+        const names = [
+            "user-data-20250301_080000-0a1b2c3d.xlsx",
+            CONVERSATIONS_FILE,
+        ];
+        const supported = {
+            supported: true,
+            provider: "perplexity",
+            reason: "supported",
+        };
+
+        expect(classifyArchiveEntries(names)).toEqual(supported);
+        expect(classifyArchiveEntries(names, "perplexity")).toEqual(supported);
+    });
+
+    it("leaves ChatGPT's numbered conversation files to ChatGPT", () => {
+        expect(classifyArchiveEntries(["conversations-000.json"])).toEqual({
+            supported: true,
+            provider: "chatgpt",
+            reason: "supported",
+        });
+    });
+
+    it("extracts each conversation of the export", async () => {
+        const result = await extractRawConversations(officialReader());
+
+        expect(result.conversations.map(idOf)).toEqual(["ctx-1", "ctx-2"]);
+    });
+
+    it("streams each conversation of the export", async () => {
+        const ids: string[] = [];
+        for await (const item of extractConversationsStream(officialReader())) {
+            ids.push(idOf(item));
+        }
+
+        expect(ids).toEqual(["ctx-1", "ctx-2"]);
+    });
+});

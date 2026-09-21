@@ -281,8 +281,11 @@ export class LongContentExtractor {
         if (payload.length > INLINE_BLOCK_MAX_BYTES) {
             const path = await this.write(payload, folder);
             if (path) {
+                // Nothing to read once the body is a link: an open callout
+                // says so, where a fold would hide only a link.
+                const opened = header?.replace("]-", "]") ?? null;
                 return {
-                    content: [header, ">>", `>> [[${path}]]`]
+                    content: [opened, ">>", `>> [[${path}]]`]
                         .filter((line): line is string => line !== null)
                         .join("\n"),
                     path,
@@ -291,6 +294,22 @@ export class LongContentExtractor {
         }
 
         const rewritten = await this.rewrite(content, folder, ">> ");
+        // A single giant line leaves the callout holding only its link.
+        const rest = rewritten.content
+            .split("\n")
+            .slice(header ? 1 : 0)
+            .filter((line) => line.replace(/^>+\s*/, "") !== "");
+        if (
+            header &&
+            rewritten.path &&
+            rest.length === 1 &&
+            rest[0] === `>> [[${rewritten.path}]]`
+        ) {
+            return {
+                content: rewritten.content.replace("]-", "]"),
+                path: rewritten.path,
+            };
+        }
         return { content: rewritten.content, path: rewritten.path };
     }
 
@@ -326,7 +345,7 @@ export class LongContentExtractor {
                 // replaces the body, the header above it stays.
                 out.push(`${prefix}[[${path}]]`);
             } else {
-                // In the middle of a message: a collapsed callout keeps the
+                // In the middle of a message: a callout keeps the
                 // content's place in the sentence instead of sending it to
                 // the bottom with the attachments.
                 out.push(...this.calloutFor(path));
@@ -337,15 +356,17 @@ export class LongContentExtractor {
     }
 
     /**
-     * The collapsed callout that stands in for a line moved out of a message.
+     * The callout that stands in for a line moved out of a message.
      * Written unprefixed: the formatter quotes every content line, turning
-     * this into the nested callout the note's attachments already use.
+     * this into the nested callout the note's attachments already use. It is
+     * not collapsed: its body is only a link, so a fold would hide nothing
+     * worth unfolding.
      */
     private calloutFor(path: string): string[] {
         const name = path.slice(path.lastIndexOf("/") + 1);
         const kind = name.slice(name.lastIndexOf(".") + 1);
         return [
-            `>[!nexus_attachment]- **${name}** (${kind})`,
+            `>[!nexus_attachment] **${name}** (${kind})`,
             ">",
             `> [[${path}]]`,
         ];

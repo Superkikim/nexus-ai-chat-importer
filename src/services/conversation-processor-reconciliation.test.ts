@@ -39,7 +39,10 @@ type ProcessorUnderTest = Record<string, unknown> & {
     updateExistingNote: (...args: unknown[]) => Promise<void>;
 };
 
-function createProcessor(noteContent: string) {
+function createProcessor(
+    noteContent: string,
+    settings: Record<string, unknown> = {}
+) {
     const logger = createLogger();
     const writeToFile = vi.fn(async (_path: string, _content: string) => {});
     const file = new TFile();
@@ -47,7 +50,7 @@ function createProcessor(noteContent: string) {
     const plugin: Record<string, unknown> = {
         logger,
         manifest: { id: "nexus-ai-chat-importer", version: "1.7.0" },
-        settings: { conversationFolder: "Nexus/Conversations" },
+        settings: { conversationFolder: "Nexus/Conversations", ...settings },
         app: {
             vault: {
                 getAbstractFileByPath: vi.fn(() => file),
@@ -242,6 +245,37 @@ describe("ConversationProcessor reconciliation", () => {
      * every later import offered it as "Updated" again and did nothing about
      * it — a promise that could never resolve.
      */
+    it("keeps the header's Last Updated line readable", async () => {
+        const { processor, writeToFile } = createProcessor(
+            [
+                "---",
+                "update_time: 2020-01-01T00:00:00.000Z",
+                "---",
+                "Last Updated: 01/01/2020 at 1:00:00 AM",
+                "<!-- UID: m1 -->",
+                "<!-- UID: m2 -->",
+            ].join("\n")
+        );
+        const { adapter } = adapterAddingSyntheticMessage();
+        const importReport = new ImportReport();
+        importReport.startFileSection("chatgpt_export.zip");
+
+        await processor.updateExistingNote(
+            adapter,
+            conversationOf([...EXISTING_MESSAGES]),
+            "note.md",
+            2,
+            importReport,
+            ZIP,
+            false,
+            true
+        );
+
+        const written = writeToFile.mock.calls[0][1];
+        expect(written).toContain("Last Updated: ");
+        expect(written).not.toMatch(/^Last Updated: \d{4}-\d{2}-\d{2}T/m);
+    });
+
     it("closes the loop when only the stamp moved", async () => {
         const { processor, writeToFile } = createProcessor(
             noteWith(["m1", "m2"])
@@ -343,5 +377,358 @@ describe("ConversationProcessor reconciliation", () => {
         expect(logger.warn).toHaveBeenCalled();
         expect(writeToFile).toHaveBeenCalledTimes(1);
         expect(writeToFile.mock.calls[0][1]).toContain("<!-- UID: m2 -->");
+    });
+
+    describe("custom ID property on update", () => {
+        const stampOnly = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            convertChat: vi.fn(),
+            getProviderName: () => "chatgpt",
+            processMessageAttachments: vi.fn(),
+        };
+
+        async function update(note: string, settings: Record<string, unknown>) {
+            const { processor, writeToFile, logger } = createProcessor(
+                note,
+                settings
+            );
+            const importReport = new ImportReport();
+            importReport.startFileSection("chatgpt_export.zip");
+            await processor.updateExistingNote(
+                stampOnly,
+                conversationOf([...EXISTING_MESSAGES]),
+                "note.md",
+                2,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return { written: writeToFile.mock.calls[0][1], logger };
+        }
+
+        const withId = (...extra: string[]) =>
+            [
+                "---",
+                "conversation_id: thread-1",
+                ...extra,
+                "update_time: 2026-01-01T00:00:00.000Z",
+                "---",
+                "<!-- UID: m1 -->",
+                "<!-- UID: m2 -->",
+            ].join("\n");
+
+        it("adds the property to a note that lacks it", async () => {
+            const { written } = await update(withId(), {
+                customIdProperty: "uid",
+            });
+            expect(written).toContain(
+                "conversation_id: thread-1\nuid: thread-1\n"
+            );
+        });
+
+        it("follows the overwrite toggle for an existing value", async () => {
+            const kept = await update(withId("uid: mine"), {
+                customIdProperty: "uid",
+                customIdPropertyOverwrite: false,
+            });
+            expect(kept.written).toContain("uid: mine\n");
+
+            const replaced = await update(withId("uid: mine"), {
+                customIdProperty: "uid",
+                customIdPropertyOverwrite: true,
+            });
+            expect(replaced.written).toContain("uid: thread-1\n");
+            expect(replaced.written).not.toContain("uid: mine");
+        });
+
+        it("still updates a note the property cannot be written to", async () => {
+            const { written, logger } = await update(noteWith(["m1", "m2"]), {
+                customIdProperty: "uid",
+            });
+            expect(written).not.toContain("uid:");
+            expect(logger.warn).toHaveBeenCalled();
+        });
+
+        it("writes nothing when the feature is off", async () => {
+            const { written } = await update(withId(), {});
+            expect(written).not.toContain("uid:");
+        });
+    });
+    describe("models on update", () => {
+        const stampOnly = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            convertChat: vi.fn(),
+            getProviderName: () => "perplexity",
+            processMessageAttachments: vi.fn(),
+        };
+
+        // A note an earlier import wrote, `mode:` line included: a version
+        // that wrote one is out there, and an update must leave it be.
+        const note = [
+            "---",
+            "update_time: 2026-01-01T00:00:00.000Z",
+            'mode: "COPILOT"',
+            "models:",
+            '  - "sonar"',
+            "---",
+            "<!-- UID: m1 -->",
+            "<!-- UID: m2 -->",
+        ].join("\n");
+
+        async function update(metadata: Record<string, unknown>) {
+            const { processor, writeToFile } = createProcessor(note);
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+            await processor.updateExistingNote(
+                stampOnly,
+                { ...conversationOf([...EXISTING_MESSAGES]), metadata },
+                "note.md",
+                2,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return writeToFile.mock.calls[0][1];
+        }
+
+        it("keeps them when the export names none", async () => {
+            const written = await update({});
+
+            expect(written).toContain('models:\n  - "sonar"');
+        });
+
+        it("replaces them when the export names some", async () => {
+            const written = await update({ models: ["turbo"] });
+
+            expect(written).toContain('models:\n  - "turbo"');
+            expect(written).not.toContain('- "sonar"');
+        });
+
+        it("leaves a mode line an earlier import wrote", async () => {
+            const written = await update({ models: ["turbo"] });
+
+            expect(written).toContain('mode: "COPILOT"');
+        });
+    });
+    describe("new messages in a note with Related Queries", () => {
+        const note = [
+            "---",
+            "update_time: 2026-01-01T00:00:00.000Z",
+            "---",
+            "<!-- UID: m1 -->",
+            "<!-- UID: m2 -->",
+            "",
+            "## Related Queries",
+            "- Old follow-up",
+        ].join("\n");
+
+        const adapter = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            convertChat: vi.fn(),
+            getProviderName: () => "perplexity",
+            processMessageAttachments: vi.fn(
+                async (messages: StandardMessage[]) => messages
+            ),
+        };
+
+        async function update(relatedQueries: string[]) {
+            const { processor, writeToFile } = createProcessor(note);
+            processor.longContentExtractorInstance = {
+                extract: vi.fn(async (messages: StandardMessage[]) => messages),
+            };
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+            await processor.updateExistingNote(
+                adapter,
+                {
+                    ...conversationOf([
+                        ...EXISTING_MESSAGES,
+                        {
+                            id: "m3",
+                            role: "user",
+                            content: "One more",
+                            timestamp: 1002,
+                        },
+                    ]),
+                    metadata: { related_queries: relatedQueries },
+                },
+                "note.md",
+                3,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return writeToFile.mock.calls[0][1];
+        }
+
+        it("keeps them when the export refreshes the section", async () => {
+            const written = await update(["New follow-up"]);
+
+            expect(written).toContain("<!-- UID: m3 -->");
+            expect(written.indexOf("<!-- UID: m3 -->")).toBeLessThan(
+                written.indexOf("## Related Queries")
+            );
+            expect(written).toContain("- New follow-up");
+            expect(written.match(/## Related Queries/g)).toHaveLength(1);
+        });
+
+        it("places them before the section when the export has none", async () => {
+            const written = await update([]);
+
+            expect(written.indexOf("<!-- UID: m3 -->")).toBeLessThan(
+                written.indexOf("## Related Queries")
+            );
+            expect(written).toContain("- Old follow-up");
+        });
+    });
+    describe("a provider that reconciles a note by content", () => {
+        const perplexityAdapter = {
+            getTitle: () => "Test conversation",
+            getCreateTime: () => 1000,
+            getUpdateTime: () => 2000,
+            getProviderName: () => "perplexity",
+            convertChat: vi.fn(),
+            reconcileNoteMessages: vi.fn(),
+        };
+
+        const note = [
+            "---",
+            "update_time: 2026-01-01T00:00:00.000Z",
+            "---",
+            ">[!nexus_agent] **Assistant** - 01.01.2026 00:00:00",
+            "> A plain answer",
+            "<!-- UID: official-1 -->",
+        ].join("\n");
+
+        async function update(plan: unknown) {
+            perplexityAdapter.reconcileNoteMessages = vi.fn(() => plan);
+            const { processor, writeToFile } = createProcessor(note);
+            processor.longContentExtractorInstance = {
+                extract: vi.fn(async (messages: StandardMessage[]) => messages),
+            };
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+            await processor.updateExistingNote(
+                perplexityAdapter,
+                conversationOf([
+                    {
+                        id: "extension-1",
+                        role: "assistant",
+                        content: "A sourced answer",
+                        timestamp: 1001,
+                    },
+                ]),
+                "note.md",
+                1,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+            return { writeToFile, importReport };
+        }
+
+        it("rewrites the stretch of note the plan names", async () => {
+            const { writeToFile, importReport } = await update({
+                append: [],
+                rewrites: [
+                    {
+                        start: note.indexOf(">[!nexus_agent]"),
+                        end: note.length,
+                        messages: [
+                            {
+                                id: "extension-1",
+                                role: "assistant",
+                                content: "A sourced answer",
+                                timestamp: 1001,
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            const written = writeToFile.mock.calls[0][1];
+            expect(written).toContain("<!-- UID: extension-1 -->");
+            expect(written).not.toContain("<!-- UID: official-1 -->");
+            expect(importReport.getUpdatedCount()).toBe(1);
+        });
+
+        it("keeps the header line with the stamp when the archive is older", async () => {
+            perplexityAdapter.reconcileNoteMessages = vi.fn(() => ({
+                append: [],
+                rewrites: [],
+            }));
+            const noteWithHeader = [
+                "---",
+                "update_time: 2026-01-01T00:00:00.000Z",
+                "---",
+                "Last Updated: 01/01/2026 at 1:00:00 AM",
+                ">[!nexus_agent] **Assistant** - 01.01.2026 00:00:00",
+                "> A plain answer",
+                "<!-- UID: official-1 -->",
+            ].join("\n");
+            const { processor, writeToFile } = createProcessor(noteWithHeader);
+            processor.longContentExtractorInstance = {
+                extract: vi.fn(async (messages: StandardMessage[]) => messages),
+            };
+            const importReport = new ImportReport();
+            importReport.startFileSection("perplexity_export.zip");
+
+            await processor.updateExistingNote(
+                perplexityAdapter,
+                conversationOf([...EXISTING_MESSAGES]),
+                "note.md",
+                1,
+                importReport,
+                ZIP,
+                false,
+                true
+            );
+
+            expect(writeToFile).not.toHaveBeenCalled();
+        });
+
+        it("keeps the note's stamp when the archive is older", async () => {
+            const { writeToFile } = await update({
+                append: [],
+                rewrites: [
+                    {
+                        start: note.indexOf(">[!nexus_agent]"),
+                        end: note.length,
+                        messages: [
+                            {
+                                id: "extension-1",
+                                role: "assistant",
+                                content: "A sourced answer",
+                                timestamp: 1001,
+                            },
+                        ],
+                    },
+                ],
+            });
+
+            expect(writeToFile.mock.calls[0][1]).toContain(
+                "update_time: 2026-01-01T00:00:00.000Z"
+            );
+        });
+
+        it("leaves the note alone when the plan is empty", async () => {
+            const { writeToFile, importReport } = await update({
+                append: [],
+                rewrites: [],
+            });
+
+            expect(writeToFile).not.toHaveBeenCalled();
+            expect(importReport.getUpdatedCount()).toBe(0);
+        });
     });
 });

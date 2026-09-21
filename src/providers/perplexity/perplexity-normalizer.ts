@@ -16,10 +16,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
+import { truncateTitlePreview } from "../../utils/title-preview";
 import {
     PerplexityConversationFile,
     PerplexityEntry,
     PerplexityEntryExportFile,
+    PerplexityOfficialConversation,
+    PerplexityOfficialEntry,
     PerplexityRawConversationFile,
     PerplexitySource,
     PerplexityTurn,
@@ -39,7 +42,92 @@ export function normalizePerplexityConversationFile(
         return legacy;
     }
 
+    // Before the extension's entries[] form: both carry an `entries` array,
+    // only Perplexity's own export names the conversation at its root.
+    const official = tryNormalizeOfficialExport(
+        raw as Partial<PerplexityOfficialConversation>
+    );
+    if (official) {
+        return official;
+    }
+
     return tryNormalizeEntriesExport(raw as Partial<PerplexityEntryExportFile>);
+}
+
+function tryNormalizeOfficialExport(
+    raw: Partial<PerplexityOfficialConversation>
+): PerplexityConversationFile | null {
+    const contextUuid = normalizeString(raw.context_uuid);
+    if (!contextUuid || !Array.isArray(raw.entries)) {
+        return null;
+    }
+
+    const turns = raw.entries
+        .map((entry) => normalizeTurnFromOfficialEntry(entry))
+        .filter((turn): turn is PerplexityTurn => turn !== null)
+        .sort(
+            (a, b) =>
+                parseTimestampMs(a.timestamp) - parseTimestampMs(b.timestamp)
+        );
+
+    if (turns.length === 0) {
+        return null;
+    }
+
+    // The export's updated_at can predate its own last entry, which would
+    // leave that entry out of every later update check.
+    const updatedAt = normalizeString(raw.updated_at);
+    const lastTurnAt = turns[turns.length - 1].timestamp;
+    const threadUpdatedAt =
+        parseTimestampMs(lastTurnAt) > parseTimestampMs(updatedAt)
+            ? lastTurnAt
+            : updatedAt || lastTurnAt;
+
+    return {
+        metadata: {
+            thread_id: contextUuid,
+            thread_title: previewTitle(raw.context_title),
+            // Perplexity opens a thread at /search/<first entry's uuid>.
+            thread_url: turns[0].uuid,
+            total_entries: raw.entries.length,
+            thread_created_at:
+                normalizeString(raw.created_at) || turns[0].timestamp,
+            thread_updated_at: threadUpdatedAt,
+        },
+        conversations: turns,
+    };
+}
+
+/**
+ * The official export has no title of its own: `context_title` is the first
+ * question, in full. It is cut to a preview, on one line, like the titles other
+ * providers derive from a message.
+ */
+function previewTitle(value: unknown): string {
+    const oneLine = typeof value === "string" ? value.replace(/\s+/g, " ") : "";
+    return truncateTitlePreview(oneLine);
+}
+
+function normalizeTurnFromOfficialEntry(raw: unknown): PerplexityTurn | null {
+    if (!isRecord(raw)) return null;
+
+    const entry = raw as PerplexityOfficialEntry;
+    const uuid = normalizeString(entry.entry_uuid);
+    if (!uuid) return null;
+
+    const query = normalizeString(entry.query);
+    const answer = normalizeString(entry.answer);
+
+    if (!query && !answer) {
+        return null;
+    }
+
+    return {
+        uuid,
+        query,
+        answer,
+        timestamp: normalizeString(entry.created_at),
+    };
 }
 
 function tryNormalizeLegacy(
@@ -168,7 +256,6 @@ function normalizeTurnFromLegacy(raw: unknown): PerplexityTurn | null {
         query,
         answer,
         model: normalizeString(raw.model),
-        mode: normalizeString(raw.mode),
         timestamp: normalizeString(raw.timestamp),
         language: normalizeString(raw.language),
         related_queries: normalizeRelatedQueries(raw.related_queries),
@@ -202,7 +289,6 @@ function normalizeTurnFromEntry(raw: unknown): PerplexityTurn | null {
         model:
             normalizeString(entry.display_model) ||
             normalizeString(entry.user_selected_model),
-        mode: normalizeString(entry.mode),
         timestamp:
             normalizeString(entry.entry_created_datetime) ||
             normalizeString(entry.entry_updated_datetime) ||

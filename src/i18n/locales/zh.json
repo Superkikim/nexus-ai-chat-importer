@@ -31,36 +31,6 @@
             "phase_error": "❌ 错误"
         }
     },
-    "provider_selection": {
-        "title": "选择存档来源",
-        "providers": {
-            "chatgpt": {
-                "name": "ChatGPT",
-                "description": "OpenAI ChatGPT 对话导出",
-                "file_formats_0": "conversations.json（旧格式）或 conversations-XXX.json 文件"
-            },
-            "claude": {
-                "name": "Claude",
-                "description": "Anthropic Claude 对话导出",
-                "file_formats_0": "conversations.json + users.json",
-                "file_formats_1": "projects.json（可选）"
-            },
-            "vibe": {
-                "name": "Mistral Vibe",
-                "description": "Mistral Vibe（原 Le Chat）对话导出",
-                "file_formats_0": "chat-<uuid>.json 文件"
-            },
-            "perplexity": {
-                "name": "Perplexity",
-                "description": "Perplexity Thread Exporter JSON 存档",
-                "file_formats_0": "perplexity_*.json 文件（metadata + conversations[] | status + entries[]）"
-            }
-        },
-        "buttons": {
-            "select": "选择",
-            "cancel": "取消"
-        }
-    },
     "file_selection": {
         "title": "导入 {{provider}} 对话",
         "import_mode": {
@@ -74,7 +44,7 @@
             "label": "重新处理已有笔记",
             "description": "重建库中已存在的笔记，而不是跳过它们。在插件更新后使用，以应用新功能。",
             "selective_hint": "要重新生成已有笔记，请在下一步中选择它们并勾选「重新生成所选笔记」。",
-            "warning": "这些笔记中的手动修改将会丢失。"
+            "warning": "这些笔记正文中的手动修改将会丢失。您添加的属性会保留。"
         },
         "file_area": {
             "section_title": "选择文件",
@@ -101,7 +71,7 @@
             "status_label": "状态：",
             "show_label": "显示：",
             "rebuild_existing_label": "若所选笔记已存在，则重新生成",
-            "rebuild_help": "关闭时，已有笔记只会补上新消息。开启时，保险库中每个被选中的笔记都会从头重写，手动修改将丢失。"
+            "rebuild_help": "关闭时，已有笔记只会补上新消息。开启时，保险库中每个被选中的笔记都会从头重写，笔记正文的手动修改将丢失。您添加的属性会保留。"
         },
         "status_filter_options": {
             "all": "全部",
@@ -223,7 +193,7 @@
             }
         },
         "display": {
-            "section_title": "📅 日期前缀",
+            "section_title": "📅 日期格式",
             "add_date_prefix": {
                 "name": "为文件名添加日期前缀",
                 "desc": "将创建日期作为前缀添加到对话文件名",
@@ -231,7 +201,6 @@
             }
         },
         "timestamps": {
-            "section_title": "📅 消息日期格式",
             "custom_format": {
                 "name": "自定义消息时间戳格式",
                 "desc": "覆盖消息标题中默认的基于区域设置的时间戳格式。禁用时，时间戳遵循 Obsidian 的语言设置。"
@@ -241,6 +210,64 @@
                 "desc": "选择对话笔记中消息时间戳的格式"
             },
             "preview_label": "预览："
+        },
+        "properties": {
+            "section_title": "🏷️ 属性",
+            "custom_id": {
+                "name": "自定义 ID 属性",
+                "desc": "为 Nexus AI Chat Importer 创建的每条对话笔记添加一个保存对话 ID 的属性。留空则不添加。\n如果你的仓库依赖 `uid` 之类的属性，这会很有用。",
+                "invalid_format": "“{{value}}”不是有效的属性名。请以拉丁字母（A–Z、a–z）或 _ 开头，之后只使用拉丁字母、数字、_ 或 -。",
+                "invalid_reserved": "不能使用“{{value}}”：Obsidian 或 Nexus AI Chat Importer 已在使用同名属性。"
+            },
+            "overwrite": {
+                "name": "覆盖已有值",
+                "desc": "覆盖已有值：如果笔记已有此属性，Nexus AI Chat Importer 会将其值替换为对话 ID。关闭时，该属性保持不变。"
+            },
+            "enable": {
+                "title": "要为现有笔记添加“{{name}}”属性吗？",
+                "body": "Nexus AI Chat Importer 将为 {{count}} 条笔记添加“{{name}}”属性。",
+                "existing_keep": "其中 {{existing}} 条已有“{{name}}”属性：Nexus AI Chat Importer 将保持该属性不变。",
+                "existing_overwrite": "其中 {{existing}} 条已有“{{name}}”属性：Nexus AI Chat Importer 将把该属性的值替换为对话 ID。",
+                "confirm": "添加属性"
+            },
+            "rename": {
+                "title": "要在现有笔记中将“{{oldName}}”属性重命名为“{{newName}}”吗？",
+                "body": "Nexus AI Chat Importer 会在属性值为对话 ID 的笔记中重命名该属性，并为缺少“{{newName}}”的笔记添加它。你自己设置的“{{oldName}}”值保持不变。笔记的其他内容不会改变。",
+                "confirm": "重命名属性"
+            },
+            "clear": {
+                "title": "要从现有笔记中移除“{{name}}”属性吗？",
+                "body_stop": "Nexus AI Chat Importer 将不再添加“{{name}}”属性。",
+                "body_scope": "只影响该属性：不会删除任何笔记。",
+                "remove_plugin": "仅在值为 Nexus AI Chat Importer 生成的 ID 时移除",
+                "recommended": "（推荐）",
+                "remove_all": "从所有笔记中移除，无论值为何",
+                "keep": "在现有笔记中保留",
+                "note": "保留并非永久：重建的笔记会重新生成，不再包含该属性。"
+            },
+            "progress": {
+                "add": "正在添加“{{name}}”属性",
+                "rename": "正在将“{{oldName}}”属性重命名为“{{newName}}”",
+                "remove": "正在移除“{{name}}”属性"
+            },
+            "summary": {
+                "title": "属性更新完成",
+                "context": "“{{name}}”属性 · 已检查 {{count}} 条笔记",
+                "added": "已添加",
+                "overwritten": "已覆盖",
+                "renamed": "已重命名",
+                "removed": "已移除",
+                "skipped": "未更改",
+                "failed": "失败",
+                "failures": "Nexus AI Chat Importer 无法更新以下笔记中的属性。它们的属性保持不变：",
+                "more_failures": "……以及另外 {{count}} 条。完整列表见开发者控制台。",
+                "reasons": {
+                    "no_frontmatter": "没有 frontmatter",
+                    "no_conversation_id": "frontmatter 中没有 conversation_id",
+                    "ambiguous_value": "该属性的值跨越多行，无法安全编辑",
+                    "other": "无法读取或写入"
+                }
+            }
         },
         "attachments": {
             "section_title": "附件设置",
@@ -339,7 +366,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 🐛 修复\n- **超大笔记修复功能现在真正生效** — 1.7.0 的修复是可选的，即使执行了修复，备份文件依然会被 Obsidian 继续索引；现在修复变为强制执行，旧的备份文件也会被重命名\n- **包含 `#`、`^`、`[` 或 `]` 的文件名现在会被修正，而不仅仅是避免** — 这些字符会破坏 wikilink，因此现在会被替换而不是删除，无论是新导入还是已有笔记都适用\n- **升级对话框在未点击按钮关闭时不再卡死**\n- **仅含 CR 换行符的内容**（较旧的 Mac 工具、AppleScript）现在会保留在其标注框和代码块内\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n- **支持 Grok** — 直接导入 Grok 数据导出的 ZIP。对话会保留每一次重新生成的回答，引用会变成指向来源的链接，Imagine 帖子会变成带图片的笔记。\n- **支持 Perplexity 官方导出** — 导入通过 *Export my data* 获得的 ZIP。每段对话都会成为一篇笔记，标题取自其第一个问题的开头。\n- **Perplexity：官方导出与 Thread Exporter 扩展可以配合使用** — 可以将其中一个导入到用另一个创建的笔记上：笔记缺少的内容会被补上，扩展的存档还会补全来源、模型和引用标记，且不会产生重复。\n- **自定义 ID 属性** — 设置 → 属性会为每篇笔记添加一个你指定的属性（例如 `uid`），其值为对话 ID，并更新你现有的笔记。\n- **重建时会保留你添加的属性**，例如 `tags`。对笔记正文的编辑仍然会丢失。\n- **设置现在会出现在 Obsidian 的设置搜索中**（Obsidian 1.13 及以上），布局也更统一。\n- **报告会说明哪些内容被排除，以及原因。**\n- 另外还有修复：Perplexity 的更新不再丢失新消息，孤立的引用标记已消除，完成对话框不再把 Perplexity 的问答计为工件，移到文件中的长内容块也不再被折叠。\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "知道了！"
             }
@@ -484,7 +511,7 @@
         "title": "Nexus AI Chat Importer {{version}}",
         "icon": "🎉",
         "heading": "感谢安装 Nexus AI Chat Importer！",
-        "description": "将你的 ChatGPT、Claude、Mistral Vibe 和 Perplexity 对话直接导入并管理到 Obsidian 仓库中。",
+        "description": "将你的 ChatGPT、Claude、Mistral Vibe、Perplexity 和 Grok 对话直接导入并管理到 Obsidian 仓库中。",
         "resources_title": "资源",
         "resources": {
             "documentation": {
@@ -543,7 +570,8 @@
             "chatgpt": "ChatGPT",
             "claude": "Claude",
             "vibe": "Mistral Vibe",
-            "perplexity": "Perplexity"
+            "perplexity": "Perplexity",
+            "grok": "Grok"
         }
     },
     "commands": {

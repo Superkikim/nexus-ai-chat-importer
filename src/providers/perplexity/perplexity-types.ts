@@ -28,7 +28,6 @@ export interface PerplexityTurn {
     query?: string;
     answer?: string;
     model?: string;
-    mode?: string;
     timestamp?: string;
     language?: string;
     related_queries?: string[];
@@ -75,7 +74,6 @@ export interface PerplexityEntry {
     query_str?: string;
     display_model?: string;
     user_selected_model?: string;
-    mode?: string;
     related_queries?: string[];
     related_query_items?: PerplexityRelatedQueryItem[];
     blocks?: PerplexityEntryBlock[];
@@ -96,6 +94,31 @@ export interface PerplexityEntryExportFile {
     thread_metadata?: PerplexityEntryThreadMetadata;
 }
 
+/** One question and its answer in Perplexity's own data export. */
+export interface PerplexityOfficialEntry {
+    entry_uuid?: string;
+    query?: string;
+    answer?: string;
+    created_at?: string;
+    label?: string | null;
+    query_status?: string | null;
+    engine_mode?: string | null;
+}
+
+/**
+ * One conversation in Perplexity's own data export ("Export my data"):
+ * `conversations-<date>_<time>-<hash>.json` holds `{ conversations: [...] }`.
+ */
+export interface PerplexityOfficialConversation {
+    context_uuid?: string;
+    context_title?: string;
+    created_at?: string;
+    updated_at?: string;
+    collection_uuid?: string | null;
+    entries?: PerplexityOfficialEntry[];
+}
+
 export type PerplexityRawConversationFile =
     | PerplexityConversationFile
-    | PerplexityEntryExportFile;
+    | PerplexityEntryExportFile
+    | PerplexityOfficialConversation;

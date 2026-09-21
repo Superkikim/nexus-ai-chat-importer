@@ -226,7 +226,6 @@
 /* Global modal sizing for all plugin modals */
 .modal.nexus-installation-welcome-dialog,
 .modal.nexus-upgrade-complete-modal,
-.modal.nexus-provider-selection-dialog,
 .modal.nexus-file-selection-dialog,
 .modal.nexus-conversation-selection-dialog {
     width: 800px;
@@ -493,8 +492,12 @@
    ======================================== */
 
 /* Support Section Styling */
-.nexus-support-section {
-    margin: 2em 0;
+.nexus-support-banner {
+    display: block;
+    margin: 1em 0;
+    padding: 0;
+    border: none;
+    background: none;
 }
 
 .nexus-support-hero {
@@ -577,7 +580,7 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.nexus-support-section .setting-item {
+.nexus-support-resources {
     border-bottom: none;
     padding-top: 0.8em;
     padding-bottom: 0.8em;
@@ -585,12 +588,12 @@
     gap: 8px;
 }
 
-.nexus-support-section .setting-item .setting-item-control {
+.nexus-support-resources .setting-item-control {
     flex-wrap: wrap;
     gap: 8px;
 }
 
-.nexus-support-section .setting-item .setting-item-control button {
+.nexus-support-resources .setting-item-control button {
     flex: 1 1 auto;
     min-width: fit-content;
 }
@@ -600,17 +603,6 @@
     margin: 2em 0;
     border: none;
     border-top: 1px solid var(--background-modifier-border);
-}
-
-/* Date prefix section */
-.nexus-date-prefix-section .setting-item {
-    display: flex;
-    align-items: center;
-}
-
-/* Message date section */
-.nexus-message-date-section {
-    margin-top: 1em;
 }
 
 /* Timestamp preview styling */
@@ -806,7 +798,6 @@
 
 .modal.nexus-installation-welcome-dialog,
 .modal.nexus-upgrade-complete-modal,
-.modal.nexus-provider-selection-dialog,
 .modal.nexus-file-selection-dialog,
 .modal.nexus-conversation-selection-dialog,
 .modal.nexus-import-completion-dialog {
@@ -1175,7 +1166,6 @@
 
     .modal.nexus-installation-welcome-dialog,
     .modal.nexus-upgrade-complete-modal,
-    .modal.nexus-provider-selection-dialog,
     .modal.nexus-file-selection-dialog,
     .modal.nexus-conversation-selection-dialog,
     .modal.nexus-import-completion-dialog {
@@ -1231,7 +1221,6 @@
 
 body.is-mobile .modal.nexus-installation-welcome-dialog,
 body.is-mobile .modal.nexus-upgrade-complete-modal,
-body.is-mobile .modal.nexus-provider-selection-dialog,
 body.is-mobile .modal.nexus-file-selection-dialog,
 body.is-mobile .modal.nexus-conversation-selection-dialog,
 body.is-mobile .modal.nexus-import-completion-dialog {
@@ -1262,25 +1251,13 @@ body.is-mobile .nexus-file-list-item {
     align-items: stretch;
 }
 
-body.is-mobile .nexus-date-prefix-section .setting-item {
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-body.is-mobile .nexus-date-prefix-section .setting-item .setting-item-control {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
-body.is-mobile .nexus-support-section .setting-item .setting-item-control {
+body.is-mobile .nexus-support-resources .setting-item-control {
     width: 100%;
     flex-wrap: wrap;
     gap: 8px;
 }
 
-body.is-mobile .nexus-support-section .setting-item .setting-item-control button {
+body.is-mobile .nexus-support-resources .setting-item-control button {
     flex: 1 1 auto;
     min-width: fit-content;
 }
@@ -1730,14 +1707,16 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 /* The dialog shows only the outcomes that happened, so the count varies from
    one to five: a fixed three-column grid would strand a lone card in a corner.
    They centre and wrap instead. */
-.nexus-import-completion-dialog .nexus-stats-grid {
+.nexus-import-completion-dialog .nexus-stats-grid,
+.nexus-custom-id-dialog .nexus-stats-grid {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     gap: 12px;
 }
 
-.nexus-import-completion-dialog .nexus-stat-card {
+.nexus-import-completion-dialog .nexus-stat-card,
+.nexus-custom-id-dialog .nexus-stat-card {
     flex: 0 1 140px;
     text-align: center;
     padding: 12px;
@@ -1746,18 +1725,21 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.nexus-import-completion-dialog .nexus-stat-card-icon {
+.nexus-import-completion-dialog .nexus-stat-card-icon,
+.nexus-custom-id-dialog .nexus-stat-card-icon {
     font-size: 1.5em;
     margin-bottom: 4px;
 }
 
-.nexus-import-completion-dialog .nexus-stat-card-value {
+.nexus-import-completion-dialog .nexus-stat-card-value,
+.nexus-custom-id-dialog .nexus-stat-card-value {
     font-weight: 600;
     font-size: 1.4em;
     margin-bottom: 4px;
 }
 
-.nexus-import-completion-dialog .nexus-stat-card-label {
+.nexus-import-completion-dialog .nexus-stat-card-label,
+.nexus-custom-id-dialog .nexus-stat-card-label {
     font-size: 0.85em;
     color: var(--text-muted);
 }
@@ -1836,13 +1818,15 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
         padding: 14px 14px 18px 14px;
     }
 
-    .nexus-import-completion-dialog .nexus-stat-card {
+    .nexus-import-completion-dialog .nexus-stat-card,
+.nexus-custom-id-dialog .nexus-stat-card {
         flex: 1 1 120px;
     }
 }
 
 @media (max-width: 480px) {
-    .nexus-import-completion-dialog .nexus-stat-card {
+    .nexus-import-completion-dialog .nexus-stat-card,
+.nexus-custom-id-dialog .nexus-stat-card {
         flex: 1 1 100%;
     }
 }
@@ -2565,4 +2549,110 @@ body.is-mobile .nexus-support-section .setting-item .setting-item-control button
 /* Folder migration dialog — enhanced folder-migration-dialog */
 .nexus-folder-migration-desc {
     margin-bottom: 20px;
+}
+
+/* Custom ID property setting and dialogs (issue #86). The dialogs reuse the
+   folder migration dialog's parts and the import completion stat cards. */
+.nexus-setting-warning {
+    margin-top: -6px;
+    margin-bottom: 12px;
+    font-size: 0.85em;
+    line-height: 1.4;
+    color: var(--text-warning, var(--text-muted));
+    font-weight: 500;
+}
+
+.nexus-custom-id-dialog .nexus-migration-paths {
+    text-align: center;
+}
+
+.nexus-custom-id-dialog .nexus-migration-buttons {
+    margin-top: 1.5em;
+}
+
+.nexus-custom-id-dialog .nexus-custom-id-choices {
+    flex-direction: column;
+}
+
+.nexus-custom-id-dialog .nexus-custom-id-choices button {
+    flex: none;
+    height: auto;
+    white-space: normal;
+}
+
+.nexus-custom-id-dialog .nexus-custom-id-footnote {
+    margin: 1em 0 0;
+    text-align: center;
+}
+
+.nexus-custom-id-dialog .nexus-custom-id-context {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 0.85em;
+    color: var(--text-muted);
+}
+
+.nexus-custom-id-dialog .nexus-merge-errors li {
+    overflow-wrap: anywhere;
+}
+
+/* Settings laid out by setFullWidthDescription(): name and controls on the
+   first row, then the description (and any preview or warning) on
+   full-width rows of their own. */
+.nexus-setting-full-width-desc {
+    flex-wrap: wrap;
+    align-items: center;
+    /* row gap, column gap */
+    gap: 4px 16px;
+}
+
+.nexus-setting-full-width-desc .setting-item-info {
+    flex: 0 0 auto;
+    margin-inline-end: 0;
+}
+
+/* Controls sit right after the name and wrap under it when room runs out. */
+.nexus-setting-full-width-desc .setting-item-control {
+    flex: 1 1 auto;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+/* A control and its label (switch + label, label + dropdown) wrap as one. */
+.nexus-control-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+}
+
+/* A hidden control group (the date format while the prefix is off). */
+.nexus-control-group.nexus-hidden {
+    display: none;
+}
+
+.nexus-control-label {
+    font-size: var(--font-ui-small);
+    color: var(--text-muted);
+}
+
+.nexus-control-label-clickable {
+    cursor: pointer;
+}
+
+.nexus-setting-full-width-desc .nexus-setting-desc-row {
+    flex: 0 0 100%;
+    margin: 0;
+}
+
+
+.nexus-custom-id-setting .setting-item-control input[type="text"] {
+    flex: 1 1 10em;
+    min-width: 8em;
+}
+
+.nexus-custom-id-setting .nexus-setting-warning {
+    flex: 0 0 100%;
+    margin: 8px 0 0;
 }

@@ -17,7 +17,10 @@
  */
 
 import { Platform } from "obsidian";
-import { ProviderRegistry } from "../providers/provider-adapter";
+import {
+    DEFAULT_ITEM_CATEGORY,
+    ProviderRegistry,
+} from "../providers/provider-adapter";
 import { Chat, ChatMessage } from "../providers/chatgpt/chatgpt-types";
 import {
     ClaudeConversation,
@@ -72,6 +75,30 @@ export interface AnalysisInfo {
     conversationsDroppedUnchanged: number;
     /** The subset of the above pulled back in because a rebuild was requested. */
     conversationsReprocessed: number;
+    /**
+     * Items the provider declines to import, by category and reason. They
+     * are part of `totalConversationsFound` and of nothing after it.
+     */
+    exclusions?: ExclusionCount[];
+    /**
+     * The same numbers split by item category, for exports that mix several
+     * kinds of item. Absent or single-keyed for every other provider.
+     */
+    categories?: Record<string, CategoryAnalysis>;
+}
+
+export interface ExclusionCount {
+    category: string;
+    reason: string;
+    count: number;
+}
+
+export interface CategoryAnalysis {
+    found: number;
+    excluded: number;
+    duplicates: number;
+    kept: number;
+    droppedUnchanged: number;
 }
 
 export interface ConversationMetadata {
@@ -88,6 +115,10 @@ export interface ConversationMetadata {
     existenceStatus?: ConversationExistenceStatus;
     existingUpdateTime?: number;
     hasNewerContent?: boolean;
+    /** Report category; DEFAULT_ITEM_CATEGORY when absent. */
+    category?: string;
+    /** Set when the provider declines to import this item. */
+    exclusionReason?: string;
 }
 
 export interface FileAnalysisStats {
@@ -262,6 +293,7 @@ export class ConversationMetadataExtractor {
         const conversationToFileMap = new Map<string, string>();
         const supportedFiles: File[] = [];
         const ignoredArchives: IgnoredArchiveInfo[] = [];
+        const excluded: ConversationMetadata[] = [];
 
         const adapter = forcedProvider
             ? this.providerRegistry.getAdapter(forcedProvider)
@@ -339,6 +371,15 @@ export class ConversationMetadataExtractor {
                 supportedFiles.push(file);
                 allConversationsFound.push(...metadata);
 
+                const importable: ConversationMetadata[] = [];
+                for (const conversation of metadata) {
+                    if (conversation.exclusionReason) {
+                        excluded.push(conversation);
+                    } else {
+                        importable.push(conversation);
+                    }
+                }
+
                 this.metadataLogger.debug(
                     `Archive metadata extraction complete`,
                     {
@@ -352,7 +393,7 @@ export class ConversationMetadataExtractor {
                 let duplicatesInFile = 0;
                 let uniqueFromFile = 0;
 
-                for (const conversation of metadata) {
+                for (const conversation of importable) {
                     const existing = conversationMap.get(conversation.id);
 
                     if (!existing) {
@@ -480,7 +521,9 @@ export class ConversationMetadataExtractor {
                 totalConversationsFound: allConversationsFound.length,
                 uniqueConversationsKept: conversationMap.size,
                 duplicatesRemoved:
-                    allConversationsFound.length - conversationMap.size,
+                    allConversationsFound.length -
+                    excluded.length -
+                    conversationMap.size,
                 hasMultipleFiles: files.length > 1,
                 conversationsNew: filterResult.newCount,
                 conversationsUpdated: filterResult.updatedCount,
@@ -488,6 +531,12 @@ export class ConversationMetadataExtractor {
                 conversationsDroppedUnchanged:
                     filterResult.droppedUnchangedCount,
                 conversationsReprocessed: filterResult.reprocessedCount,
+                exclusions: countExclusions(excluded),
+                categories: analyzeCategories(
+                    allConversationsFound,
+                    Array.from(conversationMap.values()),
+                    filterResult.ignoredConversations
+                ),
             },
             fileStats: fileStatsMap,
             supportedFiles,
@@ -562,6 +611,11 @@ export class ConversationMetadataExtractor {
                 return this.extractMistralVibeMetadata(rawConversations);
             case "perplexity":
                 return this.extractPerplexityMetadata(rawConversations);
+            case "grok":
+                return this.extractMetadataThroughAdapter(
+                    rawConversations,
+                    "grok"
+                );
             default:
                 throw new Error(`Unsupported provider: ${provider}`);
         }
@@ -690,6 +744,45 @@ export class ConversationMetadataExtractor {
                 };
             })
             .filter((metadata) => metadata.messageCount > 0);
+    }
+
+    /**
+     * Metadata read through the provider's own adapter, category and
+     * exclusion included, so the analysis and the import cannot disagree.
+     */
+    private extractMetadataThroughAdapter(
+        items: unknown[],
+        provider: string
+    ): ConversationMetadata[] {
+        const adapter = this.providerRegistry.getAdapter(provider);
+        if (!adapter) {
+            throw new Error(`Unsupported provider: ${provider}`);
+        }
+
+        const metadata: ConversationMetadata[] = [];
+        for (const item of items) {
+            const id = adapter.getId(item);
+            if (!id) {
+                this.plugin.logger.warn(
+                    `Skipping ${provider} item without an id`
+                );
+                continue;
+            }
+            metadata.push({
+                id,
+                title: adapter.getTitle(item),
+                createTime: adapter.getCreateTime(item),
+                updateTime: adapter.getUpdateTime(item),
+                messageCount: adapter.getNewMessages(item, []).length,
+                provider,
+                isStarred: false,
+                isArchived: false,
+                category: adapter.getItemCategory?.(item),
+                exclusionReason:
+                    adapter.getExclusionReason?.(item) ?? undefined,
+            });
+        }
+        return metadata;
     }
 
     private extractPerplexityMetadata(
@@ -914,4 +1007,61 @@ export class ConversationMetadataExtractor {
             droppedUnchangedCount,
         };
     }
+}
+
+function categoryOf(conversation: ConversationMetadata): string {
+    return conversation.category || DEFAULT_ITEM_CATEGORY;
+}
+
+export function countExclusions(
+    excluded: ConversationMetadata[]
+): ExclusionCount[] {
+    const counts = new Map<string, ExclusionCount>();
+    for (const conversation of excluded) {
+        const category = categoryOf(conversation);
+        const reason = conversation.exclusionReason ?? "";
+        const key = `${category}\u0000${reason}`;
+        const entry = counts.get(key) ?? { category, reason, count: 0 };
+        entry.count++;
+        counts.set(key, entry);
+    }
+    return Array.from(counts.values());
+}
+
+/**
+ * Split the analysis numbers by category. Duplicates are what is left once
+ * the excluded and the kept are taken out of what was found, so each
+ * category balances the same way the totals do.
+ */
+export function analyzeCategories(
+    found: ConversationMetadata[],
+    kept: ConversationMetadata[],
+    droppedUnchanged: ConversationMetadata[]
+): Record<string, CategoryAnalysis> {
+    const categories: Record<string, CategoryAnalysis> = {};
+    const bucket = (conversation: ConversationMetadata) => {
+        const category = categoryOf(conversation);
+        categories[category] ??= {
+            found: 0,
+            excluded: 0,
+            duplicates: 0,
+            kept: 0,
+            droppedUnchanged: 0,
+        };
+        return categories[category];
+    };
+
+    for (const conversation of found) {
+        const entry = bucket(conversation);
+        entry.found++;
+        if (conversation.exclusionReason) entry.excluded++;
+    }
+    for (const conversation of kept) bucket(conversation).kept++;
+    for (const conversation of droppedUnchanged) {
+        bucket(conversation).droppedUnchanged++;
+    }
+    for (const entry of Object.values(categories)) {
+        entry.duplicates = entry.found - entry.excluded - entry.kept;
+    }
+    return categories;
 }

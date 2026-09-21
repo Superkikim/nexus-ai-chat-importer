@@ -18,7 +18,7 @@
 
 // src/ui/settings/display-settings-section.ts
 import { Setting } from "obsidian";
-import { BaseSettingsSection } from "./base-settings-section";
+import { BaseSettingsSection, type SectionRow } from "./base-settings-section";
 import { t } from "../../i18n";
 
 export class DisplaySettingsSection extends BaseSettingsSection {
@@ -27,48 +27,61 @@ export class DisplaySettingsSection extends BaseSettingsSection {
     }
     readonly order = 10;
 
-    render(containerEl: HTMLElement): void {
-        // Add custom styling for better readability
-        const sectionContainer = containerEl.createDiv({
-            cls: "nexus-date-prefix-section",
-        });
+    protected rows(): SectionRow[] {
+        return [
+            {
+                name: t("settings.display.add_date_prefix.name"),
+                desc: t("settings.display.add_date_prefix.desc"),
+                aliases: ["filename", "file name", "prefix", "date"],
+                fullWidthDesc: true,
+                render: (setting) => this.renderDatePrefix(setting),
+            },
+        ];
+    }
 
-        // Add Date Prefix with inline format dropdown
-        const setting = new Setting(sectionContainer)
-            .setName(t("settings.display.add_date_prefix.name"))
-            .setDesc(t("settings.display.add_date_prefix.desc"));
+    /**
+     * The switch, then the format label and dropdown, which stay in place
+     * and are hidden while the switch is off: nothing needs to re-render.
+     */
+    private renderDatePrefix(setting: Setting): void {
+        let formatGroup: HTMLElement | undefined;
+        const showFormat = (enabled: boolean) => {
+            formatGroup?.toggleClass("nexus-hidden", !enabled);
+        };
 
-        // Add dropdown BEFORE toggle (shown only when enabled)
-        if (this.plugin.settings.addDatePrefix) {
-            setting.controlEl.createSpan({
-                text: t("settings.display.add_date_prefix.format_label"),
-                cls: "date-format-label",
-            });
-
-            setting.addDropdown((dropdown) =>
-                dropdown
-                    .addOption("YYYY-MM-DD", "YYYY-MM-DD")
-                    .addOption("YYYYMMDD", "YYYYMMDD")
-
-                    .setValue(this.plugin.settings.dateFormat)
-                    .onChange(async (value: string) => {
-                        if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
-                            this.plugin.settings.dateFormat = value;
-                            await this.plugin.saveSettings();
-                        }
-                    })
-            );
-        }
-
-        // Add toggle AFTER dropdown
         setting.addToggle((toggle) =>
             toggle
                 .setValue(this.plugin.settings.addDatePrefix)
                 .onChange(async (value) => {
                     this.plugin.settings.addDatePrefix = value;
                     await this.plugin.saveSettings();
-                    this.redraw(); // Trigger redraw to show/hide date format dropdown
+                    showFormat(value);
                 })
         );
+
+        setting.addDropdown((dropdown) => {
+            dropdown
+                .addOption("YYYY-MM-DD", "YYYY-MM-DD")
+                .addOption("YYYYMMDD", "YYYYMMDD")
+                .setValue(this.plugin.settings.dateFormat)
+                .onChange(async (value: string) => {
+                    if (value === "YYYY-MM-DD" || value === "YYYYMMDD") {
+                        this.plugin.settings.dateFormat = value;
+                        await this.plugin.saveSettings();
+                    }
+                });
+
+            // Label and dropdown wrap together.
+            formatGroup = setting.controlEl.createSpan({
+                cls: "nexus-control-group",
+            });
+            formatGroup.createSpan({
+                text: t("settings.display.add_date_prefix.format_label").trim(),
+                cls: "nexus-control-label",
+            });
+            formatGroup.appendChild(dropdown.selectEl);
+        });
+
+        showFormat(this.plugin.settings.addDatePrefix);
     }
 }
