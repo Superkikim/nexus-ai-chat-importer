@@ -366,7 +366,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 🐛 修复\n- **超大笔记修复功能现在真正生效** — 1.7.0 的修复是可选的，即使执行了修复，备份文件依然会被 Obsidian 继续索引；现在修复变为强制执行，旧的备份文件也会被重命名\n- **包含 `#`、`^`、`[` 或 `]` 的文件名现在会被修正，而不仅仅是避免** — 这些字符会破坏 wikilink，因此现在会被替换而不是删除，无论是新导入还是已有笔记都适用\n- **升级对话框在未点击按钮关闭时不再卡死**\n- **仅含 CR 换行符的内容**（较旧的 Mac 工具、AppleScript）现在会保留在其标注框和代码块内\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n- **支持 Grok** — 直接导入 Grok 数据导出的 ZIP。对话会保留每一次重新生成的回答，引用会变成指向来源的链接，Imagine 帖子会变成带图片的笔记。\n- **支持 Perplexity 官方导出** — 导入通过 *Export my data* 获得的 ZIP。每段对话都会成为一篇笔记，标题取自其第一个问题的开头。\n- **Perplexity：官方导出与 Thread Exporter 扩展可以配合使用** — 可以将其中一个导入到用另一个创建的笔记上：笔记缺少的内容会被补上，扩展的存档还会补全来源、模型和引用标记，且不会产生重复。\n- **自定义 ID 属性** — 设置 → 属性会为每篇笔记添加一个你指定的属性（例如 `uid`），其值为对话 ID，并更新你现有的笔记。\n- **重建时会保留你添加的属性**，例如 `tags`。对笔记正文的编辑仍然会丢失。\n- **设置现在会出现在 Obsidian 的设置搜索中**（Obsidian 1.13 及以上），布局也更统一。\n- **报告会说明哪些内容被排除，以及原因。**\n- 另外还有修复：Perplexity 的更新不再丢失新消息，孤立的引用标记已消除，完成对话框不再把 Perplexity 的问答计为工件，移到文件中的长内容块也不再被折叠。\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "知道了！"
             }
