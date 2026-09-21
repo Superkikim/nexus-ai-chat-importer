@@ -105,8 +105,8 @@ complete history visible in your provider account.
 To keep a note readable, a very long block — a single message line of roughly
 10,000+ characters, or a large extracted text attachment — is moved to a file
 under `<Attachment folder>/<provider>/documents/<note name>/` and linked from the
-message instead of inlined. If the file cannot be written, the content stays in
-the note.
+message instead of inlined, in a callout that is left open because all it holds
+is that link. If the file cannot be written, the content stays in the note.
 
 ## Related
 

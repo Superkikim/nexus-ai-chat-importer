@@ -78,7 +78,8 @@ under stable content-derived `attachment-<8 hex>.<ext>` names. The size threshol
 and user-visible behaviour are in
 [docs/user/output.md](../user/output.md#long-content); the checks are
 `String.length` counts, and `<ext>` (`json` / `html` / `md` / `txt`) is chosen by
-sniffing the content. If the write fails, the original content stays in the note.
+sniffing the content. A callout left holding only that link is written without
+the `-` fold marker, since folding it would hide nothing to read. If the write fails, the original content stays in the note.
 
 ## Generated-content reconciliation
 
