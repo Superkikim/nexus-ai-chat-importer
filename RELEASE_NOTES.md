@@ -1,5 +1,13 @@
 # Release Notes for Nexus AI Chat Importer
 
+## Version 1.8.1 — A ChatGPT DALL-E prompt reaching its image
+
+![Version](https://img.shields.io/badge/version-1.8.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
+
+### 🐛 Fixed
+
+- **DALL-E prompts no longer show "failed or interrupted" next to an image that's right there.** Some ChatGPT exports link each message to its parent but not to its children. The prompt-to-image search only followed children, so every DALL-E prompt in those exports was treated as if its image were missing — even though the image was imported, just as a separate, unlabeled entry. Re-importing pairs each prompt with its image again.
+
 ## Version 1.8.0 — Grok, Perplexity's official export, and a custom ID property
 
 ![Version](https://img.shields.io/badge/version-1.8.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)
