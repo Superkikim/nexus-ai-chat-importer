@@ -689,11 +689,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 extractionResult.analysisInfo,
                 extractionResult.fileStats,
                 false,
-                this.labelAttachmentOnlyArchives(
-                    extractionResult.ignoredArchives,
-                    provider,
-                    files
-                )
+                extractionResult.ignoredArchives
             );
 
             // Show completion dialog
@@ -1185,12 +1181,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 analysisInfo,
                 fileStats,
                 true,
-                ignoredArchives &&
-                    this.labelAttachmentOnlyArchives(
-                        ignoredArchives,
-                        provider,
-                        files
-                    )
+                ignoredArchives
             );
 
             // Show completion dialog
@@ -1836,26 +1827,6 @@ ${report.generateMobileIndexContent(files, links)}
         );
     }
 
-    private labelAttachmentOnlyArchives(
-        ignoredArchives: IgnoredArchiveInfo[],
-        provider: string,
-        selectedFiles: File[]
-    ): IgnoredArchiveInfo[] {
-        if (!this.usesMultiZipAttachmentMap(provider, selectedFiles)) {
-            return ignoredArchives;
-        }
-        return ignoredArchives.map((archive) =>
-            archive.reason === "unsupported-format"
-                ? {
-                      ...archive,
-                      reason: "attachments-only",
-                      message:
-                          "No conversations; its files were searched for the other archives' attachments.",
-                  }
-                : archive
-        );
-    }
-
     private logIgnoredArchives(
         ignoredArchives: IgnoredArchiveInfo[],
         provider: string,
@@ -1879,7 +1850,8 @@ ${report.generateMobileIndexContent(files, links)}
         const expected = ignoredArchives.every(
             (archive) =>
                 archive.reason === "provider-mismatch" ||
-                archive.reason === "unsupported-format"
+                archive.reason === "unsupported-format" ||
+                archive.reason === "attachments-only"
         );
 
         const details = {
