@@ -139,7 +139,8 @@ export interface IgnoredArchiveInfo {
         | "provider-mismatch"
         | "empty"
         | "nested-zip-container"
-        | "read-error";
+        | "read-error"
+        | "attachments-only";
     message: string;
 }
 

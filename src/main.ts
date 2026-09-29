@@ -674,6 +674,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 "import-all",
                 provider,
                 filesToImport,
+                files,
                 conversationsByFile,
                 operationReport,
                 undefined,
@@ -688,7 +689,11 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 extractionResult.analysisInfo,
                 extractionResult.fileStats,
                 false,
-                extractionResult.ignoredArchives
+                this.labelAttachmentOnlyArchives(
+                    extractionResult.ignoredArchives,
+                    provider,
+                    files
+                )
             );
 
             // Show completion dialog
@@ -1165,6 +1170,7 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 "selective-import",
                 provider,
                 filesToImport,
+                files,
                 conversationsByFile,
                 operationReport,
                 selectedExistingConversationIds,
@@ -1179,7 +1185,12 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 analysisInfo,
                 fileStats,
                 true,
-                ignoredArchives
+                ignoredArchives &&
+                    this.labelAttachmentOnlyArchives(
+                        ignoredArchives,
+                        provider,
+                        files
+                    )
             );
 
             // Show completion dialog
@@ -1610,6 +1621,7 @@ ${report.generateMobileIndexContent(files, links)}
         operation: "import-all" | "selective-import",
         provider: string,
         filesToImport: File[],
+        selectedFiles: File[],
         conversationsByFile: Map<string, string[]>,
         operationReport: ImportReport,
         selectedExistingConversationIds?: Set<string>,
@@ -1633,24 +1645,20 @@ ${report.generateMobileIndexContent(files, links)}
             );
         }
 
-        if (
-            !mobileTaskQueueMode &&
-            provider === "chatgpt" &&
-            executionFiles.length > 1
-        ) {
+        if (this.usesMultiZipAttachmentMap(provider, selectedFiles)) {
             this.setImportCheckpoint({
                 operation,
                 phase: "attachment-map-build",
                 provider,
-                task: `0/${executionFiles.length}`,
+                task: `0/${selectedFiles.length}`,
             });
             importFlowLogger.debug(`Building multi-ZIP attachment map`, {
                 provider,
-                fileCount: executionFiles.length,
+                fileCount: selectedFiles.length,
                 mode: "desktop-multi-zip",
             });
             await this.importService.buildAttachmentMapForMultiZip(
-                executionFiles,
+                selectedFiles,
                 provider
             );
         }
@@ -1749,11 +1757,7 @@ ${report.generateMobileIndexContent(files, links)}
             }
         }
 
-        if (
-            !mobileTaskQueueMode &&
-            provider === "chatgpt" &&
-            executionFiles.length > 1
-        ) {
+        if (this.usesMultiZipAttachmentMap(provider, selectedFiles)) {
             this.importService.clearAttachmentMap();
         }
     }
@@ -1817,6 +1821,39 @@ ${report.generateMobileIndexContent(files, links)}
             lastCheckpoint: this.lastImportCheckpoint,
             stack,
         });
+    }
+
+    // Built from the whole selection, not only the archives that carry
+    // conversations: later parts of a multipart export hold attachments only.
+    private usesMultiZipAttachmentMap(
+        provider: string,
+        selectedFiles: File[]
+    ): boolean {
+        return (
+            !this.isMobileTaskQueueMode() &&
+            provider === "chatgpt" &&
+            selectedFiles.length > 1
+        );
+    }
+
+    private labelAttachmentOnlyArchives(
+        ignoredArchives: IgnoredArchiveInfo[],
+        provider: string,
+        selectedFiles: File[]
+    ): IgnoredArchiveInfo[] {
+        if (!this.usesMultiZipAttachmentMap(provider, selectedFiles)) {
+            return ignoredArchives;
+        }
+        return ignoredArchives.map((archive) =>
+            archive.reason === "unsupported-format"
+                ? {
+                      ...archive,
+                      reason: "attachments-only",
+                      message:
+                          "No conversations; its files were searched for the other archives' attachments.",
+                  }
+                : archive
+        );
     }
 
     private logIgnoredArchives(
