@@ -70,14 +70,14 @@ export class ChatGPTAttachmentExtractor {
         this.allZips = allZips;
     }
 
-    /**
-     * Clear attachment map and ZIPs (call after import completes)
-     */
     /** Whether any archive of a multi-archive import holds this entry. */
     hasEntryInAnyArchive(path: string): boolean {
         return this.allZips.some((zip) => zip.has(path));
     }
 
+    /**
+     * Clear attachment map and ZIPs (call after import completes)
+     */
     clearAttachmentMap(): void {
         this.attachmentMap = null;
         this.allZips = [];
