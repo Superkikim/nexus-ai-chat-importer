@@ -80,9 +80,7 @@ describe("createLibraryAttachment", () => {
 
         expect(attachment.attachmentType).toBeUndefined();
         expect(attachment.extractedContent).toBeUndefined();
-        expect(attachment.fileName).toBe(
-            "sample_letter.docx"
-        );
+        expect(attachment.fileName).toBe("sample_letter.docx");
     });
 
     it("never leaks library-internal identifiers into rendered text", () => {
