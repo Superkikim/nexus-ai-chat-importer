@@ -112,26 +112,19 @@ async function expandContainer(
         sliced.push(innerFile);
     }
 
-    // Every conversation archive must be a real, supported export before the
-    // container is replaced. A partial match leaves the original guidance in
-    // place instead of importing something unexpected.
+    // A large export is split into parts where only the first carries the
+    // conversations; later parts hold attachments only. The container is valid
+    // once one part is a supported export, and every part is kept so their
+    // attachments reach the import. Their content is OpenAI's to decide.
+    let supportedCount = 0;
     for (const innerFile of sliced) {
         try {
             const reader = await createZipArchiveReader(innerFile);
             const innerPaths = (await reader.listEntries()).map(
                 (entry) => entry.path
             );
-            const innerClassification = classifyArchiveEntries(innerPaths);
-            if (!innerClassification.supported) {
-                containerLogger.info(
-                    "Container left untouched: nested archive is not a supported export",
-                    {
-                        fileName: file.name,
-                        innerName: innerFile.name,
-                        reason: innerClassification.reason,
-                    }
-                );
-                return null;
+            if (classifyArchiveEntries(innerPaths).supported) {
+                supportedCount++;
             }
         } catch (error) {
             containerLogger.warn("Failed to validate nested archive", {
@@ -141,6 +134,14 @@ async function expandContainer(
             });
             return null;
         }
+    }
+
+    if (supportedCount === 0) {
+        containerLogger.info(
+            "Container left untouched: no nested archive is a supported export",
+            { fileName: file.name, innerArchives: sliced.map((f) => f.name) }
+        );
+        return null;
     }
 
     return sliced.map((innerFile) =>
