@@ -583,7 +583,7 @@
         "title": "Support Nexus",
         "message_emphasis": "Donations really matter.",
         "message": "I'm currently unemployed, with no income. I spend a significant amount of time on this plugin, and I pay out of pocket for subscriptions to the AI platforms it supports, so I can test real exports and keep everything accurate.",
-        "gratitude_note": "Every release you've used exists because a handful of users already chose to support the project.",
+        "reality_check": "Out of roughly 1,600 people currently using this plugin, fewer than 1% have ever donated.",
         "cta": "If this plugin is useful to you, a donation makes a real difference.",
         "button_donate": "Support the project",
         "button_later": "Maybe later"

@@ -583,7 +583,7 @@
         "title": "Apoyar Nexus",
         "message_emphasis": "Las donaciones realmente importan.",
         "message": "Actualmente estoy desempleado y sin ingresos. Dedico mucho tiempo a este plugin y pago de mi bolsillo las suscripciones a las plataformas de IA que soporta, para poder probar exportaciones reales y mantener todo preciso.",
-        "gratitude_note": "Cada versión que has usado existe porque un puñado de usuarios ya eligió apoyar el proyecto.",
+        "reality_check": "De las aproximadamente 1.600 personas que usan este plugin, menos del 1 % ha donado alguna vez.",
         "cta": "Si este plugin te resulta útil, una donación marca una diferencia real.",
         "button_donate": "Apoyar el proyecto",
         "button_later": "Quizás más tarde"

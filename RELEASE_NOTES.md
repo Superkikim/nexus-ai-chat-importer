@@ -1,11 +1,12 @@
 # Release Notes for Nexus AI Chat Importer
 
-## Version 1.8.1 — A ChatGPT DALL-E prompt reaching its image
+## Version 1.8.1 — ChatGPT multipart exports and DALL-E prompts
 
 ![Version](https://img.shields.io/badge/version-1.8.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
 
 ### 🐛 Fixed
 
+- **Large ChatGPT exports split into parts import completely** ([#90](https://github.com/Superkikim/nexus-ai-chat-importer/issues/90)). OpenAI now splits a large Privacy Portal export into `…-part-0001.zip`, `…-part-0002.zip`, and so on: only the first part holds the conversations, the others hold attachments. Selecting the `OpenAI-export.zip` download was rejected, and selecting the parts imported the conversations without the attachments stored in the later parts. Select the download as-is, or all its parts together: every attachment is found, and the report lists the later parts as "attachments only". If you already imported the first part alone, import again with **Reprocess existing notes** to recover the missing attachments; it rewrites those notes, so edits to their body are lost. On mobile, only one archive is read per import, so attachments in later parts are still left out.
 - **DALL-E prompts no longer show "failed or interrupted" next to an image that's right there.** Some ChatGPT exports link each message to its parent but not to its children. The prompt-to-image search only followed children, so every DALL-E prompt in those exports was treated as if its image were missing — even though the image was imported, just as a separate, unlabeled entry. Re-importing pairs each prompt with its image again.
 
 ## Version 1.8.0 — Grok, Perplexity's official export, and a custom ID property
