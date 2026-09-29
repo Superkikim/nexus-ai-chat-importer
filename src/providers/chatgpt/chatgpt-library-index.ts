@@ -48,7 +48,7 @@ export interface ChatGPTLibraryEntry {
     libraryFileId?: string;
     /** File id, e.g. "file_0000000044c071f491e2d28bb4f6a09f" (matches "<id>.dat" in the ZIP). */
     fileId: string;
-    /** Original file name, e.g. "lettre_opposition_isabelle_bally.docx". */
+    /** Original file name, e.g. "sample_letter.docx". */
     fileName: string;
     /** MIME type when present. */
     mimeType?: string;

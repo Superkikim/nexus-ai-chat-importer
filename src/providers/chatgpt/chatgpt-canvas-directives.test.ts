@@ -47,9 +47,9 @@ describe("transformCanvasDirectives", () => {
 
     it("includes the subject for email variants", () => {
         const input =
-            ':::writing{variant="email" id="9" subject="Succession Bally"}\nBonjour\n:::';
+            ':::writing{variant="email" id="9" subject="Project update"}\nBonjour\n:::';
         expect(transformCanvasDirectives(input)).toContain(
-            ">[!nexus_canvas]- **Email — Succession Bally**"
+            ">[!nexus_canvas]- **Email — Project update**"
         );
     });
 
