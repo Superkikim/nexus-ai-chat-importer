@@ -3,6 +3,7 @@ import { createSupportBox } from "../ui/components/support-box";
 import { createResourceLinks } from "../ui/components/resource-links";
 import { t } from "../i18n";
 import { GITHUB } from "../config/constants";
+import { extractReadmeOverview } from "../utils/release-notes";
 
 /**
  * Welcome dialog shown on first installation
@@ -107,22 +108,7 @@ export class InstallationWelcomeDialog extends Modal {
         const readmeText = await this.fetchReadme();
         if (!readmeText) return;
 
-        // The README leads with a plain intro paragraph between the H1 and the
-        // first `##` (there is no `## Overview` heading). Take that block,
-        // dropping the H1, the shields.io badge line(s), and any blockquote
-        // admonitions (`> **Note:** …`) that are not overview prose.
-        const head = readmeText.split(/\r?\n##\s/)[0] ?? "";
-        const intro = head
-            .split(/\r?\n/)
-            .filter(
-                (line) =>
-                    line.trim() !== "" &&
-                    !line.startsWith("#") &&
-                    !line.trim().startsWith(">") &&
-                    !/^\[?!\[/.test(line.trim())
-            )
-            .join("\n")
-            .trim();
+        const intro = extractReadmeOverview(readmeText);
         if (!intro) return;
 
         const renderComponent = new Component();

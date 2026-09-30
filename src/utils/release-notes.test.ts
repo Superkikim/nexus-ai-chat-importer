@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractWhatsNewSection } from "./release-notes";
+import { extractReadmeOverview, extractWhatsNewSection } from "./release-notes";
 
 const README = `# Nexus AI Chat Importer
 
@@ -72,5 +72,45 @@ describe("extractWhatsNewSection", () => {
         expect(
             extractWhatsNewSection("# T\n\n## What's new\n\n## Install\n")
         ).toBeNull();
+    });
+});
+
+describe("extractReadmeOverview", () => {
+    const readme = [
+        "# Plugin",
+        "",
+        "[![Badge](https://example.invalid/b.svg)](https://example.invalid)",
+        "",
+        "Imports chats into your vault.",
+        "",
+        "> **Note:** something unrelated.",
+        "",
+        "## Supported providers",
+        "",
+        "**A** · **B**",
+        "",
+        "## Features",
+        "",
+        "- Feature one.",
+        "",
+        "## What's new in 1.0",
+        "",
+        "- Not part of the overview.",
+    ].join("\n");
+
+    it("keeps everything above What's new, with headings one level down", () => {
+        expect(extractReadmeOverview(readme)).toBe(
+            [
+                "Imports chats into your vault.",
+                "",
+                "### Supported providers",
+                "",
+                "**A** · **B**",
+                "",
+                "### Features",
+                "",
+                "- Feature one.",
+            ].join("\n")
+        );
     });
 });
