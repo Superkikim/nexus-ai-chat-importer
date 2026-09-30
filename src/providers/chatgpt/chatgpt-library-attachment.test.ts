@@ -23,7 +23,7 @@ function documentEntry(
     return {
         fileId: "file_doc_1",
         libraryFileId: "libfile_doc_1",
-        fileName: "lettre_opposition_isabelle_bally.docx",
+        fileName: "sample_letter.docx",
         mimeType:
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         fileSize: 37768,
@@ -80,9 +80,7 @@ describe("createLibraryAttachment", () => {
 
         expect(attachment.attachmentType).toBeUndefined();
         expect(attachment.extractedContent).toBeUndefined();
-        expect(attachment.fileName).toBe(
-            "lettre_opposition_isabelle_bally.docx"
-        );
+        expect(attachment.fileName).toBe("sample_letter.docx");
     });
 
     it("never leaks library-internal identifiers into rendered text", () => {

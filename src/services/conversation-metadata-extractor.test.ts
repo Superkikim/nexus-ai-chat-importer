@@ -10,6 +10,7 @@ import { ClaudeAdapter } from "../providers/claude/claude-adapter";
 import { MistralVibeAdapter } from "../providers/vibe/vibe-adapter";
 import { PerplexityAdapter } from "../providers/perplexity/perplexity-adapter";
 import { GrokAdapter } from "../providers/grok/grok-adapter";
+import { buildZip, toFile } from "../tests/zip-fixtures";
 
 /**
  * Tests that ConversationMetadataExtractor stays aligned with
@@ -310,5 +311,36 @@ describe("ConversationMetadataExtractor & ProviderAdapters alignment", () => {
         expect(metadata[0].createTime).toBe(
             Date.parse("2026-01-01T00:00:00Z") / 1000
         );
+    });
+});
+
+describe("ConversationMetadataExtractor — archives without conversations", () => {
+    it("labels a readable ChatGPT part as attachments only, not an unreadable one", async () => {
+        const plugin = createTestPlugin();
+        const registry = new DefaultProviderRegistry();
+        registry.register("chatgpt", new ChatGPTAdapter(plugin));
+        const extractor = new ConversationMetadataExtractor(registry, plugin);
+
+        const part2 = toFile(
+            await buildZip([
+                {
+                    name: "file_00000000aaaa1111bbbb2222cccc3333.dat",
+                    data: new Uint8Array([9, 9, 9]),
+                },
+            ]),
+            "export-part-0002.zip"
+        );
+        const broken = toFile(new Uint8Array([1, 2, 3, 4]), "broken.zip");
+
+        const result = await extractor.extractMetadataFromMultipleZips(
+            [part2, broken],
+            "chatgpt"
+        );
+
+        const reasons = Object.fromEntries(
+            result.ignoredArchives.map((a) => [a.fileName, a.reason])
+        );
+        expect(reasons["export-part-0002.zip"]).toBe("attachments-only");
+        expect(reasons["broken.zip"]).not.toBe("attachments-only");
     });
 });
