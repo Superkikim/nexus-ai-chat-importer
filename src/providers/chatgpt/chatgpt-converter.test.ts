@@ -34,7 +34,7 @@ describe("ChatGPTConverter — metadata.attachments", () => {
                     attachments: [
                         {
                             id: "file_000000009b8c71f4ace00c77fc58413d",
-                            name: "isa0001.ocr.pdf",
+                            name: "scan0001.ocr.pdf",
                             size: 2312956,
                             mime_type: "application/pdf",
                         },
@@ -49,7 +49,7 @@ describe("ChatGPTConverter — metadata.attachments", () => {
         expect(attachments[0].fileId).toBe(
             "file_000000009b8c71f4ace00c77fc58413d"
         );
-        expect(attachments[0].fileName).toBe("isa0001.ocr.pdf");
+        expect(attachments[0].fileName).toBe("scan0001.ocr.pdf");
         expect(attachments[0].fileType).toBe("application/pdf");
         expect(attachments[0].fileSize).toBe(2312956);
     });
