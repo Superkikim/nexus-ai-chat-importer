@@ -579,20 +579,12 @@
             "name": "Import AI conversations"
         }
     },
-    "donation_dialog": {
-        "title": "Support Nexus",
-        "message_emphasis": "Donations really matter.",
-        "message": "I'm currently unemployed, with no income. I spend a significant amount of time on this plugin, and I pay out of pocket for subscriptions to the AI platforms it supports, so I can test real exports and keep everything accurate.",
-        "reality_check": "Out of roughly 1,600 people currently using this plugin, fewer than 1% have ever donated.",
-        "cta": "If this plugin is useful to you, a donation makes a real difference.",
-        "button_donate": "Support the project",
-        "button_later": "Maybe later"
-    },
     "support_box": {
-        "header": "Support This Plugin",
-        "header_highlight": "Support This Plugin",
-        "default_message_emphasis": "Nexus has reached 15,000+ downloads. Your support keeps development going and covers my tooling and subscription costs.",
-        "default_message": "I'm currently unemployed, so every contribution genuinely counts.",
-        "button_alt": "Support my work"
+        "title": "Support Nexus",
+        "message": "I'm currently unemployed, with no income. I build and maintain this plugin on my own, and I pay for the AI subscriptions it supports so I can test real exports.",
+        "reality_check": "Fewer than 1% of users have ever donated.",
+        "cta": "If you find it valuable, a donation helps keep it going.",
+        "button": "Support the project",
+        "button_later": "Maybe later"
     }
 }

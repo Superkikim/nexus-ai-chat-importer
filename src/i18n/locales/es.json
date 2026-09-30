@@ -579,20 +579,12 @@
             "name": "Importar conversaciones de IA"
         }
     },
-    "donation_dialog": {
-        "title": "Apoyar Nexus",
-        "message_emphasis": "Las donaciones realmente importan.",
-        "message": "Actualmente estoy desempleado y sin ingresos. Dedico mucho tiempo a este plugin y pago de mi bolsillo las suscripciones a las plataformas de IA que soporta, para poder probar exportaciones reales y mantener todo preciso.",
-        "reality_check": "De las aproximadamente 1.600 personas que usan este plugin, menos del 1 % ha donado alguna vez.",
-        "cta": "Si este plugin te resulta útil, una donación marca una diferencia real.",
-        "button_donate": "Apoyar el proyecto",
-        "button_later": "Quizás más tarde"
-    },
     "support_box": {
-        "header": "Apoyar este plugin",
-        "header_highlight": "Apoyar este plugin",
-        "default_message_emphasis": "Nexus ha superado las 15 000 descargas. Tu apoyo mantiene el desarrollo en marcha y cubre mis costes de herramientas y suscripciones.",
-        "default_message": "Actualmente estoy sin empleo, así que cada aportación cuenta de verdad.",
-        "button_alt": "Apoyar mi trabajo"
+        "title": "Apoya Nexus",
+        "message": "Actualmente estoy desempleado y sin ingresos. Desarrollo y mantengo este plugin por mi cuenta, y pago las suscripciones a las plataformas de IA que admite para poder probar exportaciones reales.",
+        "reality_check": "Menos del 1 % de los usuarios ha donado alguna vez.",
+        "cta": "Si te resulta valioso, una donación ayuda a mantenerlo vivo.",
+        "button": "Apoyar el proyecto",
+        "button_later": "Quizás más tarde"
     }
 }
