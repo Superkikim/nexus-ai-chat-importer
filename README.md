@@ -27,7 +27,7 @@ import report. Everything runs locally in your vault.
   extracted when the export contains them; anything missing is shown explicitly.
 - **Structured Markdown** — role callouts, ISO 8601 UTC frontmatter, per-provider
   folders, and a detailed import report.
-- **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and an optional desktop [CLI](docs/user/cli.md).
+- **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and a separate [command-line importer](https://github.com/Superkikim/nexus-ai-chat-importer-cli).
 
 ## What's new in 1.8
 
