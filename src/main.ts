@@ -63,6 +63,7 @@ import { sortFilesForImport } from "./utils/file-sort";
 import { createZipArchiveReader } from "./utils/zip-loader";
 import { resolveArchiveClassification } from "./utils/zip-content-reader";
 import { expandContainerArchives } from "./utils/container-archive";
+import { countMissingExportFiles } from "./providers/chatgpt/chatgpt-export-manifest";
 interface ImportCheckpoint {
     operation: "import-all" | "selective-analysis" | "selective-import";
     phase: string;
@@ -84,6 +85,8 @@ export default class NexusAiChatImporterPlugin extends Plugin {
     private eventHandlers: EventHandlers;
     private upgradeManager: IncrementalUpgradeManager;
     private lastImportCheckpoint: ImportCheckpoint | null = null;
+    // Found while checking the selection, written into that import's report.
+    private selectionWarnings: string[] = [];
 
     constructor(app: App, manifest: PluginManifest) {
         super(app, manifest);
@@ -479,6 +482,22 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 `[${effectiveProvider}] No ZIP files selected for import`
             );
             return;
+        }
+
+        this.selectionWarnings = [];
+        if (effectiveProvider === "chatgpt") {
+            const missing = await countMissingExportFiles(sortedZipFiles);
+            if (missing) {
+                new Notice(
+                    t("notices.import_export_part_missing", {
+                        count: String(missing),
+                    }),
+                    10000
+                );
+                this.selectionWarnings.push(
+                    `This ChatGPT export lists ${missing} files that are not in the selected archives. A part is probably missing: its attachments were not imported.`
+                );
+            }
         }
 
         if (mode === "all") {
@@ -1279,6 +1298,9 @@ export default class NexusAiChatImporterPlugin extends Plugin {
             report.setAnalysisInfo(analysisInfo);
         }
         report.setIgnoredArchives(ignoredArchives ?? []);
+        for (const warning of this.selectionWarnings) {
+            report.addWarning(warning);
+        }
 
         const stats = report.getCompletionStats();
         const ledger = report.getConversationLedger();

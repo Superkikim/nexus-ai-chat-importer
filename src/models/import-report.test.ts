@@ -893,3 +893,23 @@ describe("import report — the single-archive line", () => {
         expect(archiveLine("—")).toBe("Archive: `export.zip`");
     });
 });
+
+describe("import report — warnings found before the import", () => {
+    it("lists them in their own section", () => {
+        const report = populatedReport();
+        report.addWarning("A part is probably missing.");
+
+        const markdown = report.generateSummaryReportContent(
+            [fakeFile("export.zip")],
+            ["export.zip"],
+            [],
+            false,
+            undefined,
+            LINKS
+        );
+
+        expect(markdown).toContain(
+            "## Warnings\n\n- A part is probably missing."
+        );
+    });
+});

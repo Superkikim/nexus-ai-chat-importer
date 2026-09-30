@@ -556,7 +556,8 @@
         "attachment_map_failed": "Impossibile costruire la mappa degli allegati. Consulta la console per maggiori dettagli.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Importa nuovo file",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
-        "import_archives_ignored": "Impossibile leggere {{count}} archivio/i ({{provider}}). Vedi la console per i dettagli."
+        "import_archives_ignored": "Impossibile leggere {{count}} archivio/i ({{provider}}). Vedi la console per i dettagli.",
+        "import_export_part_missing": "Questa esportazione di ChatGPT elenca {{count}} file che non si trovano negli archivi selezionati. Probabilmente manca una parte: i suoi allegati non verranno importati."
     },
     "archive_messages": {
         "empty": "Il file ZIP non contiene alcun file. Verifica di aver selezionato il file di esportazione corretto.",
