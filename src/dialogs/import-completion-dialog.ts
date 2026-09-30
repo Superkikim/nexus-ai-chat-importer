@@ -48,18 +48,18 @@ export interface ImportCompletionStats {
 export class ImportCompletionDialog extends Modal {
     private reportFilePath: string;
     private stats: ImportCompletionStats;
-    private onCloseCallback?: () => void;
+    private openDonationOnClose?: () => void;
 
     constructor(
         app: App,
         stats: ImportCompletionStats,
         reportFilePath: string,
-        onClose?: () => void
+        openDonationOnClose?: () => void
     ) {
         super(app);
         this.stats = stats;
         this.reportFilePath = reportFilePath;
-        this.onCloseCallback = onClose;
+        this.openDonationOnClose = openDonationOnClose;
     }
 
     onOpen() {
@@ -89,8 +89,10 @@ export class ImportCompletionDialog extends Modal {
         // Report link section
         this.createReportSection(contentEl);
 
-        // Support section (using reusable component)
-        createSupportBox(contentEl);
+        // The donation dialog follows on close when due: one ask, not two.
+        if (!this.openDonationOnClose) {
+            createSupportBox(contentEl);
+        }
 
         // Action buttons
         this.createActionButtons(contentEl);
@@ -358,6 +360,6 @@ export class ImportCompletionDialog extends Modal {
     onClose() {
         const { contentEl } = this;
         contentEl.empty();
-        this.onCloseCallback?.();
+        this.openDonationOnClose?.();
     }
 }
