@@ -281,7 +281,7 @@ describe("ConversationProcessor reconciliation", () => {
             noteWith(["m1", "m2"])
         );
         const adapter = {
-            getTitle: () => "Problème de succession Bally",
+            getTitle: () => "Project update",
             getCreateTime: () => 1_780_517_756,
             getUpdateTime: () => 1_781_427_506,
             convertChat: vi.fn(),

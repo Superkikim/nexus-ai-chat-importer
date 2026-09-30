@@ -70,6 +70,11 @@ export class ChatGPTAttachmentExtractor {
         this.allZips = allZips;
     }
 
+    /** Whether any archive of a multi-archive import holds this entry. */
+    hasEntryInAnyArchive(path: string): boolean {
+        return this.allZips.some((zip) => zip.has(path));
+    }
+
     /**
      * Clear attachment map and ZIPs (call after import completes)
      */
@@ -473,8 +478,10 @@ export class ChatGPTAttachmentExtractor {
         // Strategy 0 (new 2026 format): resolve via conversation_asset_file_names.json
         // where every attachment is stored as <fileId>.dat at the ZIP root
         const assetIndex = await this.getAssetIndex(zip);
+        let indexedAsset: ChatGPTAssetEntry | undefined;
         if (assetIndex) {
             const assetEntry = assetIndex.byFileId.get(attachment.fileId);
+            indexedAsset = assetEntry;
             if (assetEntry && zip.has(assetEntry.datPath)) {
                 const located: LocatedZipFile = {
                     reader: zip,
@@ -506,8 +513,14 @@ export class ChatGPTAttachmentExtractor {
                 messageId
             );
             if (result) {
-                this.zipFileCache.set(cacheKey, result);
-                return result;
+                // A multipart export keeps the index in the first part while
+                // the payload may sit in a later one: keep its metadata.
+                const located: LocatedZipFile =
+                    indexedAsset && result.path === indexedAsset.datPath
+                        ? { ...result, assetEntry: indexedAsset }
+                        : result;
+                this.zipFileCache.set(cacheKey, located);
+                return located;
             }
         }
 

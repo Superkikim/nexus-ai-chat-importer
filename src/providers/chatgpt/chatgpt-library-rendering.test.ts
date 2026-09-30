@@ -124,7 +124,7 @@ describe("library artifact rendering", () => {
             {
                 fileId: "file_doc_1",
                 libraryFileId: "libfile_SECRET_doc_id",
-                fileName: "lettre_opposition_isabelle_bally.docx",
+                fileName: "sample_letter.docx",
                 mimeType:
                     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 fileSize: 37768,
@@ -134,7 +134,7 @@ describe("library artifact rendering", () => {
         );
         // Simulate a successful extraction (as the shared extractor would do).
         documentAttachment.url =
-            "attachments/chatgpt/documents/lettre_opposition_isabelle_bally.docx";
+            "attachments/chatgpt/documents/sample_letter.docx";
         documentAttachment.status = {
             processed: true,
             found: true,
@@ -151,13 +151,13 @@ describe("library artifact rendering", () => {
 
         const rendered = formatter.formatMessage(message);
 
-        expect(rendered).toContain("lettre_opposition_isabelle_bally.docx");
+        expect(rendered).toContain("sample_letter.docx");
         // Document: a link, never an embed.
         expect(rendered).toContain(
-            "[[attachments/chatgpt/documents/lettre_opposition_isabelle_bally.docx]]"
+            "[[attachments/chatgpt/documents/sample_letter.docx]]"
         );
         expect(rendered).not.toContain(
-            "![[attachments/chatgpt/documents/lettre_opposition_isabelle_bally.docx]]"
+            "![[attachments/chatgpt/documents/sample_letter.docx]]"
         );
         expect(rendered).not.toContain("libfile_SECRET_doc_id");
     });

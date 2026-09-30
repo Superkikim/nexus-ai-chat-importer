@@ -264,7 +264,10 @@ export class ChatGPTAdapter extends BaseProviderAdapter<Chat> {
             messages,
             conversationId,
             libraryIndex,
-            (fileId) => zip.has(`${fileId}.dat`),
+            // A multipart export may keep the payload in another part.
+            (fileId) =>
+                zip.has(`${fileId}.dat`) ||
+                this.attachmentExtractor.hasEntryInAnyArchive(`${fileId}.dat`),
             this.libraryLogger
         );
 

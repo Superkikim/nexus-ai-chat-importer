@@ -63,7 +63,7 @@ describe("ConversationProcessor.calculateAttachmentStats with library artifacts"
                 timestamp: 1000,
                 attachments: [
                     {
-                        fileName: "lettre_opposition_isabelle_bally.docx",
+                        fileName: "sample_letter.docx",
                         fileType:
                             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                         fileId: "file_doc_1",
@@ -71,7 +71,7 @@ describe("ConversationProcessor.calculateAttachmentStats with library artifacts"
                             processed: true,
                             found: true,
                             localPath:
-                                "attachments/chatgpt/documents/lettre_opposition_isabelle_bally.docx",
+                                "attachments/chatgpt/documents/sample_letter.docx",
                         },
                     },
                 ],

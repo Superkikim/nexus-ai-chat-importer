@@ -729,21 +729,19 @@ export class ImportService {
                 : undefined;
             const entryFilter = adapter?.shouldIncludeZipEntry?.bind(adapter);
 
-            // Build the attachment map
-            this.currentAttachmentMap =
-                await this.attachmentMapBuilder.buildAttachmentMap(files);
-
-            // Open all ZIPs for later access through the unified reader
+            // Open first and map only what opened: the map's zipIndex points
+            // into currentZips, so an unreadable archive must not shift it.
             this.currentZips = [];
+            const openedFiles: File[] = [];
 
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
+            for (const file of files) {
                 try {
                     const zipContent = await createZipArchiveReader(
                         file,
                         entryFilter
                     );
                     this.currentZips.push(zipContent);
+                    openedFiles.push(file);
                 } catch (error) {
                     this.plugin.logger.warn(
                         `Skipping ZIP for attachment map: ${file.name}`,
@@ -751,6 +749,9 @@ export class ImportService {
                     );
                 }
             }
+
+            this.currentAttachmentMap =
+                await this.attachmentMapBuilder.buildAttachmentMap(openedFiles);
 
             // Pass the attachment map to the ChatGPT adapter
             const chatgptAdapter = this.providerRegistry.getAdapter(

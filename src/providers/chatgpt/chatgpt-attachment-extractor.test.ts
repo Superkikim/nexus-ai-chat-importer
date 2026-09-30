@@ -272,6 +272,74 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
     });
 });
 
+describe("ChatGPTAttachmentExtractor — multipart export", () => {
+    const PART2_IMAGE = "file_00000000aaaa1111bbbb2222cccc3333";
+    const PART2_VOICE = "file_00000000dddd4444eeee5555ffff6666";
+    const PART1_INDEX = JSON.stringify({
+        [`${PART2_IMAGE}.dat`]: "holiday-sketch.png",
+        [`${PART2_VOICE}.dat`]: "conv-x/audio/voice-note.wav",
+    });
+
+    let mock: PluginMock;
+    let extractor: ChatGPTAttachmentExtractor;
+    let part1: ZipArchiveReader;
+
+    beforeEach(() => {
+        mock = createPluginMock();
+        extractor = createExtractor(mock);
+        part1 = createZipMock({
+            "conversation_asset_file_names.json": PART1_INDEX,
+        });
+        const part2 = createZipMock({
+            [`${PART2_IMAGE}.dat`]: PNG_BYTES,
+            [`${PART2_VOICE}.dat`]: WAV_BYTES,
+        });
+        const location = (id: string) => [
+            {
+                zipIndex: 1,
+                path: `${id}.dat`,
+                size: 12,
+                zipFileName: "export-part-0002.zip",
+            },
+        ];
+        extractor.setAttachmentMap(
+            new Map([
+                [PART2_IMAGE, location(PART2_IMAGE)],
+                [PART2_VOICE, location(PART2_VOICE)],
+            ]),
+            [part1, part2]
+        );
+    });
+
+    it("imports an attachment stored in a later part under its original name", async () => {
+        const [result] = await extractor.extractAttachments(part1, "conv-1", [
+            {
+                fileName: `image_${PART2_IMAGE}_800x600.png`,
+                fileType: "image/png",
+                fileId: PART2_IMAGE,
+            },
+        ]);
+
+        expect(result.status?.found).toBe(true);
+        expect(result.fileName).toBe("holiday-sketch.png");
+        expect(mock.writtenFiles.size).toBe(1);
+    });
+
+    it("still skips a voice recording stored in a later part", async () => {
+        const [result] = await extractor.extractAttachments(part1, "conv-1", [
+            {
+                fileName: "recording",
+                fileType: "application/octet-stream",
+                fileId: PART2_VOICE,
+            },
+        ]);
+
+        expect(result.status?.found).toBe(false);
+        expect(result.status?.reason).toBe("not_in_export");
+        expect(mock.writtenFiles.size).toBe(0);
+    });
+});
+
 describe("ChatGPTAttachmentExtractor — old format fallback (no index)", () => {
     let mock: PluginMock;
     let extractor: ChatGPTAttachmentExtractor;
