@@ -33,7 +33,7 @@ import report. Everything runs locally in your vault.
 
 ### 1.8.1
 
-- **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files.
+- **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files; a notice warns if a part is missing.
 - **DALL-E prompts are paired with their image again.**
 
 ### 1.8.0
