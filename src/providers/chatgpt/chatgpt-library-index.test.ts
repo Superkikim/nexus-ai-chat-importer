@@ -43,7 +43,7 @@ function createZipMock(files: Record<string, string>): ZipArchiveReader {
 const SAMPLE = JSON.stringify([
     {
         file_id: "file_0000000044c071f491e2d28bb4f6a09f",
-        file_name: "sample_letter.docx",
+        file_name: "lettre_opposition_isabelle_bally.docx",
         mime_type:
             "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         library_artifact_type: "report",
@@ -89,13 +89,13 @@ describe("buildChatGPTLibraryIndex", () => {
             "07625cea-5297-4e80-abe1-432448da0665"
         );
         expect(docx).toHaveLength(1);
-        expect(docx![0].fileName).toBe("sample_letter.docx");
+        expect(docx![0].fileName).toBe("lettre_opposition_isabelle_bally.docx");
         expect(docx![0].artifactType).toBe("report");
 
         expect(
             index!.byFileId.get("file_0000000044c071f491e2d28bb4f6a09f")
                 ?.fileName
-        ).toBe("sample_letter.docx");
+        ).toBe("lettre_opposition_isabelle_bally.docx");
     });
 
     it("omits entries with no origination message id from the message map", async () => {

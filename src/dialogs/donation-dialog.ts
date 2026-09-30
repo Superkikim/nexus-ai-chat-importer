@@ -53,11 +53,11 @@ export class DonationDialog extends Modal {
         const msgRow = box.createDiv({ cls: "nexus-support-message" });
         msgRow.createEl("p", { text: t("donation_dialog.message") });
 
-        // Reality check (gold tint)
-        const realityCheck = box.createDiv({
-            cls: "nexus-support-reality-check",
+        // Gratitude note (gold tint)
+        const gratitudeNote = box.createDiv({
+            cls: "nexus-support-gratitude-note",
         });
-        realityCheck.setText(t("donation_dialog.reality_check"));
+        gratitudeNote.setText(t("donation_dialog.gratitude_note"));
 
         // CTA
         const ctaRow = box.createDiv({ cls: "nexus-support-message" });

@@ -14,7 +14,7 @@ import report. Everything runs locally in your vault.
 
 ## Supported providers
 
-**ChatGPT** · **Claude** · **Mistral Vibe** · **Perplexity** · **Grok**
+**ChatGPT** · **Claude** · **Mistral Vibe** (formerly Le Chat) · **Perplexity** · **Grok**
 
 ## Features
 
@@ -29,14 +29,7 @@ import report. Everything runs locally in your vault.
   folders, and a detailed import report.
 - **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and an optional desktop [CLI](docs/user/cli.md).
 
-## What's new in 1.8
-
-### 1.8.1
-
-- **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files.
-- **DALL-E prompts are paired with their image again.**
-
-### 1.8.0
+## What's new in 1.8.0
 
 - **Grok is supported** — import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer, citations become links to their source, and Imagine posts become notes with their images.
 - **Perplexity's official export is supported** — import the ZIP from *Export my data*. Every conversation becomes a note, titled with the start of its first question.

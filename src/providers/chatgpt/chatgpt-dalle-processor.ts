@@ -39,7 +39,6 @@ export class ChatGPTDalleProcessor {
             { prompt: string; timestamp: number }
         >();
         const orphanedPrompts = new Map<string, string>();
-        const childrenIndex = this.buildChildrenIndex(chat.mapping);
 
         for (const messageObj of Object.values(chat.mapping)) {
             const message = messageObj?.message;
@@ -52,8 +51,7 @@ export class ChatGPTDalleProcessor {
                     // Recursive search in descendants until we find image or hit user message
                     const imageMessageId = this.findDalleImageInDescendants(
                         chat.mapping,
-                        messageObj.id || "",
-                        childrenIndex
+                        messageObj.id || ""
                     );
 
                     if (imageMessageId) {
@@ -76,35 +74,12 @@ export class ChatGPTDalleProcessor {
     }
 
     /**
-     * Index each node's children, from `children` and from `parent`.
-     * Some exports (May 2026) carry only `parent` on every node, so walking
-     * `children` alone never reaches the image that follows a prompt.
-     */
-    private static buildChildrenIndex(
-        mapping: Record<string, ChatMapping>
-    ): Map<string, string[]> {
-        const index = new Map<string, string[]>();
-        const add = (parentId: string, childId: string) => {
-            const list = index.get(parentId);
-            if (!list) index.set(parentId, [childId]);
-            else if (!list.includes(childId)) list.push(childId);
-        };
-
-        for (const [id, node] of Object.entries(mapping)) {
-            for (const childId of node?.children ?? []) add(id, childId);
-            if (node?.parent) add(node.parent, id);
-        }
-        return index;
-    }
-
-    /**
      * Recursively search for DALL-E image in descendants
      * Stops at first user message encountered (limit to prevent going too far)
      */
     private static findDalleImageInDescendants(
         mapping: Record<string, ChatMapping>,
-        startId: string,
-        childrenIndex: Map<string, string[]> = this.buildChildrenIndex(mapping)
+        startId: string
     ): string | null {
         const queue = [startId];
         const visited = new Set<string>();
@@ -134,7 +109,8 @@ export class ChatGPTDalleProcessor {
             }
 
             // Continue with children
-            queue.push(...(childrenIndex.get(currentId) ?? []));
+            const children = currentObj.children || [];
+            queue.push(...children);
         }
 
         return null;

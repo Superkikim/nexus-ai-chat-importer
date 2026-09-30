@@ -214,25 +214,6 @@ describe("ChatGPTAdapter.reconcileConversationMessages", () => {
         expect(attachments[0].status?.reason).toBe("not_in_export");
     });
 
-    it("attaches an artifact whose payload sits in another part of a multipart export", async () => {
-        const adapter = new ChatGPTAdapter(createTestPlugin());
-        const { zip: part1 } = createZipMock({
-            "library_files.json": libraryJson([GENERATED_IMAGE]),
-        });
-        const { zip: part2 } = createZipMock({}, ["file_img_1.dat"]);
-        adapter.setAttachmentMap(new Map(), [part1, part2]);
-
-        const result = await adapter.reconcileConversationMessages(
-            baseMessages(),
-            CONVERSATION,
-            part1
-        );
-
-        const attachments = result[1].attachments ?? [];
-        expect(attachments).toHaveLength(1);
-        expect(attachments[0].fileId).toBe("file_img_1");
-    });
-
     it("ignores artifacts belonging to another conversation", async () => {
         const adapter = new ChatGPTAdapter(createTestPlugin());
         const { zip } = createZipMock(

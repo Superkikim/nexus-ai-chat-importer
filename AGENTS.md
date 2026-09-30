@@ -10,8 +10,6 @@ These instructions apply to every coding agent working in this repository. Tool-
 - Do not change Git author configuration. Use the identity already configured in Git.
 - The agent completing a task is responsible for committing and pushing its validated, in-scope work unless the maintainer explicitly says not to.
 - Before staging, inspect every changed and untracked file intended for the commit. Commit and push only material that is appropriate for this public repository. Never stage secrets, credentials, private notes, personal data, provider export data, `.agent-work/`, or unrelated user changes.
-- Test fixtures, examples, and code comments use invented values only. Never copy a title, name, file name, ID, or text from a real export into the repository, even when reproducing a bug from one.
-- Real exports and temporary files (builds, extracts, scratch scripts and output) go under `local_resources/`, never elsewhere in the repository. `.agent-work/` holds only progress notes and findings.
 - Tags, releases, pull requests, merges, and deployments still require explicit authorization for that exact action.
 - Credits are curated by the maintainer. Preserve existing human credits and add people only when explicitly requested.
 

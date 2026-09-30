@@ -366,7 +366,7 @@
         },
         "complete_modal": {
             "title": "✅ 升级完成 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}} 更新内容\n\n### 1.8.1\n\n- **拆分为多个部分的大型 ChatGPT 导出可以完整导入** — 直接选择下载的 `OpenAI-export.zip`，或选择其全部 `part-*.zip` 文件。\n- **DALL-E 提示词重新与其图像配对。**\n\n### 1.8.0\n\n- **支持 Grok** — 直接导入 Grok 数据导出的 ZIP。对话会保留每一次重新生成的回答，引用会变成指向来源的链接，Imagine 帖子会变成带图片的笔记。\n- **支持 Perplexity 官方导出** — 导入通过 *Export my data* 获得的 ZIP。每段对话都会成为一篇笔记，标题取自其第一个问题的开头。\n- **Perplexity：官方导出与 Thread Exporter 扩展可以配合使用** — 可以将其中一个导入到用另一个创建的笔记上：笔记缺少的内容会被补上，扩展的存档还会补全来源、模型和引用标记，且不会产生重复。\n- **自定义 ID 属性** — 设置 → 属性会为每篇笔记添加一个你指定的属性（例如 `uid`），其值为对话 ID，并更新你现有的笔记。\n- **重建时会保留你添加的属性**，例如 `tags`。对笔记正文的编辑仍然会丢失。\n- **设置现在会出现在 Obsidian 的设置搜索中**（Obsidian 1.13 及以上），布局也更统一。\n- **报告会说明哪些内容被排除，以及原因。**\n- 另外还有修复：Perplexity 的更新不再丢失新消息，孤立的引用标记已消除，完成对话框不再把 Perplexity 的问答计为工件，移到文件中的长内容块也不再被折叠。\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ v{{version}} 更新内容\n\n- **支持 Grok** — 直接导入 Grok 数据导出的 ZIP。对话会保留每一次重新生成的回答，引用会变成指向来源的链接，Imagine 帖子会变成带图片的笔记。\n- **支持 Perplexity 官方导出** — 导入通过 *Export my data* 获得的 ZIP。每段对话都会成为一篇笔记，标题取自其第一个问题的开头。\n- **Perplexity：官方导出与 Thread Exporter 扩展可以配合使用** — 可以将其中一个导入到用另一个创建的笔记上：笔记缺少的内容会被补上，扩展的存档还会补全来源、模型和引用标记，且不会产生重复。\n- **自定义 ID 属性** — 设置 → 属性会为每篇笔记添加一个你指定的属性（例如 `uid`），其值为对话 ID，并更新你现有的笔记。\n- **重建时会保留你添加的属性**，例如 `tags`。对笔记正文的编辑仍然会丢失。\n- **设置现在会出现在 Obsidian 的设置搜索中**（Obsidian 1.13 及以上），布局也更统一。\n- **报告会说明哪些内容被排除，以及原因。**\n- 另外还有修复：Perplexity 的更新不再丢失新消息，孤立的引用标记已消除，完成对话框不再把 Perplexity 的问答计为工件，移到文件中的长内容块也不再被折叠。\n\n[完整发行说明](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "知道了！"
             }
@@ -583,7 +583,7 @@
         "title": "支持 Nexus",
         "message_emphasis": "捐款真的很重要。",
         "message": "我目前失业，没有收入。我花大量时间在这个插件上，并自掏腰包订阅它所支持的 AI 平台，以便测试真实的导出并保持一切准确。",
-        "reality_check": "在大约1,600名正在使用此插件的用户中，捐赠过的不到1%。",
+        "gratitude_note": "您用过的每一个版本，都是因为已经有一小部分用户选择支持这个项目才得以存在。",
         "cta": "如果这个插件对您有用，您的捐款将产生真正的影响。",
         "button_donate": "支持项目",
         "button_later": "也许以后"

@@ -674,7 +674,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 "import-all",
                 provider,
                 filesToImport,
-                files,
                 conversationsByFile,
                 operationReport,
                 undefined,
@@ -1166,7 +1165,6 @@ export default class NexusAiChatImporterPlugin extends Plugin {
                 "selective-import",
                 provider,
                 filesToImport,
-                files,
                 conversationsByFile,
                 operationReport,
                 selectedExistingConversationIds,
@@ -1612,7 +1610,6 @@ ${report.generateMobileIndexContent(files, links)}
         operation: "import-all" | "selective-import",
         provider: string,
         filesToImport: File[],
-        selectedFiles: File[],
         conversationsByFile: Map<string, string[]>,
         operationReport: ImportReport,
         selectedExistingConversationIds?: Set<string>,
@@ -1636,20 +1633,24 @@ ${report.generateMobileIndexContent(files, links)}
             );
         }
 
-        if (this.usesMultiZipAttachmentMap(provider, selectedFiles)) {
+        if (
+            !mobileTaskQueueMode &&
+            provider === "chatgpt" &&
+            executionFiles.length > 1
+        ) {
             this.setImportCheckpoint({
                 operation,
                 phase: "attachment-map-build",
                 provider,
-                task: `0/${selectedFiles.length}`,
+                task: `0/${executionFiles.length}`,
             });
             importFlowLogger.debug(`Building multi-ZIP attachment map`, {
                 provider,
-                fileCount: selectedFiles.length,
+                fileCount: executionFiles.length,
                 mode: "desktop-multi-zip",
             });
             await this.importService.buildAttachmentMapForMultiZip(
-                selectedFiles,
+                executionFiles,
                 provider
             );
         }
@@ -1748,7 +1749,11 @@ ${report.generateMobileIndexContent(files, links)}
             }
         }
 
-        if (this.usesMultiZipAttachmentMap(provider, selectedFiles)) {
+        if (
+            !mobileTaskQueueMode &&
+            provider === "chatgpt" &&
+            executionFiles.length > 1
+        ) {
             this.importService.clearAttachmentMap();
         }
     }
@@ -1814,19 +1819,6 @@ ${report.generateMobileIndexContent(files, links)}
         });
     }
 
-    // Built from the whole selection, not only the archives that carry
-    // conversations: later parts of a multipart export hold attachments only.
-    private usesMultiZipAttachmentMap(
-        provider: string,
-        selectedFiles: File[]
-    ): boolean {
-        return (
-            !this.isMobileTaskQueueMode() &&
-            provider === "chatgpt" &&
-            selectedFiles.length > 1
-        );
-    }
-
     private logIgnoredArchives(
         ignoredArchives: IgnoredArchiveInfo[],
         provider: string,
@@ -1850,8 +1842,7 @@ ${report.generateMobileIndexContent(files, links)}
         const expected = ignoredArchives.every(
             (archive) =>
                 archive.reason === "provider-mismatch" ||
-                archive.reason === "unsupported-format" ||
-                archive.reason === "attachments-only"
+                archive.reason === "unsupported-format"
         );
 
         const details = {

@@ -91,17 +91,14 @@ Release body.
 
 Keep the README concise (see [`docs/README.md`](../README.md) for its role).
 
-Keep one **What's new in X.Y** section covering the current minor series, so
-someone upgrading from an older series sees everything it brings: a `### X.Y.Z`
-subsection per release, newest first, each with one-line bullets (headlines only,
-no mechanism or justification), then the "Full release notes" link. A patch release
-adds its subsection on top; a new minor release replaces the whole section.
-`RELEASE_NOTES.md` stays the canonical changelog.
+Replace the **What's new in X.Y.Z** section with a pared-down version of the new
+release: 6–8 one-line bullets, headlines only, no mechanism or justification, then
+the "Full release notes" link. It covers the current version only — it is replaced
+each release, never appended to. `RELEASE_NOTES.md` stays the canonical changelog.
 
 > **The upgrade and new-version dialogs render this section.** They fetch
 > `README.md` at the version tag and take everything under the first
-> `## What's new …` heading, up to the next `##` heading — so per-release
-> subsections must be `###`
+> `## What's new …` heading
 > ([`src/utils/release-notes.ts`](../../src/utils/release-notes.ts)). Keep the
 > heading wording, keep links absolute so they resolve inside the modal, and do
 > not forget it at release time — otherwise the dialog silently falls back to the
@@ -114,7 +111,7 @@ Update `upgrade.complete_modal.fallback_content` in every
 upgrade dialog when the GitHub README cannot be fetched (offline, or the tag not
 yet published). `{{version}}` is filled at runtime.
 
-Keep it a translated mirror of the **What's new in X.Y** README section — same
+Keep it a translated mirror of the **What's new in X.Y.Z** README section — same
 bullets, same order — so a reader sees the same summary whether or not the fetch
 succeeds. It is a hand-maintained changelog in 10 languages: if it is ever left
 stale again, replace it with a short version-agnostic pointer to
@@ -184,4 +181,4 @@ manual action.
 | `package.json`, `package-lock.json`, `manifest.json` | `version` (at the start of the release, not the end) |
 | `versions.json` | New version → `minAppVersion` row |
 | `CLAUDE.md` | Current Version line |
-| `README.md` | Update the **What's new in X.Y** section |
+| `README.md` | Replace the **What's new in X.Y.Z** section |

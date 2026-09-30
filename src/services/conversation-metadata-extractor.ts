@@ -139,8 +139,7 @@ export interface IgnoredArchiveInfo {
         | "provider-mismatch"
         | "empty"
         | "nested-zip-container"
-        | "read-error"
-        | "attachments-only";
+        | "read-error";
     message: string;
 }
 
@@ -345,27 +344,13 @@ export class ConversationMetadataExtractor {
                 });
 
                 if (!classification.supported) {
-                    // A later part of a multipart ChatGPT export holds only
-                    // attachments; the import still searches it for them.
-                    const attachmentsOnly =
-                        forcedProvider === "chatgpt" &&
-                        classification.reason === "unsupported-format";
-                    ignoredArchives.push(
-                        attachmentsOnly
-                            ? {
-                                  fileName: file.name,
-                                  reason: "attachments-only",
-                                  message:
-                                      "No conversations; only its attachments can be used.",
-                              }
-                            : {
-                                  fileName: file.name,
-                                  reason: classification.reason,
-                                  message:
-                                      classification.message ??
-                                      "Unsupported archive format.",
-                              }
-                    );
+                    ignoredArchives.push({
+                        fileName: file.name,
+                        reason: classification.reason,
+                        message:
+                            classification.message ??
+                            "Unsupported archive format.",
+                    });
                     this.metadataLogger.debug(`Skipping unsupported archive`, {
                         fileName: file.name,
                         reason: classification.reason,

@@ -119,57 +119,6 @@ describe("expandContainerArchives", () => {
         expect(result.files).toEqual([containerFile]);
     });
 
-    it("keeps every part of a multipart export, including attachment-only parts", async () => {
-        const container = await buildContainer([
-            {
-                name: "User Online Activity/Conversations__abc-chatgpt-0001-part-0002.zip",
-                data: await buildZip([
-                    {
-                        name: "file_00000000ef01.dat",
-                        data: new Uint8Array([9, 8, 7]),
-                    },
-                ]),
-            },
-            {
-                name: "User Online Activity/Conversations__abc-chatgpt-0001-part-0001.zip",
-                data: await buildInnerExport(),
-            },
-        ]);
-
-        const result = await expandContainerArchives([
-            toFile(container, "OpenAI-export.zip"),
-        ]);
-
-        expect(result.expandedContainers).toEqual(["OpenAI-export.zip"]);
-        expect(result.files.map((file) => file.name)).toEqual([
-            "Conversations__abc-chatgpt-0001-part-0001.zip",
-            "Conversations__abc-chatgpt-0001-part-0002.zip",
-        ]);
-    });
-
-    it("leaves the container untouched when no part carries conversations", async () => {
-        const attachmentsOnly = async () =>
-            buildZip([
-                { name: "file_00000000ef01.dat", data: new Uint8Array([9]) },
-            ]);
-        const container = await buildContainer([
-            {
-                name: "User Online Activity/Conversations__abc-chatgpt-0001-part-0001.zip",
-                data: await attachmentsOnly(),
-            },
-            {
-                name: "User Online Activity/Conversations__abc-chatgpt-0001-part-0002.zip",
-                data: await attachmentsOnly(),
-            },
-        ]);
-        const containerFile = toFile(container, "OpenAI-export.zip");
-
-        const result = await expandContainerArchives([containerFile]);
-
-        expect(result.expandedContainers).toEqual([]);
-        expect(result.files).toEqual([containerFile]);
-    });
-
     it("leaves the container untouched when the inner archive is not a supported export", async () => {
         const container = await buildContainer([
             {

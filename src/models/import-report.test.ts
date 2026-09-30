@@ -523,33 +523,6 @@ describe("import report — an unprocessed archive says why", () => {
             )
         ).toBe("no selected conversations");
     });
-
-    it("names an archive that only supplied attachments", () => {
-        const report = populatedReport();
-        report.setIgnoredArchives([
-            {
-                fileName: "part-0002.zip",
-                reason: "attachments-only",
-                message: "searched for attachments",
-            },
-        ]);
-
-        const markdown = report.generateSummaryReportContent(
-            [fakeFile("export.zip"), fakeFile("part-0002.zip")],
-            ["export.zip"],
-            ["part-0002.zip"],
-            false,
-            undefined,
-            LINKS
-        );
-
-        const row = markdown
-            .split("\n")
-            .find((line) => line.startsWith("| `part-0002.zip`"));
-        expect(row?.split("|")[4].trim()).toBe(
-            "attachments only: searched for attachments"
-        );
-    });
 });
 
 describe("import report — the outcomes account for every selected conversation", () => {

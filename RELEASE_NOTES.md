@@ -1,14 +1,5 @@
 # Release Notes for Nexus AI Chat Importer
 
-## Version 1.8.1 — ChatGPT multipart exports and DALL-E prompts
-
-![Version](https://img.shields.io/badge/version-1.8.1-blue) ![Patch](https://img.shields.io/badge/type-patch-orange)
-
-### 🐛 Fixed
-
-- **Large ChatGPT exports split into parts now import completely** ([#90](https://github.com/Superkikim/nexus-ai-chat-importer/issues/90)). Select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files. Already imported the first part alone? Import again with **Reprocess existing notes** (it rewrites those notes). Not supported on mobile.
-- **DALL-E prompts are paired with their image again** in exports that only link messages to their parent. Import again to fix existing notes.
-
 ## Version 1.8.0 — Grok, Perplexity's official export, and a custom ID property
 
 ![Version](https://img.shields.io/badge/version-1.8.0-blue) ![Feature](https://img.shields.io/badge/type-feature-green)

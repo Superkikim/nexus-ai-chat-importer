@@ -1590,8 +1590,6 @@ export class ImportReport {
                 return "empty archive";
             case "read-error":
                 return "read error";
-            case "attachments-only":
-                return "attachments only";
             default:
                 return reason;
         }
