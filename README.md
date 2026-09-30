@@ -29,10 +29,23 @@ import report. Everything runs locally in your vault.
   folders, and a detailed import report.
 - **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and an optional desktop [CLI](docs/user/cli.md).
 
-## What's new in 1.8.1
+## What's new in 1.8
+
+### 1.8.1
 
 - **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files.
 - **DALL-E prompts are paired with their image again.**
+
+### 1.8.0
+
+- **Grok is supported** — import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer, citations become links to their source, and Imagine posts become notes with their images.
+- **Perplexity's official export is supported** — import the ZIP from *Export my data*. Every conversation becomes a note, titled with the start of its first question.
+- **Perplexity: the official export and the Thread Exporter extension work together** — import either over notes created from the other: it adds what a note lacks, and an extension archive fills in sources, models and citation markers, without duplicating anything.
+- **Custom ID property** — Settings → Properties adds a property of your choice (for example `uid`) holding the conversation ID to every note, and updates your existing notes.
+- **A rebuild keeps the properties you added**, such as `tags`. Edits to the note body are still lost.
+- **Settings appear in Obsidian's settings search** (Obsidian 1.13+), with a consistent layout.
+- **Reports say what was left out, and why.**
+- Plus fixes: Perplexity updates no longer lose new messages, orphan citation markers are gone, the completion dialog no longer counts Perplexity turns as artifacts, and a long block moved to a file is no longer folded.
 
 [Full release notes →](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)
 
