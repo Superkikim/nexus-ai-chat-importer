@@ -500,86 +500,6 @@
     background: none;
 }
 
-.nexus-support-hero {
-    text-align: center;
-    padding: 2em 1.5em;
-    background: var(--background-secondary);
-    border-radius: 8px;
-    margin-bottom: 1.5em;
-    border: 1px solid var(--background-modifier-border);
-}
-
-.nexus-support-title {
-    margin: 0 0 1em 0;
-    font-size: 1.5em;
-    font-weight: 600;
-    color: var(--text-normal);
-}
-
-.nexus-support-message-container {
-    max-width: 600px;
-    margin: 0 auto 2em auto;
-}
-
-.nexus-support-line {
-    margin: 0.75em 0;
-    line-height: 1.6;
-    color: var(--text-muted);
-    font-size: 0.95em;
-}
-
-.nexus-support-cta-text {
-    font-weight: 500;
-    color: var(--text-normal);
-}
-
-.nexus-support-stats {
-    display: flex;
-    justify-content: center;
-    gap: 3em;
-    margin-bottom: 2em;
-    flex-wrap: wrap;
-}
-
-.nexus-stat {
-    text-align: center;
-    min-width: 100px;
-}
-
-.nexus-stat-number {
-    font-size: 2em;
-    font-weight: bold;
-    color: var(--interactive-accent);
-    margin-bottom: 0.25em;
-}
-
-.nexus-stat-number.nexus-stat-negative {
-    color: var(--text-error);
-}
-
-.nexus-stat-label {
-    font-size: 0.85em;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.nexus-support-cta {
-    margin-top: 1.5em;
-}
-
-.nexus-support-button {
-    font-size: 1.1em;
-    padding: 0.75em 2em;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.nexus-support-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-}
-
 .nexus-support-resources {
     border-bottom: none;
     padding-top: 0.8em;
@@ -676,76 +596,62 @@
    SUPPORT BOX
    ======================================== */
 
+.nexus-support {
+    margin: 16px 0;
+}
+
+.nexus-support-title {
+    text-align: center;
+    margin: 0 0 12px 0;
+    font-size: 1.3em;
+    font-weight: 600;
+    color: var(--text-normal);
+}
+
 .nexus-support-box {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     border-radius: 12px;
-    padding: 20px;
-    margin: 16px 0;
-    color: white;
+    padding: 20px 24px;
+    text-align: center;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
-.nexus-support-header {
-    text-align: center;
-    margin-bottom: 16px;
-    font-size: 1.3em;
-    font-weight: 600;
-}
-
-.nexus-support-header-highlight {
-    color: #FFD700;
-}
-
-.nexus-support-message {
-    text-align: center;
-    margin-bottom: 8px;
-    line-height: 1.6;
-}
-
-.nexus-support-message p {
+.nexus-support-box p {
     margin: 8px 0;
+    line-height: 1.6;
     color: rgba(255, 255, 255, 0.95);
 }
 
-.nexus-support-message-emphasis {
-    color: #FFD700;
-    font-weight: 600;
-    font-size: 1.05em;
-}
-
-.nexus-support-reality-check {
-    background: rgba(255, 215, 0, 0.15);
-    border: 1px solid rgba(255, 215, 0, 0.3);
+.nexus-support-box p.nexus-support-reality-check {
+    margin: 14px 0;
+    padding: 10px 14px;
+    border: 1px solid rgba(255, 215, 0, 0.35);
     border-radius: 8px;
+    background: rgba(255, 215, 0, 0.15);
+    color: #ffd700;
+    font-weight: 600;
+}
+
+/*
+ * The coral is a deliberate brand color for the one donate action, kept the
+ * same wherever it appears rather than following the theme accent.
+ */
+.nexus-support a.nexus-support-button {
+    display: block;
+    margin-top: 20px;
     padding: 12px 16px;
-    margin: 16px 0;
-    text-align: center;
-    font-size: 0.95em;
-    color: rgba(255, 255, 255, 0.95);
-    line-height: 1.5;
-}
-
-.nexus-support-button-container {
-    text-align: center;
-    margin: 0px 0;
-}
-
-.nexus-support-link {
-    display: inline-block;
-    padding: 10px 28px;
-    background-color: #FF5E5B;
+    border-radius: 8px;
+    background-color: #ff5e5b;
     color: #ffffff;
     font-weight: 600;
-    font-size: 1em;
-    border-radius: 8px;
+    text-align: center;
     text-decoration: none;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    transition: background-color 0.2s ease, transform 0.2s ease;
 }
 
-.nexus-support-link:hover {
+.nexus-support a.nexus-support-button:hover {
     background-color: #e04a47;
-    transform: scale(1.05);
+    color: #ffffff;
+    text-decoration: none;
 }
 
 /* ========================================
@@ -810,64 +716,25 @@
     max-width: 90vw;
 }
 
-.nexus-donation-hero {
-    text-align: center;
-    font-size: 56px;
-    margin: 8px 0 4px 0;
-    line-height: 1;
+.nexus-donation-dialog .nexus-support {
+    margin: 0;
 }
 
-.nexus-donation-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-    align-items: center;
-}
-
-.nexus-donation-btn-primary {
-    width: 100%;
-    padding: 12px 0;
-    font-size: 1.05em;
-    font-weight: 600;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-}
-
-/*
- * The button also carries Obsidian's own `.mod-cta` class (for baseline
- * button behaviour), whose background-color otherwise wins the cascade.
- * Same fix as `.nexus-ai-chat-importer-modal button.mod-cta` above:
- * out-specificity it (ancestor class + element + two classes) instead of
- * reaching for !important. The coral is a deliberate brand color — it
- * matches the support-box link — not meant to follow the theme accent,
- * so this doesn't use --interactive-accent the way that rule does.
- */
-.nexus-donation-dialog button.nexus-donation-btn-primary.mod-cta {
-    background-color: #FF5E5B;
-    color: #ffffff;
-}
-
-.nexus-donation-dialog button.nexus-donation-btn-primary.mod-cta:hover {
-    background-color: #e04a47;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.nexus-donation-btn-secondary {
+.modal.nexus-donation-dialog button.nexus-donation-later {
+    display: block;
+    margin: 12px auto 0 auto;
     background: none;
     border: none;
+    box-shadow: none;
     color: var(--text-muted);
     font-size: 0.9em;
     cursor: pointer;
-    padding: 4px 8px;
-    text-decoration: underline;
-    transition: color 0.15s ease;
 }
 
-.nexus-donation-btn-secondary:hover {
+.modal.nexus-donation-dialog button.nexus-donation-later:hover {
+    background: none;
     color: var(--text-normal);
+    text-decoration: underline;
 }
 
 .nexus-ai-chat-importer-modal,

@@ -366,7 +366,7 @@
         },
         "complete_modal": {
             "title": "✅ 업그레이드 완료 - v{{version}}",
-            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 1.8.1\n\n- **여러 부분으로 나뉜 대용량 ChatGPT 내보내기를 완전히 가져옵니다** — 다운로드한 `OpenAI-export.zip`을 그대로 선택하거나, 모든 `part-*.zip` 파일을 선택하세요.\n- **DALL-E 프롬프트가 다시 해당 이미지와 연결됩니다.**\n\n### 1.8.0\n\n- **Grok을 지원합니다** — Grok 데이터 내보내기의 ZIP을 그대로 가져오세요. 대화는 다시 생성된 모든 답변을 유지하고, 인용은 출처 링크가 되며, Imagine 게시물은 이미지가 포함된 노트가 됩니다.\n- **Perplexity 공식 내보내기를 지원합니다** — *Export my data*로 받은 ZIP을 가져오세요. 각 대화는 첫 질문의 앞부분을 제목으로 한 노트가 됩니다.\n- **Perplexity: 공식 내보내기와 Thread Exporter 확장 프로그램이 함께 작동합니다** — 한쪽으로 만든 노트 위에 다른 쪽을 가져올 수 있습니다. 노트에 없는 내용이 추가되고, 확장 프로그램 아카이브는 출처, 모델, 인용 표시를 채워 주며, 중복은 생기지 않습니다.\n- **사용자 지정 ID 속성** — 설정 → 속성에서 대화 ID를 담는 원하는 속성(예: `uid`)을 모든 노트에 추가하고, 기존 노트도 업데이트합니다.\n- **재구성해도 직접 추가한 속성은 유지됩니다**(예: `tags`). 노트 본문 편집 내용은 여전히 사라집니다.\n- **설정이 Obsidian의 설정 검색에 표시됩니다**(Obsidian 1.13 이상). 레이아웃도 일관되게 정리했습니다.\n- **보고서에 제외된 항목과 그 이유가 표시됩니다.**\n- 그 밖의 수정: Perplexity 업데이트에서 새 메시지가 더 이상 사라지지 않고, 남은 인용 표시가 없어지며, 완료 대화상자가 Perplexity 대화를 아티팩트로 세지 않고, 파일로 옮겨진 긴 블록이 더 이상 접혀 있지 않습니다.\n\n[전체 릴리스 노트](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ v{{version}}의 새로운 기능\n\n### 1.8.1\n\n- **여러 부분으로 나뉜 대용량 ChatGPT 내보내기를 완전히 가져옵니다** — 다운로드한 `OpenAI-export.zip`을 그대로 선택하거나, 모든 `part-*.zip` 파일을 선택하세요. 누락된 파트가 있으면 알림이 표시됩니다.\n- **DALL-E 프롬프트가 다시 해당 이미지와 연결됩니다.**\n\n### 1.8.0\n\n- **Grok을 지원합니다** — Grok 데이터 내보내기의 ZIP을 그대로 가져오세요. 대화는 다시 생성된 모든 답변을 유지하고, 인용은 출처 링크가 되며, Imagine 게시물은 이미지가 포함된 노트가 됩니다.\n- **Perplexity 공식 내보내기를 지원합니다** — *Export my data*로 받은 ZIP을 가져오세요. 각 대화는 첫 질문의 앞부분을 제목으로 한 노트가 됩니다.\n- **Perplexity: 공식 내보내기와 Thread Exporter 확장 프로그램이 함께 작동합니다** — 한쪽으로 만든 노트 위에 다른 쪽을 가져올 수 있습니다. 노트에 없는 내용이 추가되고, 확장 프로그램 아카이브는 출처, 모델, 인용 표시를 채워 주며, 중복은 생기지 않습니다.\n- **사용자 지정 ID 속성** — 설정 → 속성에서 대화 ID를 담는 원하는 속성(예: `uid`)을 모든 노트에 추가하고, 기존 노트도 업데이트합니다.\n- **재구성해도 직접 추가한 속성은 유지됩니다**(예: `tags`). 노트 본문 편집 내용은 여전히 사라집니다.\n- **설정이 Obsidian의 설정 검색에 표시됩니다**(Obsidian 1.13 이상). 레이아웃도 일관되게 정리했습니다.\n- **보고서에 제외된 항목과 그 이유가 표시됩니다.**\n- 그 밖의 수정: Perplexity 업데이트에서 새 메시지가 더 이상 사라지지 않고, 남은 인용 표시가 없어지며, 완료 대화상자가 Perplexity 대화를 아티팩트로 세지 않고, 파일로 옮겨진 긴 블록이 더 이상 접혀 있지 않습니다.\n\n[전체 릴리스 노트](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "알겠어요!"
             }
@@ -556,7 +556,8 @@
         "attachment_map_failed": "첨부 파일 맵을 만들지 못했습니다. 자세한 내용은 콘솔을 확인하세요.",
         "ribbon_tooltip": "Nexus AI Chat Importer - 새 파일 가져오기",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
-        "import_archives_ignored": "{{count}}개의 아카이브를 읽을 수 없습니다({{provider}}). 자세한 내용은 콘솔을 확인하세요."
+        "import_archives_ignored": "{{count}}개의 아카이브를 읽을 수 없습니다({{provider}}). 자세한 내용은 콘솔을 확인하세요.",
+        "import_export_part_missing": "이 ChatGPT 내보내기에는 선택한 아카이브에 없는 파일 {{count}}개가 나열되어 있습니다. 일부 파트가 누락된 것 같습니다. 해당 파트의 첨부 파일은 가져오지 않습니다."
     },
     "archive_messages": {
         "empty": "이 ZIP 파일에는 파일이 없습니다. 올바른 내보내기 파일을 선택했는지 확인하세요.",
@@ -579,20 +580,12 @@
             "name": "AI 대화 가져오기"
         }
     },
-    "donation_dialog": {
-        "title": "Nexus 후원하기",
-        "message_emphasis": "후원은 정말 중요합니다.",
-        "message": "저는 현재 실직 상태로 수입이 없습니다. 이 플러그인에 많은 시간을 투자하고 있으며, 실제 내보내기를 테스트하고 정확성을 유지하기 위해 지원하는 AI 플랫폼의 구독료를 자비로 부담하고 있습니다.",
-        "reality_check": "이 플러그인을 사용 중인 약 1,600명 중 기부한 적이 있는 사용자는 1% 미만입니다.",
-        "cta": "이 플러그인이 유용하다면, 후원은 큰 도움이 됩니다.",
-        "button_donate": "프로젝트 후원하기",
-        "button_later": "나중에"
-    },
     "support_box": {
-        "header": "이 플러그인 후원하기",
-        "header_highlight": "이 플러그인 후원하기",
-        "default_message_emphasis": "Nexus의 다운로드가 15,000회를 넘었습니다. 여러분의 후원이 개발을 이어가게 하고 도구와 구독 비용을 충당합니다.",
-        "default_message": "현재 실직 상태라 작은 후원도 큰 힘이 됩니다.",
-        "button_alt": "내 작업 후원하기"
+        "title": "Nexus 후원하기",
+        "message": "저는 현재 실직 상태이며 수입이 전혀 없습니다. 이 플러그인을 혼자 개발하고 유지하며, 실제 내보내기를 테스트하기 위해 지원하는 AI 플랫폼 구독료를 직접 부담하고 있습니다.",
+        "reality_check": "기부한 적이 있는 사용자는 1% 미만입니다.",
+        "cta": "이 플러그인이 가치 있다고 생각하신다면, 기부가 계속 운영하는 데 도움이 됩니다.",
+        "button": "프로젝트 후원하기",
+        "button_later": "나중에"
     }
 }

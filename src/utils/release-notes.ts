@@ -30,6 +30,33 @@ export function extractWhatsNewSection(readmeText: string): string | null {
 }
 
 /**
+ * The README from its top down to the "What's new" section — the intro,
+ * supported providers and features — for the first-install dialog. The H1,
+ * badge lines and `>` notes are dropped, and `##` headings become `###` to
+ * sit under the dialog's own title. Returns `null` when nothing is left.
+ */
+export function extractReadmeOverview(readmeText: string): string | null {
+    const norm = readmeText.replace(/\r\n/g, "\n");
+    const whatsNew = WHATS_NEW_HEADING.exec(norm);
+    const head = whatsNew ? norm.slice(0, whatsNew.index) : norm;
+
+    const body = head
+        .split("\n")
+        .filter(
+            (line) =>
+                !/^#\s/.test(line) &&
+                !line.trim().startsWith(">") &&
+                !/^\[?!\[/.test(line.trim())
+        )
+        .map((line) => line.replace(/^##\s/, "### "))
+        .join("\n")
+        .replace(/\n{3,}/g, "\n\n")
+        .trim();
+
+    return body.length > 0 ? body : null;
+}
+
+/**
  * Fetch the README's "What's new" section from GitHub. Tries the version tag
  * first, then `master`. Returns `null` on any failure (offline, tag not yet
  * published, section missing) so callers fall back to the bundled localized

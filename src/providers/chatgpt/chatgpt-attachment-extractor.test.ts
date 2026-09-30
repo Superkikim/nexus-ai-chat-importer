@@ -145,7 +145,7 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
         });
 
         const attachment: StandardAttachment = {
-            fileName: "isa0001.ocr.pdf",
+            fileName: "scan0001.ocr.pdf",
             fileType: "application/pdf",
             fileId: "file_000000009b8c71f4ace00c77fc58413d",
         };
@@ -156,7 +156,7 @@ describe("ChatGPTAttachmentExtractor — new 2026 export format", () => {
 
         expect(result.status?.found).toBe(true);
         expect(result.status?.localPath).toBe(
-            "attachments/chatgpt/documents/isa0001.ocr.pdf"
+            "attachments/chatgpt/documents/scan0001.ocr.pdf"
         );
     });
 

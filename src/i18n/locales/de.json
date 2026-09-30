@@ -366,7 +366,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade abgeschlossen – v{{version}}",
-            "fallback_content": "## ✨ Neuigkeiten in v{{version}}\n\n### 1.8.1\n\n- **Große, in Teile aufgeteilte ChatGPT-Exporte werden vollständig importiert** — wählen Sie den Download `OpenAI-export.zip` unverändert oder alle zugehörigen `part-*.zip`-Dateien.\n- **DALL-E-Prompts werden wieder ihrem Bild zugeordnet.**\n\n### 1.8.0\n\n- **Grok wird unterstützt** — importieren Sie das ZIP Ihres Grok-Datenexports unverändert. Konversationen behalten jede neu generierte Antwort, Zitate werden zu Links auf ihre Quelle, und Imagine-Beiträge werden zu Notizen mit ihren Bildern.\n- **Der offizielle Perplexity-Export wird unterstützt** — importieren Sie das ZIP aus *Export my data*. Jede Konversation wird zu einer Notiz, deren Titel der Anfang ihrer ersten Frage ist.\n- **Perplexity: offizieller Export und Thread-Exporter-Erweiterung arbeiten zusammen** — importieren Sie einen über Notizen, die mit dem anderen erstellt wurden: Fehlendes wird ergänzt, und ein Archiv der Erweiterung liefert Quellen, Modelle und Zitatmarker nach, ohne etwas zu duplizieren.\n- **Benutzerdefinierte ID-Eigenschaft** — Einstellungen → Eigenschaften fügt jeder Notiz eine Eigenschaft Ihrer Wahl hinzu (zum Beispiel `uid`), die die Konversations-ID enthält, und aktualisiert Ihre vorhandenen Notizen.\n- **Ein Neuaufbau behält Eigenschaften, die Sie hinzugefügt haben**, etwa `tags`. Änderungen am Notizinhalt gehen weiterhin verloren.\n- **Die Einstellungen erscheinen in der Einstellungssuche von Obsidian** (Obsidian 1.13+), mit einheitlichem Layout.\n- **Berichte zeigen, was ausgelassen wurde und warum.**\n- Dazu Korrekturen: Perplexity-Aktualisierungen verlieren keine neuen Nachrichten mehr, verwaiste Zitatmarker verschwinden, der Abschlussdialog zählt Perplexity-Einträge nicht mehr als Artefakte, und ein in eine Datei ausgelagerter langer Block ist nicht mehr eingeklappt.\n\n[Vollständige Versionshinweise](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ Neuigkeiten in v{{version}}\n\n### 1.8.1\n\n- **Große, in Teile aufgeteilte ChatGPT-Exporte werden vollständig importiert** — wählen Sie den Download `OpenAI-export.zip` unverändert oder alle zugehörigen `part-*.zip`-Dateien; ein Hinweis warnt, wenn ein Teil fehlt.\n- **DALL-E-Prompts werden wieder ihrem Bild zugeordnet.**\n\n### 1.8.0\n\n- **Grok wird unterstützt** — importieren Sie das ZIP Ihres Grok-Datenexports unverändert. Konversationen behalten jede neu generierte Antwort, Zitate werden zu Links auf ihre Quelle, und Imagine-Beiträge werden zu Notizen mit ihren Bildern.\n- **Der offizielle Perplexity-Export wird unterstützt** — importieren Sie das ZIP aus *Export my data*. Jede Konversation wird zu einer Notiz, deren Titel der Anfang ihrer ersten Frage ist.\n- **Perplexity: offizieller Export und Thread-Exporter-Erweiterung arbeiten zusammen** — importieren Sie einen über Notizen, die mit dem anderen erstellt wurden: Fehlendes wird ergänzt, und ein Archiv der Erweiterung liefert Quellen, Modelle und Zitatmarker nach, ohne etwas zu duplizieren.\n- **Benutzerdefinierte ID-Eigenschaft** — Einstellungen → Eigenschaften fügt jeder Notiz eine Eigenschaft Ihrer Wahl hinzu (zum Beispiel `uid`), die die Konversations-ID enthält, und aktualisiert Ihre vorhandenen Notizen.\n- **Ein Neuaufbau behält Eigenschaften, die Sie hinzugefügt haben**, etwa `tags`. Änderungen am Notizinhalt gehen weiterhin verloren.\n- **Die Einstellungen erscheinen in der Einstellungssuche von Obsidian** (Obsidian 1.13+), mit einheitlichem Layout.\n- **Berichte zeigen, was ausgelassen wurde und warum.**\n- Dazu Korrekturen: Perplexity-Aktualisierungen verlieren keine neuen Nachrichten mehr, verwaiste Zitatmarker verschwinden, der Abschlussdialog zählt Perplexity-Einträge nicht mehr als Artefakte, und ein in eine Datei ausgelagerter langer Block ist nicht mehr eingeklappt.\n\n[Vollständige Versionshinweise](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Verstanden!"
             }
@@ -556,7 +556,8 @@
         "attachment_map_failed": "Anhangskarte konnte nicht erstellt werden. Weitere Details in der Konsole.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Neue Datei importieren",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
-        "import_archives_ignored": "{{count}} Archiv(e) konnten nicht gelesen werden ({{provider}}). Details in der Konsole."
+        "import_archives_ignored": "{{count}} Archiv(e) konnten nicht gelesen werden ({{provider}}). Details in der Konsole.",
+        "import_export_part_missing": "Dieser ChatGPT-Export listet {{count}} Dateien auf, die in den ausgewählten Archiven fehlen. Wahrscheinlich fehlt ein Teil: Seine Anhänge werden nicht importiert."
     },
     "archive_messages": {
         "empty": "Die ZIP-Datei enthält keine Dateien. Bitte prüfen Sie, ob Sie die richtige Exportdatei ausgewählt haben.",
@@ -579,20 +580,12 @@
             "name": "KI-Gespräche importieren"
         }
     },
-    "donation_dialog": {
-        "title": "Nexus unterstützen",
-        "message_emphasis": "Spenden sind wirklich wichtig.",
-        "message": "Ich bin derzeit arbeitslos und habe kein Einkommen. Ich investiere viel Zeit in dieses Plugin und bezahle aus eigener Tasche Abonnements für die KI-Plattformen, die es unterstützt, um echte Exporte testen und alles akkurat halten zu können.",
-        "reality_check": "Von den etwa 1.600 Nutzern dieses Plugins haben weniger als 1 % jemals gespendet.",
-        "cta": "Wenn dieses Plugin nützlich für Sie ist, macht eine Spende wirklich einen Unterschied.",
-        "button_donate": "Projekt unterstützen",
-        "button_later": "Vielleicht später"
-    },
     "support_box": {
-        "header": "Dieses Plugin unterstützen",
-        "header_highlight": "Dieses Plugin unterstützen",
-        "default_message_emphasis": "Nexus hat 15.000+ Downloads erreicht. Ihre Unterstützung hält die Entwicklung am Laufen und deckt meine Werkzeug- und Abokosten.",
-        "default_message": "Ich bin derzeit arbeitslos, jeder Beitrag zählt wirklich.",
-        "button_alt": "Meine Arbeit unterstützen"
+        "title": "Nexus unterstützen",
+        "message": "Ich bin derzeit arbeitslos und habe kein Einkommen. Ich entwickle und pflege dieses Plugin allein und bezahle die Abos der unterstützten KI-Plattformen selbst, um echte Exporte testen zu können.",
+        "reality_check": "Weniger als 1 % der Nutzer haben je gespendet.",
+        "cta": "Wenn Sie es wertvoll finden, hilft eine Spende, es weiterzuführen.",
+        "button": "Projekt unterstützen",
+        "button_later": "Vielleicht später"
     }
 }

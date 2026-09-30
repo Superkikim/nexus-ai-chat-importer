@@ -98,6 +98,12 @@ no mechanism or justification), then the "Full release notes" link. A patch rele
 adds its subsection on top; a new minor release replaces the whole section.
 `RELEASE_NOTES.md` stays the canonical changelog.
 
+> **The first-install dialog renders everything above this section** — the
+> intro, `## Supported providers` and `## Features` — through
+> `extractReadmeOverview` in
+> [`src/utils/release-notes.ts`](../../src/utils/release-notes.ts), so keep the
+> links there absolute too.
+>
 > **The upgrade and new-version dialogs render this section.** They fetch
 > `README.md` at the version tag and take everything under the first
 > `## What's new …` heading, up to the next `##` heading — so per-release

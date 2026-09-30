@@ -162,6 +162,7 @@ export class ImportReport {
     private fileSections: Map<string, FileSection> = new Map();
     private currentFileName: string = "";
     private globalErrors: { message: string; details: string }[] = [];
+    private warnings: string[] = [];
     private providerSpecificColumnHeader: string = "Attachments";
     /**
      * Whether `providerSpecificCount` re-counts the attachments an entry
@@ -540,6 +541,10 @@ export class ImportReport {
         this.globalErrors.push({ message, details });
     }
 
+    addWarning(message: string) {
+        this.warnings.push(message);
+    }
+
     /**
      * The analysis and per-file stats come from `setAnalysisInfo` /
      * `setFileStats` rather than parameters: the caller already handed them
@@ -715,6 +720,15 @@ export class ImportReport {
                 }
                 lines.push("");
             }
+        }
+
+        if (this.warnings.length > 0) {
+            lines.push("## Warnings");
+            lines.push("");
+            for (const warning of this.warnings) {
+                lines.push(`- ${warning}`);
+            }
+            lines.push("");
         }
 
         if (this.globalErrors.length > 0) {

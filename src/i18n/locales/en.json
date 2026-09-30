@@ -366,7 +366,7 @@
         },
         "complete_modal": {
             "title": "✅ Upgrade Complete - v{{version}}",
-            "fallback_content": "## ✨ What's New in v{{version}}\n\n### 1.8.1\n\n- **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files.\n- **DALL-E prompts are paired with their image again.**\n\n### 1.8.0\n\n- **Grok is supported** — import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer, citations become links to their source, and Imagine posts become notes with their images.\n- **Perplexity's official export is supported** — import the ZIP from *Export my data*. Every conversation becomes a note, titled with the start of its first question.\n- **Perplexity: the official export and the Thread Exporter extension work together** — import either over notes created from the other: it adds what a note lacks, and an extension archive fills in sources, models and citation markers, without duplicating anything.\n- **Custom ID property** — Settings → Properties adds a property of your choice (for example `uid`) holding the conversation ID to every note, and updates your existing notes.\n- **A rebuild keeps the properties you added**, such as `tags`. Edits to the note body are still lost.\n- **Settings appear in Obsidian's settings search** (Obsidian 1.13+), with a consistent layout.\n- **Reports say what was left out, and why.**\n- Plus fixes: Perplexity updates no longer lose new messages, orphan citation markers are gone, the completion dialog no longer counts Perplexity turns as artifacts, and a long block moved to a file is no longer folded.\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
+            "fallback_content": "## ✨ What's New in v{{version}}\n\n### 1.8.1\n\n- **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files; a notice warns if a part is missing.\n- **DALL-E prompts are paired with their image again.**\n\n### 1.8.0\n\n- **Grok is supported** — import the ZIP from your Grok data export as-is. Conversations keep every regenerated answer, citations become links to their source, and Imagine posts become notes with their images.\n- **Perplexity's official export is supported** — import the ZIP from *Export my data*. Every conversation becomes a note, titled with the start of its first question.\n- **Perplexity: the official export and the Thread Exporter extension work together** — import either over notes created from the other: it adds what a note lacks, and an extension archive fills in sources, models and citation markers, without duplicating anything.\n- **Custom ID property** — Settings → Properties adds a property of your choice (for example `uid`) holding the conversation ID to every note, and updates your existing notes.\n- **A rebuild keeps the properties you added**, such as `tags`. Edits to the note body are still lost.\n- **Settings appear in Obsidian's settings search** (Obsidian 1.13+), with a consistent layout.\n- **Reports say what was left out, and why.**\n- Plus fixes: Perplexity updates no longer lose new messages, orphan citation markers are gone, the completion dialog no longer counts Perplexity turns as artifacts, and a long block moved to a file is no longer folded.\n\n[Full release notes](https://github.com/Superkikim/nexus-ai-chat-importer/blob/master/RELEASE_NOTES.md)",
             "buttons": {
                 "got_it": "Got it!"
             }
@@ -556,7 +556,8 @@
         "attachment_map_failed": "Failed to build attachment map. Check console for details.",
         "ribbon_tooltip": "Nexus AI Chat Importer - Import new file",
         "import_no_supported_archives": "No supported {{provider}} archives were found in the selected ZIP files.",
-        "import_archives_ignored": "{{count}} archive(s) could not be read ({{provider}}). See the console for details."
+        "import_archives_ignored": "{{count}} archive(s) could not be read ({{provider}}). See the console for details.",
+        "import_export_part_missing": "This ChatGPT export lists {{count}} files that are not in the selected archives. A part is probably missing: its attachments won't be imported."
     },
     "archive_messages": {
         "empty": "The ZIP file contains no files. Please check that you selected the correct export file.",
@@ -579,20 +580,12 @@
             "name": "Import AI conversations"
         }
     },
-    "donation_dialog": {
-        "title": "Support Nexus",
-        "message_emphasis": "Donations really matter.",
-        "message": "I'm currently unemployed, with no income. I spend a significant amount of time on this plugin, and I pay out of pocket for subscriptions to the AI platforms it supports, so I can test real exports and keep everything accurate.",
-        "reality_check": "Out of roughly 1,600 people currently using this plugin, fewer than 1% have ever donated.",
-        "cta": "If this plugin is useful to you, a donation makes a real difference.",
-        "button_donate": "Support the project",
-        "button_later": "Maybe later"
-    },
     "support_box": {
-        "header": "Support This Plugin",
-        "header_highlight": "Support This Plugin",
-        "default_message_emphasis": "Nexus has reached 15,000+ downloads. Your support keeps development going and covers my tooling and subscription costs.",
-        "default_message": "I'm currently unemployed, so every contribution genuinely counts.",
-        "button_alt": "Support my work"
+        "title": "Support Nexus",
+        "message": "I'm currently unemployed, with no income. I build and maintain this plugin on my own, and I pay for the AI subscriptions it supports so I can test real exports.",
+        "reality_check": "Fewer than 1% of users have ever donated.",
+        "cta": "If you find it valuable, a donation helps keep it going.",
+        "button": "Support the project",
+        "button_later": "Maybe later"
     }
 }

@@ -27,13 +27,13 @@ import report. Everything runs locally in your vault.
   extracted when the export contains them; anything missing is shown explicitly.
 - **Structured Markdown** — role callouts, ISO 8601 UTC frontmatter, per-provider
   folders, and a detailed import report.
-- **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and an optional desktop [CLI](docs/user/cli.md).
+- **Localised UI** in 10 languages, with [translated documentation](https://nexus-prod.dev/nexus-ai-chat-importer/) and a separate [command-line importer](https://github.com/Superkikim/nexus-ai-chat-importer-cli).
 
 ## What's new in 1.8
 
 ### 1.8.1
 
-- **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files.
+- **Large ChatGPT exports split into parts import completely** — select the `OpenAI-export.zip` download as-is, or all its `part-*.zip` files; a notice warns if a part is missing.
 - **DALL-E prompts are paired with their image again.**
 
 ### 1.8.0

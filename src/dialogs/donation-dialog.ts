@@ -19,7 +19,7 @@
 // src/dialogs/donation-dialog.ts
 import { App, Modal } from "obsidian";
 import { t } from "../i18n";
-import { getLocalizedSupportUrl } from "../utils/support-links";
+import { createSupportBox } from "../ui/components/support-box";
 
 export class DonationDialog extends Modal {
     constructor(app: App) {
@@ -27,66 +27,21 @@ export class DonationDialog extends Modal {
     }
 
     onOpen() {
-        const { contentEl, modalEl, titleEl } = this;
+        const { contentEl, modalEl } = this;
         contentEl.empty();
-
         modalEl.addClass("nexus-donation-dialog");
-        contentEl.addClass("nexus-donation-dialog");
 
-        titleEl.setText(t("donation_dialog.title"));
+        const supportLink = createSupportBox(contentEl);
+        supportLink.addEventListener("click", () => this.close());
 
-        // Hero icon
-        const hero = contentEl.createDiv({ cls: "nexus-donation-hero" });
-        hero.textContent = "💙";
-
-        // Support box — reuse the gradient purple style
-        const box = contentEl.createDiv({ cls: "nexus-support-box" });
-
-        // Emphasis line (gold)
-        const emphasisRow = box.createDiv({ cls: "nexus-support-message" });
-        emphasisRow.createEl("p").createSpan({
-            cls: "nexus-support-message-emphasis",
-            text: t("donation_dialog.message_emphasis"),
-        });
-
-        // Main message
-        const msgRow = box.createDiv({ cls: "nexus-support-message" });
-        msgRow.createEl("p", { text: t("donation_dialog.message") });
-
-        // Reality check (gold tint)
-        const realityCheck = box.createDiv({
-            cls: "nexus-support-reality-check",
-        });
-        realityCheck.setText(t("donation_dialog.reality_check"));
-
-        // CTA
-        const ctaRow = box.createDiv({ cls: "nexus-support-message" });
-        ctaRow.createEl("p", { text: t("donation_dialog.cta") });
-
-        // Action buttons
-        const actions = contentEl.createDiv({ cls: "nexus-donation-actions" });
-
-        const donateBtn = actions.createEl("button", {
-            text: t("donation_dialog.button_donate"),
-            cls: "nexus-donation-btn-primary mod-cta",
-        });
-        donateBtn.addEventListener("click", () => {
-            try {
-                window.open(getLocalizedSupportUrl(), "_blank");
-            } finally {
-                this.close();
-            }
-        });
-
-        const laterBtn = actions.createEl("button", {
-            text: t("donation_dialog.button_later"),
-            cls: "nexus-donation-btn-secondary",
+        const laterBtn = contentEl.createEl("button", {
+            text: t("support_box.button_later"),
+            cls: "nexus-donation-later",
         });
         laterBtn.addEventListener("click", () => this.close());
     }
 
     onClose() {
-        const { contentEl } = this;
-        contentEl.empty();
+        this.contentEl.empty();
     }
 }
